@@ -99,11 +99,12 @@ H.letterReport = function(){
   p.boxes.forEach(b => {
     const a = Math.max(0, Math.round(mapx(b.x0)) - 2);
     const z = Math.min(p.W - 1, Math.round(mapx(b.x1)) + 2);
-    const mine  = H.sample(m, p.W, p.H, a, z);
-    const model = H.glyphSample(b.ch, '120px ' + (p.fam || 'KtavYad,"Arial Hebrew",sans-serif'));
-    if(!mine.cells){ out.letters.push({ch:b.ch, cover:0, stray:1, ok:false}); return; }
-    const r = H.cmp(mine, model);
-    out.letters.push({ch:b.ch, cover:r.cover, stray:r.stray,
+    const mine = H.sample(m, p.W, p.H, a, z);
+    if(!mine.cells){ out.letters.push({ch:b.ch, cover:0, stray:1, ok:false, sample:null}); return; }
+    const base = H.strip(b.ch);
+    const r = H.letterSim(mine, base);      /* פונט או הכתב האישי — הטוב מביניהם */
+    out.letters.push({ch:b.ch, base, sample:mine, from:r.from,
+                      cover:r.cover, stray:r.stray,
                       ok: r.cover >= H.L_COVER && r.stray <= H.L_STRAY});
   });
   out.countOk = true;

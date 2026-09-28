@@ -7,6 +7,10 @@ H.STRAY_MAX = 0.62;   /* כמה דיו מותר מחוץ למילה */
 H.RATIO_MIN = 0.55;   /* כמות דיו ביחס למילה — זה מה שפוסל שרבוט */
 H.RATIO_MAX = 1.70;
 H.MIN_INK   = 10;
+/* מצב מבחן: נפתח למילה רק אחרי שהיא כבר נכבשה במשחקי האריחים,
+   כלומר כשידוע שהילד יודע לאיית אותה. אז אפשר לדרוש גם צורה. */
+H.TEST_FRAC = 0.70;   /* איזה חלק מהאותיות חייב להיות מזוהה */
+H.TEST_COVER = 0.46;
 
 H.pad = {};
 
@@ -17,9 +21,15 @@ H.game({
   next(){
     const w = H.nextWord();
     if(!w) return H.endRound();
-    H.run.guide = false;
+    const r = H.run;
+    r.guide = false;
+    /* המילה כבר נכבשה באריחים — אז כאן זה כבר מבחן, לא תרגול */
+    r.testMode = (H.state.stats[w] || {run:0}).run >= H.MASTER_AT;
     H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters();
-    H.$('writeprompt').textContent = 'שמע את המילה וכתוב אותה בכתב';
+    H.$('writeprompt').textContent = r.testMode
+      ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
+      : 'שמע את המילה וכתוב אותה בכתב';
+    H.$('testbadge').style.display = r.testMode ? '' : 'none';
     H.$('writebtn').textContent = '✅ בדוק';
     H.$('writefb').textContent = '';
     setTimeout(() => H.say(w), 320);
@@ -45,9 +55,19 @@ H.game({
        בכל פעם, ובטלפון אי אפשר לדייק. לכן היא רק רמז רך, ומצטברת
        לדוח ההורים — שם הרעש מתמצע על פני הרבה ניסיונות. */
     const weak = rep.letters.filter(l => l.ok === false);
-    const good = res.cover >= H.COVER_MIN && res.stray <= H.STRAY_MAX
-              && res.ratio >= H.RATIO_MIN;
+    const okFrac = rep.letters.length
+      ? rep.letters.filter(l => l.ok).length / rep.letters.length : 0;
+    const basic = res.cover >= H.COVER_MIN && res.stray <= H.STRAY_MAX
+               && res.ratio >= H.RATIO_MIN;
+    /* בתרגול מספיק שכתב משהו בצורת מילה. במבחן, שהמילה כבר שלו,
+       אפשר לדרוש שגם רוב האותיות יזוהו. */
+    const good = r.testMode
+      ? (basic && res.cover >= H.TEST_COVER && okFrac >= H.TEST_FRAC)
+      : basic;
     if(good && !r.guide){
+      /* דגימות מוצלחות מלמדות את הפרופיל האישי, בכפוף לסף הפונט */
+      rep.letters.forEach(l => l.sample && H.learnLetter(l.base, l.sample, false));
+      H.save();
       H.right();
       fb.className = 'fb ok';
       fb.innerHTML = weak.length === 1
@@ -56,6 +76,10 @@ H.game({
       H.speak(r.word);
       setTimeout(() => this.next(), 1000);
     } else if(good && r.guide){
+      /* העתקה מקו העזר — ידוע בוודאות מה הועתק, אז זו הדגימה
+         הכי אמינה שיש ללימוד הכתב האישי */
+      rep.letters.forEach(l => l.sample && H.learnLetter(l.base, l.sample, true));
+      H.save();
       fb.className = 'fb ok'; fb.textContent = 'טוב! עכשיו אתה יודע אותה';
       H.sfx.good();
       H.run.queue.push(r.word);

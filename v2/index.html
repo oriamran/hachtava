@@ -449,6 +449,23 @@ body.nav .wrap{padding-top:36px}
 .obring{width:46px;height:46px;border-radius:50%;box-shadow:0 4px 0 rgba(43,34,80,.2)}
 .obring.on{outline:4px solid var(--ink);outline-offset:3px}
 
+/* ---------- תג מצב מבחן ---------- */
+.testbadge{
+  display:inline-block;margin:0 auto 4px;padding:5px 15px;border-radius:999px;
+  background:linear-gradient(135deg,var(--plum),var(--grape));color:#fff;
+  font-size:14px;font-weight:800;box-shadow:0 4px 0 rgba(43,34,80,.22);
+}
+#s-write{text-align:center}
+#s-write .sub,#s-write .note{text-align:center}
+
+/* ---------- הכרת כתב היד בדוח ---------- */
+.handbox{
+  background:linear-gradient(135deg,#efe7ff,#ddd0ff);border-radius:16px;padding:13px;
+  text-align:center;font-size:16px;font-weight:800;color:var(--ink);
+}
+.handbox b{font-size:26px;color:var(--plum)}
+.handbox small{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-top:3px}
+
 </style>
 </head>
 <body>
@@ -586,6 +603,7 @@ body.nav .wrap{padding-top:36px}
 
   <!-- ============ כתיבה ============ -->
   <section class="screen" id="s-write">
+    <div id="testbadge" class="testbadge" style="display:none">⚔️ מבחן</div>
     <p class="sub" id="writeprompt"></p>
     <div class="row"><button class="mini speaker" data-say>🔊</button></div>
     <div class="padwrap" id="padwrap">
@@ -641,6 +659,9 @@ body.nav .wrap{padding-top:36px}
     <div id="rep-sum" class="statrow"></div>
     <h3>תרגול בשבוע האחרון</h3>
     <div id="rep-chart" class="chart"></div>
+    <h3>הכרת כתב היד</h3>
+    <div id="rep-hand"></div>
+
     <h3>אותיות שקשות לו</h3>
     <div id="rep-letters"></div>
 
@@ -1500,6 +1521,10 @@ H.STRAY_MAX = 0.62;   /* כמה דיו מותר מחוץ למילה */
 H.RATIO_MIN = 0.55;   /* כמות דיו ביחס למילה — זה מה שפוסל שרבוט */
 H.RATIO_MAX = 1.70;
 H.MIN_INK   = 10;
+/* מצב מבחן: נפתח למילה רק אחרי שהיא כבר נכבשה במשחקי האריחים,
+   כלומר כשידוע שהילד יודע לאיית אותה. אז אפשר לדרוש גם צורה. */
+H.TEST_FRAC = 0.70;   /* איזה חלק מהאותיות חייב להיות מזוהה */
+H.TEST_COVER = 0.46;
 
 H.pad = {};
 
@@ -1510,9 +1535,15 @@ H.game({
   next(){
     const w = H.nextWord();
     if(!w) return H.endRound();
-    H.run.guide = false;
+    const r = H.run;
+    r.guide = false;
+    /* המילה כבר נכבשה באריחים — אז כאן זה כבר מבחן, לא תרגול */
+    r.testMode = (H.state.stats[w] || {run:0}).run >= H.MASTER_AT;
     H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters();
-    H.$('writeprompt').textContent = 'שמע את המילה וכתוב אותה בכתב';
+    H.$('writeprompt').textContent = r.testMode
+      ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
+      : 'שמע את המילה וכתוב אותה בכתב';
+    H.$('testbadge').style.display = r.testMode ? '' : 'none';
     H.$('writebtn').textContent = '✅ בדוק';
     H.$('writefb').textContent = '';
     setTimeout(() => H.say(w), 320);
@@ -1538,9 +1569,19 @@ H.game({
        בכל פעם, ובטלפון אי אפשר לדייק. לכן היא רק רמז רך, ומצטברת
        לדוח ההורים — שם הרעש מתמצע על פני הרבה ניסיונות. */
     const weak = rep.letters.filter(l => l.ok === false);
-    const good = res.cover >= H.COVER_MIN && res.stray <= H.STRAY_MAX
-              && res.ratio >= H.RATIO_MIN;
+    const okFrac = rep.letters.length
+      ? rep.letters.filter(l => l.ok).length / rep.letters.length : 0;
+    const basic = res.cover >= H.COVER_MIN && res.stray <= H.STRAY_MAX
+               && res.ratio >= H.RATIO_MIN;
+    /* בתרגול מספיק שכתב משהו בצורת מילה. במבחן, שהמילה כבר שלו,
+       אפשר לדרוש שגם רוב האותיות יזוהו. */
+    const good = r.testMode
+      ? (basic && res.cover >= H.TEST_COVER && okFrac >= H.TEST_FRAC)
+      : basic;
     if(good && !r.guide){
+      /* דגימות מוצלחות מלמדות את הפרופיל האישי, בכפוף לסף הפונט */
+      rep.letters.forEach(l => l.sample && H.learnLetter(l.base, l.sample, false));
+      H.save();
       H.right();
       fb.className = 'fb ok';
       fb.innerHTML = weak.length === 1
@@ -1549,6 +1590,10 @@ H.game({
       H.speak(r.word);
       setTimeout(() => this.next(), 1000);
     } else if(good && r.guide){
+      /* העתקה מקו העזר — ידוע בוודאות מה הועתק, אז זו הדגימה
+         הכי אמינה שיש ללימוד הכתב האישי */
+      rep.letters.forEach(l => l.sample && H.learnLetter(l.base, l.sample, true));
+      H.save();
       fb.className = 'fb ok'; fb.textContent = 'טוב! עכשיו אתה יודע אותה';
       H.sfx.good();
       H.run.queue.push(r.word);
@@ -1946,11 +1991,12 @@ H.letterReport = function(){
   p.boxes.forEach(b => {
     const a = Math.max(0, Math.round(mapx(b.x0)) - 2);
     const z = Math.min(p.W - 1, Math.round(mapx(b.x1)) + 2);
-    const mine  = H.sample(m, p.W, p.H, a, z);
-    const model = H.glyphSample(b.ch, '120px ' + (p.fam || 'KtavYad,"Arial Hebrew",sans-serif'));
-    if(!mine.cells){ out.letters.push({ch:b.ch, cover:0, stray:1, ok:false}); return; }
-    const r = H.cmp(mine, model);
-    out.letters.push({ch:b.ch, cover:r.cover, stray:r.stray,
+    const mine = H.sample(m, p.W, p.H, a, z);
+    if(!mine.cells){ out.letters.push({ch:b.ch, cover:0, stray:1, ok:false, sample:null}); return; }
+    const base = H.strip(b.ch);
+    const r = H.letterSim(mine, base);      /* פונט או הכתב האישי — הטוב מביניהם */
+    out.letters.push({ch:b.ch, base, sample:mine, from:r.from,
+                      cover:r.cover, stray:r.stray,
                       ok: r.cover >= H.L_COVER && r.stray <= H.L_STRAY});
   });
   out.countOk = true;
@@ -1991,6 +2037,75 @@ H.showLetters = function(rep){
 };
 H.clearLetters = function(){
   const b = H.$('letterstrip'); if(b){ b.innerHTML = ''; b.style.display = 'none'; }
+};
+
+/* ===== 59-handwriting.js ===== */
+/* ==========================================================
+   פרופיל כתב אישי.
+   לכל אות נשמר סכום הדגימות של הילד ברשת GWxGH, וממנו נגזרת
+   "האות שלו". ההשוואה לוקחת את הטוב מבין השניים — הפונט
+   והפרופיל — כדי לא להעניש סגנון אישי עקבי.
+
+   המלכודת: אם לומדים כל דגימה, ילד שכותב אות הפוך ילמד את
+   המערכת שהפוך זה נכון. לכן לומדים רק מדגימות שכבר עברו סף
+   דמיון לפונט, או מהעתקה מקו העזר — שם ידוע מה הועתק.
+   ========================================================== */
+H.HAND_MIN     = 6;      /* מכמה דגימות מתחילים להשתמש בפרופיל */
+H.HAND_LEARN   = 0.42;   /* סף דמיון לפונט שמתחתיו לא לומדים כלום */
+H.HAND_ON      = 0.35;   /* תא נחשב "מלא" אם הופיע ברבע הזה מהדגימות */
+H.HAND_CAP     = 40;     /* מעל זה מחצים, כדי שהפרופיל ימשיך להשתנות */
+
+H.handOf = function(base){
+  const h = H.state.hand || (H.state.hand = {});
+  return h[base];
+};
+/* הפרופיל כרשת בינארית, כמו כל דגימה אחרת */
+H.handProto = function(base){
+  const h = H.handOf(base);
+  if(!h || h.n < H.HAND_MIN) return null;
+  const g = new Uint8Array(H.GW * H.GH);
+  let cells = 0;
+  for(let i = 0; i < g.length; i++)
+    if(h.s[i] / h.n >= H.HAND_ON){ g[i] = 1; cells++; }
+  return cells ? {g, cells, gw:H.GW, gh:H.GH} : null;
+};
+H.learnLetter = function(base, sample, trusted){
+  if(!sample || !sample.cells) return false;
+  const font = H.glyphSample(base, '120px ' + (H.pad.fam || 'KtavYad'));
+  const sim  = H.cmp(sample, font);
+  /* העתקה מקו העזר נאמנת בהגדרה; אחרת דורשים דמיון מינימלי */
+  if(!trusted && sim.cover < H.HAND_LEARN) return false;
+  const all = H.state.hand || (H.state.hand = {});
+  const h = all[base] || (all[base] = {n:0, s:new Array(H.GW*H.GH).fill(0)});
+  for(let i = 0; i < h.s.length; i++) if(sample.g[i]) h.s[i]++;
+  h.n++;
+  if(h.n > H.HAND_CAP){                     /* שכחה הדרגתית */
+    h.n = Math.round(h.n / 2);
+    for(let i = 0; i < h.s.length; i++) h.s[i] = Math.round(h.s[i] / 2);
+  }
+  return true;
+};
+/* הציון לאות: הטוב מבין הפונט לבין הכתב האישי */
+H.letterSim = function(sample, base){
+  const font = H.glyphSample(base, '120px ' + (H.pad.fam || 'KtavYad'));
+  const a = H.cmp(sample, font);
+  a.from = 'font';
+  const proto = H.handProto(base);
+  if(!proto) return a;
+  const b = H.cmp(sample, proto);
+  b.from = 'hand';
+  /* "טוב יותר" = כיסוי גבוה עם מעט חריגה */
+  const score = r => r.cover - r.stray * 0.5;
+  return score(b) > score(a) ? b : a;
+};
+H.handStats = function(){
+  const h = H.state.hand || {};
+  const ks = Object.keys(h);
+  return {
+    letters: ks.length,
+    ready: ks.filter(k => h[k].n >= H.HAND_MIN).length,
+    samples: ks.reduce((a, k) => a + h[k].n, 0)
+  };
 };
 
 /* ===== 60-map.js ===== */
@@ -2244,6 +2359,13 @@ H.renderReport = function(){
         '<span class="lr">' + Math.round(l.rate*100) + '%</span>' +
         '<span class="ln">' + l.ok + '/' + l.tries + '</span></div>').join('') + '</div>'
     : '<p class="rempty">\u05e2\u05d3\u05d9\u05d9\u05df \u05d0\u05d9\u05df \u05de\u05e1\u05e4\u05d9\u05e7 \u05db\u05ea\u05d9\u05d1\u05d4 \u05db\u05d3\u05d9 \u05dc\u05d6\u05d4\u05d5\u05ea \u05d0\u05d5\u05ea\u05d9\u05d5\u05ea \u05d1\u05e2\u05d9\u05d9\u05ea\u05d9\u05d5\u05ea</p>';
+
+  /* כמה המערכת כבר מכירה את הכתב שלו */
+  const hs = H.handStats();
+  H.$('rep-hand').innerHTML = hs.ready
+    ? '<div class="handbox"><b>' + hs.ready + '</b> \u05d0\u05d5\u05ea\u05d9\u05d5\u05ea \u05e0\u05dc\u05de\u05d3\u05d5 \u05de\u05d4\u05db\u05ea\u05d1 \u05e9\u05dc\u05d5' +
+      '<small>' + hs.samples + ' \u05d3\u05d2\u05d9\u05de\u05d5\u05ea. \u05db\u05db\u05dc \u05e9\u05d9\u05e8\u05d1\u05d4 \u05dc\u05db\u05ea\u05d5\u05d1, \u05d4\u05d1\u05d3\u05d9\u05e7ה \u05de\u05d3\u05d5\u05d9\u05e7\u05ea \u05d9\u05d5\u05ea\u05e8</small></div>'
+    : '<p class="rempty">\u05e2\u05d5\u05d3 \u05de\u05e2\u05d8 \u05db\u05ea\u05d9\u05d1\u05d4 \u05d5\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05ea\u05ea\u05d7\u05d9\u05dc \u05dc\u05d4\u05db\u05d9\u05e8 \u05d0\u05ea \u05d4\u05db\u05ea\u05d1 \u05e9\u05dc\u05d5</p>';
 
   H.$('rep-topic').textContent = H.topic();
 };

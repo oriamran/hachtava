@@ -422,3 +422,20 @@ body.nav .wrap{padding-top:36px}
 .obrings{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .obring{width:46px;height:46px;border-radius:50%;box-shadow:0 4px 0 rgba(43,34,80,.2)}
 .obring.on{outline:4px solid var(--ink);outline-offset:3px}
+
+/* ---------- תג מצב מבחן ---------- */
+.testbadge{
+  display:inline-block;margin:0 auto 4px;padding:5px 15px;border-radius:999px;
+  background:linear-gradient(135deg,var(--plum),var(--grape));color:#fff;
+  font-size:14px;font-weight:800;box-shadow:0 4px 0 rgba(43,34,80,.22);
+}
+#s-write{text-align:center}
+#s-write .sub,#s-write .note{text-align:center}
+
+/* ---------- הכרת כתב היד בדוח ---------- */
+.handbox{
+  background:linear-gradient(135deg,#efe7ff,#ddd0ff);border-radius:16px;padding:13px;
+  text-align:center;font-size:16px;font-weight:800;color:var(--ink);
+}
+.handbox b{font-size:26px;color:var(--plum)}
+.handbox small{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-top:3px}
