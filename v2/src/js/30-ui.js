@@ -11,6 +11,7 @@ H.el = (tag, cls, html) => {
 
 H.screen = 'home';
 H.show = function(id){
+  if(H.hidePeek) H.hidePeek();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
   const s = H.$('s-' + id);
   if(s) s.classList.add('on');

@@ -16,7 +16,7 @@ H.game({
     H.$('anafb').textContent = '';
     this.render();
     this.startClock();
-    setTimeout(() => H.speak(w), 200);
+    setTimeout(() => H.say(w), 200);
   },
   startClock(){
     const r = H.run;

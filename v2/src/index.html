@@ -12,6 +12,7 @@
 <button id="backbtn" aria-label="חזרה">✕</button>
 <div id="toasts"></div>
 <div id="confetti"></div>
+<div id="peek" class="peek-word" aria-live="polite"></div>
 
 <div class="wrap">
 
@@ -27,6 +28,17 @@
       <div class="xpbar"><i id="xpfill"></i></div>
     </div>
   </header>
+
+  <!-- ============ מסך ראשון ============ -->
+  <section class="screen" id="s-onboard">
+    <h1>ברוך הבא! 👋</h1>
+    <p class="sub">בוא נבחר לך דמות</p>
+    <div id="ob-avatars" class="obgrid"></div>
+    <p class="sub">ואיזה צבע?</p>
+    <div id="ob-rings" class="obrings"></div>
+    <label class="lbl">איך קוראים לך?<input id="ob-name" placeholder="לא חובה" maxlength="14"></label>
+    <div class="row"><button class="go" onclick="H.finishOnboard()">יאללה, מתחילים! 🚀</button></div>
+  </section>
 
   <!-- ============ בית ============ -->
   <section class="screen on" id="s-home">
@@ -203,6 +215,7 @@
     <label class="lbl">חבילות מילים</label>
     <div id="packlist" class="packlist"></div>
     <label class="lbl">שם הילד<input id="nameIn" placeholder="לא חובה"></label>
+    <label class="check"><input type="checkbox" id="peekIn"> הצג את המילה לרגע לפני כל שאלה</label>
     <label class="lbl">שם ההכתבה<input id="topicIn" placeholder="חגי תשרי"></label>
     <label class="lbl">הפרס על אלבום מלא<input id="prizeIn" placeholder="חטיף MARS"></label>
     <label class="lbl">מילים — אחת בכל שורה</label>

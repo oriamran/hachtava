@@ -12,12 +12,12 @@
   font-display:block;
 }
 /* כל מקום שמוצגת בו מילה מההכתבה */
-.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,#wordsIn{
+.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,#wordsIn{
   font-family:'KtavYad','Arial Hebrew',sans-serif;
 }
 body.dfus .front,body.dfus .tile,body.dfus .bigword,body.dfus .misword,
 body.dfus .bt,body.dfus .bubble,body.dfus .falling,body.dfus .stk-w,body.dfus .peek,
-body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus #wordsIn{
+body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus #wordsIn{
   font-family:"Arial Hebrew","Heebo",Arial,sans-serif;
 }
 body:not(.dfus) .front{font-size:23px}
@@ -416,6 +416,39 @@ body.nav .wrap{padding-top:36px}
 .letcell .lr{font-size:14px;font-weight:800;color:var(--bad);font-variant-numeric:tabular-nums}
 .letcell .ln{font-size:11px;color:var(--ink2);font-weight:700;font-variant-numeric:tabular-nums}
 
+/* ---------- הצגת המילה לרגע ---------- */
+.peek-word{
+  position:fixed;z-index:68;pointer-events:none;
+  inset-inline-start:50%;top:20%;transform:translateX(50%) scale(.88);
+  max-width:92vw;padding:14px 26px;border-radius:24px;
+  background:#fff;box-shadow:0 10px 30px rgba(43,34,80,.28);
+  text-align:center;font-size:44px;font-weight:800;color:var(--ink);
+  white-space:nowrap;opacity:0;transition:opacity .18s, transform .18s;
+}
+.peek-word.on{opacity:1;transform:translateX(50%) scale(1)}
+@media(max-width:420px){.peek-word{font-size:36px}}
+
+/* ---------- תיבת סימון בהגדרות ---------- */
+.check{
+  display:flex;align-items:center;gap:9px;margin-top:12px;
+  background:#fff;border-radius:14px;padding:11px 13px;
+  box-shadow:0 4px 0 var(--cardEdge);font-size:15px;font-weight:800;color:var(--ink);
+}
+.check input{width:20px;height:20px;accent-color:var(--sunDeep)}
+
+/* ---------- מסך ראשון ---------- */
+.obgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.obav{
+  background:#fff;border-radius:20px;padding:12px 4px;text-align:center;color:var(--ink);
+  box-shadow:0 5px 0 var(--cardEdge);display:flex;flex-direction:column;gap:2px;align-items:center;
+}
+.obav-e{font-size:34px}
+.obav b{font-size:12px}
+.obav.on{background:linear-gradient(135deg,#fff8e1,#ffe9a8);box-shadow:0 5px 0 var(--sunDeep)}
+.obrings{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.obring{width:46px;height:46px;border-radius:50%;box-shadow:0 4px 0 rgba(43,34,80,.2)}
+.obring.on{outline:4px solid var(--ink);outline-offset:3px}
+
 </style>
 </head>
 <body>
@@ -423,6 +456,7 @@ body.nav .wrap{padding-top:36px}
 <button id="backbtn" aria-label="חזרה">✕</button>
 <div id="toasts"></div>
 <div id="confetti"></div>
+<div id="peek" class="peek-word" aria-live="polite"></div>
 
 <div class="wrap">
 
@@ -438,6 +472,17 @@ body.nav .wrap{padding-top:36px}
       <div class="xpbar"><i id="xpfill"></i></div>
     </div>
   </header>
+
+  <!-- ============ מסך ראשון ============ -->
+  <section class="screen" id="s-onboard">
+    <h1>ברוך הבא! 👋</h1>
+    <p class="sub">בוא נבחר לך דמות</p>
+    <div id="ob-avatars" class="obgrid"></div>
+    <p class="sub">ואיזה צבע?</p>
+    <div id="ob-rings" class="obrings"></div>
+    <label class="lbl">איך קוראים לך?<input id="ob-name" placeholder="לא חובה" maxlength="14"></label>
+    <div class="row"><button class="go" onclick="H.finishOnboard()">יאללה, מתחילים! 🚀</button></div>
+  </section>
 
   <!-- ============ בית ============ -->
   <section class="screen on" id="s-home">
@@ -614,6 +659,7 @@ body.nav .wrap{padding-top:36px}
     <label class="lbl">חבילות מילים</label>
     <div id="packlist" class="packlist"></div>
     <label class="lbl">שם הילד<input id="nameIn" placeholder="לא חובה"></label>
+    <label class="check"><input type="checkbox" id="peekIn"> הצג את המילה לרגע לפני כל שאלה</label>
     <label class="lbl">שם ההכתבה<input id="topicIn" placeholder="חגי תשרי"></label>
     <label class="lbl">הפרס על אלבום מלא<input id="prizeIn" placeholder="חטיף MARS"></label>
     <label class="lbl">מילים — אחת בכל שורה</label>
@@ -685,7 +731,7 @@ H.RINGS = [
 ];
 
 H.blank = () => ({
-  name: '',
+  name: '', onboarded: false, peekAlways: false,
   avatar: 'fox', hat: 'none', ring: 'sun',
   owned: ['fox','panda','frog','cat','none','sun','mint'],
   xp: 0, coins: 0,
@@ -698,6 +744,16 @@ H.blank = () => ({
   daily: {last: '', streak: 0},
   wins: 0
 });
+
+/* בדיקה אמיתית ולא רק קיום המפתח: ב-data: URL ובגלישה פרטית
+   הגישה זורקת, ואז אין טעם להבטיח לילד שההתקדמות נשמרת. */
+H.storageOK = (function(){
+  try{
+    const k = '__t'; localStorage.setItem(k, '1');
+    const ok = localStorage.getItem(k) === '1';
+    localStorage.removeItem(k); return ok;
+  }catch(e){ return false; }
+})();
 
 H.load = function(){
   let s = null;
@@ -866,7 +922,7 @@ H.initVoice = function(){
   H.voice = vs.find(v => /^he/i.test(v.lang)) || null;
   if(!H.voice && vs.length) H.useAudio = false;
 };
-speechSynthesis.onvoiceschanged = H.initVoice;
+speechSynthesis.onvoiceschanged = () => { H.initVoice(); if(H.labelSay) H.labelSay(); };
 
 H.speak = function(t){
   if(!H.useAudio || !t) return;
@@ -908,6 +964,31 @@ H.sfx = {
   level: () => [392,523,659,784,1047].forEach((f,i) => H.tone(f, .22, 'triangle', .16, i*0.09))
 };
 
+/* ==========================================================
+   הצגת המילה. בלי קול עברי במכשיר, מי שלא רואה את המילה
+   לא יכול לשחק בכלל — אז היא מוצגת לרגע ואז נעלמת.
+   ההורה יכול להדליק את זה גם כשיש קול, לילד שמתקשה.
+   ========================================================== */
+H.PEEK_MS = 2400;
+H.peek = function(word){
+  const box = H.$('peek');
+  if(!box) return;
+  clearTimeout(H.peekT);
+  box.textContent = word;
+  box.classList.add('on');
+  H.peekT = setTimeout(() => box.classList.remove('on'), H.PEEK_MS);
+};
+H.hidePeek = function(){
+  clearTimeout(H.peekT);
+  const box = H.$('peek'); if(box) box.classList.remove('on');
+};
+/* מה שכל מיני־משחק קורא לו כדי "למסור" את המילה לילד */
+H.say = function(word){
+  if(!word) return;
+  H.speak(word);
+  if(!H.useAudio || H.state.peekAlways) H.peek(word);
+};
+
 /* ===== 30-ui.js ===== */
 /* ==========================================================
    ניווט בין מסכים, פסי מצב, הודעות קופצות, קונפטי
@@ -922,6 +1003,7 @@ H.el = (tag, cls, html) => {
 
 H.screen = 'home';
 H.show = function(id){
+  if(H.hidePeek) H.hidePeek();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
   const s = H.$('s-' + id);
   if(s) s.classList.add('on');
@@ -1006,6 +1088,44 @@ H.finish = function(opt){
   if(opt.xp) H.reward(opt.xp);
   if((opt.stars||0) >= 3) H.confetti(60);
   H.show('end');
+};
+
+/* ===== 35-onboard.js ===== */
+/* ==========================================================
+   מסך ראשון: שם ודמות. רץ פעם אחת, לפני שהילד רואה משהו אחר.
+   ========================================================== */
+H.needsOnboard = () => !H.state.onboarded;
+
+H.renderOnboard = function(){
+  const box = H.$('ob-avatars');
+  box.innerHTML = '';
+  H.AVATARS.filter(a => a.cost === 0).forEach(a => {
+    const el = H.el('button', 'obav' + (H.state.avatar === a.id ? ' on' : ''),
+                    '<span class="obav-e">' + a.e + '</span><b>' + a.name + '</b>');
+    el.onclick = () => { H.sfx.tap(); H.state.avatar = a.id; H.renderOnboard(); H.paint(); };
+    box.appendChild(el);
+  });
+  const rings = H.$('ob-rings');
+  rings.innerHTML = '';
+  H.RINGS.filter(r => r.cost === 0).forEach(r => {
+    const el = H.el('button', 'obring' + (H.state.ring === r.id ? ' on' : ''));
+    el.style.background = r.css;
+    el.onclick = () => { H.sfx.tap(); H.state.ring = r.id; H.renderOnboard(); H.paint(); };
+    rings.appendChild(el);
+  });
+};
+H.startOnboard = function(){
+  H.renderOnboard();
+  H.$('ob-name').value = H.state.name || '';
+  H.show('onboard');
+  H.$('backbtn').classList.remove('on');     /* אין לאן לחזור */
+};
+H.finishOnboard = function(){
+  H.state.name = H.$('ob-name').value.trim();
+  H.state.onboarded = true;
+  H.save();
+  H.sfx.great(); H.confetti(28);
+  H.refresh(); H.show('home');
 };
 
 /* ===== 40-games.js ===== */
@@ -1168,7 +1288,7 @@ H.game({
     H.run.answer = [];
     H.$('buildfb').textContent = '';
     this.render();
-    setTimeout(() => H.speak(w), 250);
+    setTimeout(() => H.say(w), 250);
   },
   render(){
     const r = H.run, slots = H.$('slots'), pool = H.$('pool');
@@ -1201,7 +1321,7 @@ H.game({
       H.wrong();
       H.$('buildfb').innerHTML = '<span class="no">כמעט… נסה שוב</span>';
       r.answer = []; this.render();
-      setTimeout(() => H.speak(r.word), 350);
+      setTimeout(() => H.say(r.word), 350);
     }
   },
   hint(){
@@ -1227,7 +1347,7 @@ H.game({
       box.appendChild(b);
     });
     H.$('pickfb').textContent = '';
-    setTimeout(() => H.speak(w), 300);
+    setTimeout(() => H.say(w), 300);
   },
   choose(btn, ok){
     if(H.run.picked) return;
@@ -1277,7 +1397,7 @@ H.game({
       box.appendChild(b);
     });
     H.$('misfb').textContent = '';
-    setTimeout(() => H.speak(w), 300);
+    setTimeout(() => H.say(w), 300);
   },
   choose(btn, ok){
     if(H.run.picked) return;
@@ -1310,7 +1430,7 @@ H.game({
       '<span class="bt' + (i === 0 ? ' now' : '') + '">' + c + '</span>').join('');
     const field = H.$('bubfield'); field.innerHTML = '';
     r.spawnAt = 0;
-    setTimeout(() => H.speak(w), 250);
+    setTimeout(() => H.say(w), 250);
     this.tick(field);
   },
   tick(field){
@@ -1395,7 +1515,7 @@ H.game({
     H.$('writeprompt').textContent = 'שמע את המילה וכתוב אותה בכתב';
     H.$('writebtn').textContent = '✅ בדוק';
     H.$('writefb').textContent = '';
-    setTimeout(() => H.speak(w), 320);
+    setTimeout(() => H.say(w), 320);
   },
   check(){
     const r = H.run, res = H.padScore(), fb = H.$('writefb');
@@ -1572,7 +1692,7 @@ H.game({
     H.$('anafb').textContent = '';
     this.render();
     this.startClock();
-    setTimeout(() => H.speak(w), 200);
+    setTimeout(() => H.say(w), 200);
   },
   startClock(){
     const r = H.run;
@@ -1663,7 +1783,7 @@ H.game({
     H.$('catchtarget').innerHTML = r.need.map((c, i) =>
       '<span class="bt' + (i === 0 ? ' now' : '') + '">' + c + '</span>').join('');
     H.$('catchfield').querySelectorAll('.falling').forEach(e => e.remove());
-    setTimeout(() => H.speak(w), 200);
+    setTimeout(() => H.say(w), 200);
     this.tick();
   },
   tick(){
@@ -2019,6 +2139,7 @@ H.openSettings = function(){
   const p = H.pack();
   H.renderPacks();
   H.$('nameIn').value  = H.state.name || '';
+  H.$('peekIn').checked = !!H.state.peekAlways;
   H.$('topicIn').value = p.topic || '';
   H.$('prizeIn').value = p.prize || '';
   H.$('wordsIn').value = p.list.join('\n');
@@ -2040,6 +2161,7 @@ H.applySettings = function(){
     .filter(x => x.length);
   if(list.length < 2) return alert('צריך לפחות שתי מילים');
   H.state.name = H.$('nameIn').value.trim();
+  H.state.peekAlways = H.$('peekIn').checked;
   const p = H.pack();
   p.topic = H.$('topicIn').value.trim() || 'הכתבה';
   p.prize = H.$('prizeIn').value.trim();
@@ -2143,7 +2265,7 @@ H.boot = function(){
   } }catch(e){}
   H.initVoice();
   H.refresh();
-  H.show('home');
+  if(H.needsOnboard()) H.startOnboard(); else H.show('home');
 
   /* כפתורים קבועים */
   H.$('backbtn').onclick   = () => { H.sfx.tap(); H.home(); };
@@ -2157,8 +2279,17 @@ H.boot = function(){
   H.$('ktbtn').onclick     = H.toggleScript;
   document.querySelectorAll('[data-go]').forEach(b =>
     b.onclick = () => { H.sfx.tap(); H.show(b.dataset.go); });
-  document.querySelectorAll('[data-say]').forEach(b =>
-    b.onclick = () => H.speak(H.run && H.run.word));
+  /* בלי קול עברי הכפתור הזה חסר תועלת, אז הוא הופך ל"הצג שוב" */
+  document.querySelectorAll('[data-say]').forEach(b => {
+    b.onclick = () => { H.sfx.tap(); H.say(H.run && H.run.word); };
+  });
+  H.labelSay = () => document.querySelectorAll('[data-say]').forEach(b => {
+    if(b.classList.contains('speaker')) { b.textContent = H.useAudio ? '\ud83d\udd0a' : '\ud83d\udc41\ufe0f'; return; }
+    b.textContent = H.useAudio
+      ? '\ud83d\udd0a \u05e9\u05de\u05e2 \u05e9\u05d5\u05d1'
+      : '\ud83d\udc41\ufe0f \u05d4\u05e6\u05d2 \u05e9\u05d5\u05d1';
+  });
+  H.labelSay();
 
   /* פתיחת הקול דורשת מגע ראשון בדפדפנים */
   document.addEventListener('pointerdown', function once(){
@@ -2166,6 +2297,8 @@ H.boot = function(){
     document.removeEventListener('pointerdown', once);
   }, {once:true});
 
+  if(!H.storageOK) H.toast('\u05d4\u05d4\u05ea\u05e7\u05d3\u05de\u05d5\u05ea \u05dc\u05d0 \u05ea\u05d9\u05e9\u05de\u05e8 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u05d4\u05d6\u05d4 \u2014 \u05e4\u05ea\u05d7 \u05d3\u05e8\u05da \u05d4\u05e7\u05d9\u05e9\u05d5\u05e8', 'no');
+  if(!H.useAudio) H.toast('\u05d0\u05d9\u05df \u05e7\u05d5\u05dc \u05e2\u05d1\u05e8\u05d9 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u2014 \u05d4\u05de\u05d9\u05dc\u05d4 \u05ea\u05d5\u05e6\u05d2 \u05dc\u05e8\u05d2\u05e2 \u05d1\u05de\u05e7\u05d5\u05dd');
   if(H.state.daily.streak > 1) H.toast('🔥 רצף ' + H.state.daily.streak + ' ימים!', 'level');
 };
 document.addEventListener('DOMContentLoaded', H.boot);

@@ -22,7 +22,7 @@ H.game({
     H.$('writeprompt').textContent = 'שמע את המילה וכתוב אותה בכתב';
     H.$('writebtn').textContent = '✅ בדוק';
     H.$('writefb').textContent = '';
-    setTimeout(() => H.speak(w), 320);
+    setTimeout(() => H.say(w), 320);
   },
   check(){
     const r = H.run, res = H.padScore(), fb = H.$('writefb');

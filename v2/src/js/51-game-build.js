@@ -16,7 +16,7 @@ H.game({
     H.run.answer = [];
     H.$('buildfb').textContent = '';
     this.render();
-    setTimeout(() => H.speak(w), 250);
+    setTimeout(() => H.say(w), 250);
   },
   render(){
     const r = H.run, slots = H.$('slots'), pool = H.$('pool');
@@ -49,7 +49,7 @@ H.game({
       H.wrong();
       H.$('buildfb').innerHTML = '<span class="no">כמעט… נסה שוב</span>';
       r.answer = []; this.render();
-      setTimeout(() => H.speak(r.word), 350);
+      setTimeout(() => H.say(r.word), 350);
     }
   },
   hint(){

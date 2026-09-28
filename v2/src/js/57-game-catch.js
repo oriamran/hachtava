@@ -27,7 +27,7 @@ H.game({
     H.$('catchtarget').innerHTML = r.need.map((c, i) =>
       '<span class="bt' + (i === 0 ? ' now' : '') + '">' + c + '</span>').join('');
     H.$('catchfield').querySelectorAll('.falling').forEach(e => e.remove());
-    setTimeout(() => H.speak(w), 200);
+    setTimeout(() => H.say(w), 200);
     this.tick();
   },
   tick(){

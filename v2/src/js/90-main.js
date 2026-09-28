@@ -14,7 +14,7 @@ H.boot = function(){
   } }catch(e){}
   H.initVoice();
   H.refresh();
-  H.show('home');
+  if(H.needsOnboard()) H.startOnboard(); else H.show('home');
 
   /* כפתורים קבועים */
   H.$('backbtn').onclick   = () => { H.sfx.tap(); H.home(); };
@@ -28,8 +28,17 @@ H.boot = function(){
   H.$('ktbtn').onclick     = H.toggleScript;
   document.querySelectorAll('[data-go]').forEach(b =>
     b.onclick = () => { H.sfx.tap(); H.show(b.dataset.go); });
-  document.querySelectorAll('[data-say]').forEach(b =>
-    b.onclick = () => H.speak(H.run && H.run.word));
+  /* בלי קול עברי הכפתור הזה חסר תועלת, אז הוא הופך ל"הצג שוב" */
+  document.querySelectorAll('[data-say]').forEach(b => {
+    b.onclick = () => { H.sfx.tap(); H.say(H.run && H.run.word); };
+  });
+  H.labelSay = () => document.querySelectorAll('[data-say]').forEach(b => {
+    if(b.classList.contains('speaker')) { b.textContent = H.useAudio ? '\ud83d\udd0a' : '\ud83d\udc41\ufe0f'; return; }
+    b.textContent = H.useAudio
+      ? '\ud83d\udd0a \u05e9\u05de\u05e2 \u05e9\u05d5\u05d1'
+      : '\ud83d\udc41\ufe0f \u05d4\u05e6\u05d2 \u05e9\u05d5\u05d1';
+  });
+  H.labelSay();
 
   /* פתיחת הקול דורשת מגע ראשון בדפדפנים */
   document.addEventListener('pointerdown', function once(){
@@ -37,6 +46,8 @@ H.boot = function(){
     document.removeEventListener('pointerdown', once);
   }, {once:true});
 
+  if(!H.storageOK) H.toast('\u05d4\u05d4\u05ea\u05e7\u05d3\u05de\u05d5\u05ea \u05dc\u05d0 \u05ea\u05d9\u05e9\u05de\u05e8 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u05d4\u05d6\u05d4 \u2014 \u05e4\u05ea\u05d7 \u05d3\u05e8\u05da \u05d4\u05e7\u05d9\u05e9\u05d5\u05e8', 'no');
+  if(!H.useAudio) H.toast('\u05d0\u05d9\u05df \u05e7\u05d5\u05dc \u05e2\u05d1\u05e8\u05d9 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u2014 \u05d4\u05de\u05d9\u05dc\u05d4 \u05ea\u05d5\u05e6\u05d2 \u05dc\u05e8\u05d2\u05e2 \u05d1\u05de\u05e7\u05d5\u05dd');
   if(H.state.daily.streak > 1) H.toast('🔥 רצף ' + H.state.daily.streak + ' ימים!', 'level');
 };
 document.addEventListener('DOMContentLoaded', H.boot);

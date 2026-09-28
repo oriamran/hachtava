@@ -53,7 +53,7 @@ H.RINGS = [
 ];
 
 H.blank = () => ({
-  name: '',
+  name: '', onboarded: false, peekAlways: false,
   avatar: 'fox', hat: 'none', ring: 'sun',
   owned: ['fox','panda','frog','cat','none','sun','mint'],
   xp: 0, coins: 0,
@@ -66,6 +66,16 @@ H.blank = () => ({
   daily: {last: '', streak: 0},
   wins: 0
 });
+
+/* בדיקה אמיתית ולא רק קיום המפתח: ב-data: URL ובגלישה פרטית
+   הגישה זורקת, ואז אין טעם להבטיח לילד שההתקדמות נשמרת. */
+H.storageOK = (function(){
+  try{
+    const k = '__t'; localStorage.setItem(k, '1');
+    const ok = localStorage.getItem(k) === '1';
+    localStorage.removeItem(k); return ok;
+  }catch(e){ return false; }
+})();
 
 H.load = function(){
   let s = null;

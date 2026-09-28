@@ -14,7 +14,7 @@ H.game({
       box.appendChild(b);
     });
     H.$('pickfb').textContent = '';
-    setTimeout(() => H.speak(w), 300);
+    setTimeout(() => H.say(w), 300);
   },
   choose(btn, ok){
     if(H.run.picked) return;

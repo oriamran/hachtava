@@ -31,6 +31,7 @@ H.openSettings = function(){
   const p = H.pack();
   H.renderPacks();
   H.$('nameIn').value  = H.state.name || '';
+  H.$('peekIn').checked = !!H.state.peekAlways;
   H.$('topicIn').value = p.topic || '';
   H.$('prizeIn').value = p.prize || '';
   H.$('wordsIn').value = p.list.join('\n');
@@ -52,6 +53,7 @@ H.applySettings = function(){
     .filter(x => x.length);
   if(list.length < 2) return alert('צריך לפחות שתי מילים');
   H.state.name = H.$('nameIn').value.trim();
+  H.state.peekAlways = H.$('peekIn').checked;
   const p = H.pack();
   p.topic = H.$('topicIn').value.trim() || 'הכתבה';
   p.prize = H.$('prizeIn').value.trim();

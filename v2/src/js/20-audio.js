@@ -9,7 +9,7 @@ H.initVoice = function(){
   H.voice = vs.find(v => /^he/i.test(v.lang)) || null;
   if(!H.voice && vs.length) H.useAudio = false;
 };
-speechSynthesis.onvoiceschanged = H.initVoice;
+speechSynthesis.onvoiceschanged = () => { H.initVoice(); if(H.labelSay) H.labelSay(); };
 
 H.speak = function(t){
   if(!H.useAudio || !t) return;
@@ -49,4 +49,29 @@ H.sfx = {
   bad:   () => { H.tone(220, .18, 'sawtooth', .10); H.tone(165, .22, 'sawtooth', .08, .08); },
   coin:  () => { H.tone(988, .07, 'square', .10); H.tone(1319, .12, 'square', .09, .06); },
   level: () => [392,523,659,784,1047].forEach((f,i) => H.tone(f, .22, 'triangle', .16, i*0.09))
+};
+
+/* ==========================================================
+   הצגת המילה. בלי קול עברי במכשיר, מי שלא רואה את המילה
+   לא יכול לשחק בכלל — אז היא מוצגת לרגע ואז נעלמת.
+   ההורה יכול להדליק את זה גם כשיש קול, לילד שמתקשה.
+   ========================================================== */
+H.PEEK_MS = 2400;
+H.peek = function(word){
+  const box = H.$('peek');
+  if(!box) return;
+  clearTimeout(H.peekT);
+  box.textContent = word;
+  box.classList.add('on');
+  H.peekT = setTimeout(() => box.classList.remove('on'), H.PEEK_MS);
+};
+H.hidePeek = function(){
+  clearTimeout(H.peekT);
+  const box = H.$('peek'); if(box) box.classList.remove('on');
+};
+/* מה שכל מיני־משחק קורא לו כדי "למסור" את המילה לילד */
+H.say = function(word){
+  if(!word) return;
+  H.speak(word);
+  if(!H.useAudio || H.state.peekAlways) H.peek(word);
 };

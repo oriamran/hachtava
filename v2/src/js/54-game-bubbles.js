@@ -13,7 +13,7 @@ H.game({
       '<span class="bt' + (i === 0 ? ' now' : '') + '">' + c + '</span>').join('');
     const field = H.$('bubfield'); field.innerHTML = '';
     r.spawnAt = 0;
-    setTimeout(() => H.speak(w), 250);
+    setTimeout(() => H.say(w), 250);
     this.tick(field);
   },
   tick(field){
