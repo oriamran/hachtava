@@ -3,3 +3,6 @@ _font/__MACOSX/
 
 # build variant for claude.ai artifact, not part of the site
 hachtava-artifact.html
+
+# claude.ai artifact build of v2, not part of the site
+v2/artifact.html

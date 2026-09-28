@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#7cc6f0">
+<title>ארץ המילים</title>
+<!--STYLE-->
+</head>
+<body>
+
+<button id="backbtn" aria-label="חזרה">✕</button>
+<div id="toasts"></div>
+<div id="confetti"></div>
+
+<div class="wrap">
+
+  <!-- ============ פס עליון ============ -->
+  <header class="hud">
+    <div id="avatarchip" class="avatarchip"></div>
+    <div class="hud-mid">
+      <div class="hud-row">
+        <span class="pill">רמה <b id="lvl">1</b></span>
+        <span class="pill">🪙 <b id="coins">0</b></span>
+        <span class="pill">🔥 <b id="streak">0</b></span>
+      </div>
+      <div class="xpbar"><i id="xpfill"></i></div>
+    </div>
+  </header>
+
+  <!-- ============ בית ============ -->
+  <section class="screen on" id="s-home">
+    <h1 id="hello">היי!</h1>
+    <p class="topic" id="topic"></p>
+
+    <div class="tiles">
+      <button class="menu big-map" data-go="map">
+        <span class="m-e">🗺️</span><b>המסע</b><small>תחנות שנפתחות אחת אחרי השנייה</small>
+      </button>
+      <button class="menu wide" data-go="play">
+        <span class="m-e">🎮</span><b>משחקים</b><small>בחר מה בא לך</small>
+      </button>
+      <button class="menu" data-go="album">
+        <span class="m-e">📔</span><b>האלבום</b><small>מדבקות ופרס</small>
+      </button>
+      <button class="menu" data-go="shop">
+        <span class="m-e">🛍️</span><b>חנות</b><small>דמויות וכובעים</small>
+      </button>
+    </div>
+
+    <div class="row small">
+      <button class="mini" onclick="H.openSettings()">⚙️ הורים</button>
+      <button class="mini" id="ktbtn">כתב ✏️</button>
+    </div>
+  </section>
+
+  <!-- ============ מפה ============ -->
+  <section class="screen" id="s-map">
+    <h2>המסע 🗺️</h2>
+    <p class="sub">כוכבים: <b id="mapstars">0</b></p>
+    <div id="maplist" class="maplist"></div>
+  </section>
+
+  <!-- ============ בחירת משחק ============ -->
+  <section class="screen" id="s-play">
+    <h2>משחקים 🎮</h2>
+    <div id="playlist" class="playlist"></div>
+  </section>
+
+  <!-- ============ אלבום ============ -->
+  <section class="screen" id="s-album">
+    <h2>האלבום 📔</h2>
+    <p class="sub">נכבשו <b id="albumcount">0</b></p>
+    <div class="pbar"><i id="albumfill"></i></div>
+    <div id="prizestate" class="prizestate"></div>
+    <div id="albumlist" class="albumlist"></div>
+  </section>
+
+  <!-- ============ חנות ============ -->
+  <section class="screen" id="s-shop">
+    <h2>חנות 🛍️</h2>
+    <p class="sub">יש לך <b id="shopcoins">0</b> 🪙</p>
+    <h3>דמות</h3><div id="shop-avatar" class="shoprow"></div>
+    <h3>כובע</h3><div id="shop-hat" class="shoprow"></div>
+    <h3>רקע</h3><div id="shop-ring" class="shoprow"></div>
+  </section>
+
+  <!-- ============ זיכרון ============ -->
+  <section class="screen" id="s-memory">
+    <p class="sub" id="memnote"></p>
+    <div id="board" class="board"></div>
+  </section>
+
+  <!-- ============ הרכבה ============ -->
+  <section class="screen" id="s-build">
+    <p class="sub">הרכב את המילה שאתה שומע</p>
+    <div class="row"><button class="mini" data-say>🔊 שמע שוב</button></div>
+    <div id="slots" class="slots"></div>
+    <div id="pool" class="pool"></div>
+    <div id="buildfb" class="fb"></div>
+    <div class="row">
+      <button class="go" id="buildcheck">✅ בדיקה</button>
+      <button class="mini" id="buildhint">💡 רמז</button>
+    </div>
+  </section>
+
+  <!-- ============ שמע ובחר ============ -->
+  <section class="screen" id="s-pick">
+    <p class="sub">איזו כתיבה נכונה?</p>
+    <div class="row"><button class="mini" data-say>🔊 שמע שוב</button></div>
+    <div id="pickopts" class="pickopts"></div>
+    <div id="pickfb" class="fb"></div>
+  </section>
+
+  <!-- ============ מה חסר ============ -->
+  <section class="screen" id="s-missing">
+    <p class="sub">איזו אות חסרה?</p>
+    <div class="row"><button class="mini" data-say>🔊 שמע שוב</button></div>
+    <div id="misword" class="misword"></div>
+    <div id="misopts" class="misopts"></div>
+    <div id="misfb" class="fb"></div>
+  </section>
+
+  <!-- ============ בועות ============ -->
+  <section class="screen" id="s-bubbles">
+    <p class="sub">לחץ על האותיות לפי הסדר</p>
+    <div id="bubtarget" class="bubtarget"></div>
+    <div id="bubfield" class="bubfield"></div>
+  </section>
+
+  <!-- ============ כתיבה ============ -->
+  <section class="screen" id="s-write">
+    <p class="sub" id="writeprompt"></p>
+    <div class="row"><button class="mini speaker" data-say>🔊</button></div>
+    <div class="padwrap" id="padwrap">
+      <canvas id="tmplCanvas"></canvas>
+      <canvas id="inkCanvas"></canvas>
+    </div>
+    <div id="letterstrip" class="letterstrip" style="display:none"></div>
+    <div id="writefb" class="fb"></div>
+    <div class="row">
+      <button class="go" id="writebtn">✅ בדוק</button>
+      <button class="mini" id="writeclear">🧹 נקה</button>
+    </div>
+    <p class="note">כתוב גם במחברת — האצבע על המסך זו רק הבדיקה.</p>
+  </section>
+
+  <!-- ============ סיום סיבוב ============ -->
+  <section class="screen" id="s-end">
+    <div id="endemoji" class="endemoji">🌟</div>
+    <h1 id="endtitle"></h1>
+    <div id="endstars" class="endstars"></div>
+    <p class="sub" id="endtext"></p>
+    <div class="row">
+      <button class="go" id="againbtn">🔁 עוד פעם</button>
+      <button class="mini" id="endhome">🏠 בית</button>
+    </div>
+  </section>
+
+
+  <!-- ============ ערבוביה ============ -->
+  <section class="screen" id="s-anagram">
+    <p class="sub">סדר את האותיות לפי הסדר הנכון</p>
+    <div class="clockbar"><i id="anaclock"></i></div>
+    <div class="row"><button class="mini" data-say>🔊 שמע שוב</button></div>
+    <div id="anaslots" class="slots"></div>
+    <div id="anapool" class="pool"></div>
+    <div id="anafb" class="fb"></div>
+    <div class="row"><button class="go" id="anacheck">✅ בדיקה</button></div>
+  </section>
+
+  <!-- ============ תפוס ============ -->
+  <section class="screen" id="s-catch">
+    <p class="sub">הזז את הסל ותפוס לפי הסדר</p>
+    <div id="catchtarget" class="bubtarget"></div>
+    <div id="catchfield" class="catchfield">
+      <div id="basket" class="basket">🧺</div>
+    </div>
+  </section>
+
+  <!-- ============ דוח הורים ============ -->
+  <section class="screen" id="s-report">
+    <h2>דוח התקדמות 📊</h2>
+    <p class="sub" id="rep-topic"></p>
+    <div id="rep-sum" class="statrow"></div>
+    <h3>תרגול בשבוע האחרון</h3>
+    <div id="rep-chart" class="chart"></div>
+    <h3>אותיות שקשות לו</h3>
+    <div id="rep-letters"></div>
+
+    <h3>מילים שנתקעות</h3>
+    <div id="rep-stuck"></div>
+    <h3>מילים שנכבשו</h3>
+    <div id="rep-done"></div>
+    <h3>עוד לא תורגלו</h3>
+    <div id="rep-fresh"></div>
+  </section>
+
+  <!-- ============ הורים ============ -->
+  <section class="screen" id="s-settings">
+    <h2>מסך הורים ⚙️</h2>
+    <div class="row"><button class="mini" data-go="report">📊 דוח התקדמות</button></div>
+    <label class="lbl">חבילות מילים</label>
+    <div id="packlist" class="packlist"></div>
+    <label class="lbl">שם הילד<input id="nameIn" placeholder="לא חובה"></label>
+    <label class="lbl">שם ההכתבה<input id="topicIn" placeholder="חגי תשרי"></label>
+    <label class="lbl">הפרס על אלבום מלא<input id="prizeIn" placeholder="חטיף MARS"></label>
+    <label class="lbl">מילים — אחת בכל שורה</label>
+    <div id="nikpad" class="nikpad"></div>
+    <textarea id="wordsIn" rows="10"></textarea>
+    <p class="note">להוספת ניקוד: לחץ אחרי האות בתיבה, ואז על הסימן למעלה.</p>
+    <div class="row">
+      <button class="go" onclick="H.applySettings()">💾 שמור</button>
+      <button class="mini" onclick="H.resetWords()">ברירת מחדל</button>
+      <button class="mini" onclick="H.removePack()">🗑️ מחק חבילה</button>
+    </div>
+  </section>
+
+</div>
+<!--SCRIPT-->
+</body>
+</html>
