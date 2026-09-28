@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
+<!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ארץ המילים">
+<meta name="mobile-web-app-capable" content="yes">
 <title>ארץ המילים</title>
 <style>
 @font-face{
@@ -293,7 +300,8 @@ body.nav .wrap{padding-top:36px}
   border:none;border-radius:14px;padding:11px;background:#fff;color:var(--ink);
   box-shadow:0 4px 0 var(--cardEdge);direction:rtl;text-align:right;
 }
-#wordsIn{
+#backupOut,#backupIn{font-size:11px;line-height:1.4;direction:ltr;text-align:left;word-break:break-all;font-family:ui-monospace,Menlo,monospace}
+#wordsIn,#backupOut,#backupIn{
   width:100%;font-family:inherit;font-size:20px;line-height:2;border:none;border-radius:16px;
   padding:12px;margin-top:8px;background:#fff;color:var(--ink);
   box-shadow:0 4px 0 var(--cardEdge);direction:rtl;text-align:right;
@@ -466,6 +474,12 @@ body.nav .wrap{padding-top:36px}
 .handbox b{font-size:26px;color:var(--plum)}
 .handbox small{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-top:3px}
 
+/* ---------- הצעת התקנה ---------- */
+.menu.install{
+  background:linear-gradient(135deg,#e7f7ff,#c9ecff);
+  box-shadow:0 6px 0 #a8d4ea;
+}
+
 </style>
 </head>
 <body>
@@ -520,6 +534,10 @@ body.nav .wrap{padding-top:36px}
         <span class="m-e">🛍️</span><b>חנות</b><small>דמויות וכובעים</small>
       </button>
     </div>
+
+    <button class="menu wide install" id="installbtn" style="display:none" onclick="H.doInstall()">
+      <span class="m-e">📲</span><b>התקן על המסך</b><small>כדי שההתקדמות תישמר ויהיה קל לחזור</small>
+    </button>
 
     <div class="row small">
       <button class="mini" onclick="H.openSettings()">⚙️ הורים</button>
@@ -687,6 +705,25 @@ body.nav .wrap{padding-top:36px}
     <div id="nikpad" class="nikpad"></div>
     <textarea id="wordsIn" rows="10"></textarea>
     <p class="note">להוספת ניקוד: לחץ אחרי האות בתיבה, ואז על הסימן למעלה.</p>
+    <h3>גיבוי</h3>
+    <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
+    <div class="row">
+      <button class="mini" onclick="H.exportAll()">📤 צור קוד גיבוי</button>
+      <button class="mini" onclick="H.exportLight()">📱 קוד למכשיר חדש</button>
+    </div>
+    <textarea id="backupOut" rows="3" readonly style="display:none"></textarea>
+    <p class="note" id="backupInfo"></p>
+    <div class="row">
+      <button class="mini" onclick="H.copyBackup()">📋 העתק</button>
+      <button class="mini" onclick="H.downloadBackup()">⬇️ הורד קובץ</button>
+    </div>
+    <label class="lbl">שחזור — הדבק כאן קוד גיבוי</label>
+    <textarea id="backupIn" rows="3" placeholder="Z...."></textarea>
+    <div class="row">
+      <button class="mini" onclick="H.importBackup()">♻️ שחזר</button>
+      <button class="mini" onclick="H.resetHand()">🧽 אפס פרופיל כתב</button>
+    </div>
+
     <div class="row">
       <button class="go" onclick="H.applySettings()">💾 שמור</button>
       <button class="mini" onclick="H.resetWords()">ברירת מחדל</button>
@@ -892,6 +929,64 @@ H.pickWords = function(n){
     }
   }
   return out;
+};
+
+/* ===== 05-install.js ===== */
+/* ==========================================================
+   שמירת ההתקדמות מתחילה כאן, לא בכפתור ייצוא.
+   שני דברים שקורים לבד:
+   1. בקשה מהדפדפן לא למחוק את האחסון אוטומטית.
+   2. הצעה להתקין למסך הבית — לאתר מותקן דפדפנים נותנים
+      אחסון קבוע הרבה יותר בקלות, וגם קל יותר לחזור אליו.
+   ========================================================== */
+H.installEvt = null;
+
+H.askPersist = async function(){
+  try{
+    if(!navigator.storage || !navigator.storage.persist) return 'unsupported';
+    if(await navigator.storage.persisted()) return 'already';
+    return (await navigator.storage.persist()) ? 'granted' : 'denied';
+  }catch(e){ return 'error'; }
+};
+
+H.initInstall = function(){
+  /* אנדרואיד/כרום: הדפדפן מודיע שאפשר להתקין */
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    H.installEvt = e;
+    H.showInstall(true);
+  });
+  window.addEventListener('appinstalled', () => {
+    H.installEvt = null;
+    H.showInstall(false);
+    H.askPersist();
+    H.toast('הותקן! 🎉 עכשיו ההתקדמות נשמרת טוב יותר', 'level');
+  });
+  /* אייפון לא שולח את האירוע, אז מציגים הסבר ידני */
+  const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const standalone = window.matchMedia('(display-mode: standalone)').matches
+                  || window.navigator.standalone === true;
+  H.isInstalled = standalone;
+  if(iOS && !standalone) H.showInstall(true, true);
+};
+H.showInstall = function(on, ios){
+  const b = H.$('installbtn');
+  if(!b) return;
+  b.style.display = on ? '' : 'none';
+  b.dataset.ios = ios ? '1' : '';
+};
+H.doInstall = async function(){
+  if(H.$('installbtn').dataset.ios === '1'){
+    alert('להתקנה באייפון:\n\n' +
+          '1. לחץ על כפתור השיתוף למטה ⬆️\n' +
+          '2. גלול ובחר "הוסף למסך הבית"\n' +
+          '3. לחץ "הוסף"');
+    return;
+  }
+  if(!H.installEvt) return;
+  H.installEvt.prompt();
+  const res = await H.installEvt.userChoice;
+  if(res && res.outcome === 'accepted') H.installEvt = null;
 };
 
 /* ===== 10-words.js ===== */
@@ -2370,6 +2465,96 @@ H.renderReport = function(){
   H.$('rep-topic').textContent = H.topic();
 };
 
+/* ===== 87-backup.js ===== */
+/* ==========================================================
+   גיבוי ושחזור. ההתקנה ואחסון קבוע מטפלים ברוב המקרים,
+   אבל ניקוי ידני של ההיסטוריה או מעבר למכשיר חדש מוחקים הכול,
+   כולל פרופיל כתב היד שנבנה לאורך שבועות. זו רשת הביטחון.
+   ========================================================== */
+H.B64 = {
+  enc: u => btoa(String.fromCharCode.apply(null, u)),
+  dec: s => Uint8Array.from(atob(s), c => c.charCodeAt(0))
+};
+H.hasGzip = typeof CompressionStream !== 'undefined';
+
+H.packCode = async function(obj){
+  const json = JSON.stringify(obj);
+  if(!H.hasGzip) return 'R.' + H.B64.enc(new TextEncoder().encode(json));
+  const buf = await new Response(
+    new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))
+  ).arrayBuffer();
+  return 'Z.' + H.B64.enc(new Uint8Array(buf));
+};
+H.unpackCode = async function(code){
+  code = (code || '').trim().replace(/\s+/g, '');
+  const raw = code.startsWith('R.');
+  const zip = code.startsWith('Z.');
+  if(!raw && !zip) throw new Error('bad');
+  const bytes = H.B64.dec(code.slice(2));
+  if(raw) return JSON.parse(new TextDecoder().decode(bytes));
+  const buf = await new Response(
+    new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))
+  ).arrayBuffer();
+  return JSON.parse(new TextDecoder().decode(buf));
+};
+
+/* קוד מלא — כולל פרופיל כתב היד */
+H.exportAll = async function(){
+  const code = await H.packCode(H.state);
+  H.$('backupOut').value = code;
+  H.$('backupOut').style.display = '';
+  H.$('backupInfo').textContent =
+    'העתק ושמור במקום בטוח · ' + code.length + ' תווים';
+  H.$('backupOut').select();
+};
+/* קוד קצר להעברה למכשיר אחר — הכול חוץ מפרופיל כתב היד */
+H.exportLight = async function(){
+  const light = Object.assign({}, H.state); delete light.hand;
+  const code = await H.packCode(light);
+  H.$('backupOut').value = code;
+  H.$('backupOut').style.display = '';
+  H.$('backupInfo').textContent =
+    'קוד העברה קצר, בלי פרופיל הכתב · ' + code.length + ' תווים';
+  H.$('backupOut').select();
+};
+H.copyBackup = async function(){
+  const t = H.$('backupOut');
+  if(!t.value) return;
+  try{ await navigator.clipboard.writeText(t.value); H.toast('הועתק ✔️', 'good'); }
+  catch(e){ t.select(); document.execCommand && document.execCommand('copy'); H.toast('הועתק ✔️', 'good'); }
+};
+H.downloadBackup = async function(){
+  const code = H.$('backupOut').value || await H.packCode(H.state);
+  const name = 'hachtava-' + new Date().toISOString().slice(0,10) + '.txt';
+  const url = URL.createObjectURL(new Blob([code], {type:'text/plain'}));
+  const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+};
+H.importBackup = async function(){
+  const code = H.$('backupIn').value;
+  if(!code.trim()) return;
+  let data;
+  try{ data = await H.unpackCode(code); }
+  catch(e){ return alert('הקוד לא תקין'); }
+  if(!data || !Array.isArray(data.packs))
+    return alert('הקוד לא מכיל נתוני משחק');
+  if(!confirm('להחליף את כל הנתונים במכשיר הזה?')) return;
+  const keepHand = H.state.hand;           /* קוד קצר לא מוחק פרופיל קיים */
+  H.state = Object.assign(H.blank(), data);
+  if(!data.hand && keepHand) H.state.hand = keepHand;
+  H.syncStats(); H.save();
+  H.toast('שוחזר ✔️', 'good');
+  H.refresh(); H.home();
+};
+H.resetHand = function(){
+  const hs = H.handStats();
+  if(!hs.samples) return alert('עדיין אין פרופיל כתב');
+  if(!confirm('למחוק את פרופיל כתב היד? (' + hs.samples + ' דגימות)')) return;
+  H.state.hand = {}; H.save(); H.renderReport();
+  H.toast('הפרופיל נמחק', 'no');
+};
+
 /* ===== 90-main.js ===== */
 /* ========== הפעלה ========== */
 H.refresh = function(){
@@ -2416,8 +2601,11 @@ H.boot = function(){
   /* פתיחת הקול דורשת מגע ראשון בדפדפנים */
   document.addEventListener('pointerdown', function once(){
     H.ac(); try{ speechSynthesis.resume(); }catch(e){}
+    /* דפדפנים נוטים לאשר אחסון קבוע רק אחרי אינטראקציה אמיתית */
+    H.askPersist();
     document.removeEventListener('pointerdown', once);
   }, {once:true});
+  H.initInstall();
 
   if(!H.storageOK) H.toast('\u05d4\u05d4\u05ea\u05e7\u05d3\u05de\u05d5\u05ea \u05dc\u05d0 \u05ea\u05d9\u05e9\u05de\u05e8 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u05d4\u05d6\u05d4 \u2014 \u05e4\u05ea\u05d7 \u05d3\u05e8\u05da \u05d4\u05e7\u05d9\u05e9\u05d5\u05e8', 'no');
   if(!H.useAudio) H.toast('\u05d0\u05d9\u05df \u05e7\u05d5\u05dc \u05e2\u05d1\u05e8\u05d9 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u2014 \u05d4\u05de\u05d9\u05dc\u05d4 \u05ea\u05d5\u05e6\u05d2 \u05dc\u05e8\u05d2\u05e2 \u05d1\u05de\u05e7\u05d5\u05dd');

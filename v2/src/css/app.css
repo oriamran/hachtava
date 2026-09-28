@@ -267,7 +267,8 @@ body.nav .wrap{padding-top:36px}
   border:none;border-radius:14px;padding:11px;background:#fff;color:var(--ink);
   box-shadow:0 4px 0 var(--cardEdge);direction:rtl;text-align:right;
 }
-#wordsIn{
+#backupOut,#backupIn{font-size:11px;line-height:1.4;direction:ltr;text-align:left;word-break:break-all;font-family:ui-monospace,Menlo,monospace}
+#wordsIn,#backupOut,#backupIn{
   width:100%;font-family:inherit;font-size:20px;line-height:2;border:none;border-radius:16px;
   padding:12px;margin-top:8px;background:#fff;color:var(--ink);
   box-shadow:0 4px 0 var(--cardEdge);direction:rtl;text-align:right;
@@ -439,3 +440,9 @@ body.nav .wrap{padding-top:36px}
 }
 .handbox b{font-size:26px;color:var(--plum)}
 .handbox small{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin-top:3px}
+
+/* ---------- הצעת התקנה ---------- */
+.menu.install{
+  background:linear-gradient(135deg,#e7f7ff,#c9ecff);
+  box-shadow:0 6px 0 #a8d4ea;
+}
