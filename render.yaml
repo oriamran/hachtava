@@ -1,7 +1,20 @@
 services:
+  # הגרסה הראשונה. מוגשת משורש המאגר וממשיכה לעבוד כרגיל.
   - type: web
     name: hachtava
     runtime: static
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=300
+
+  # הגרסה השנייה, כשירות נפרד לגמרי. rootDir מבודד אותה לתיקיית v2,
+  # כך שהיא לא נוגעת בקבצים של הראשונה ולא מושפעת מהם.
+  - type: web
+    name: hachtava-v2
+    runtime: static
+    rootDir: v2
     staticPublishPath: .
     headers:
       - path: /*
