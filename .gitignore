@@ -1,0 +1,5 @@
+.DS_Store
+_font/__MACOSX/
+
+# build variant for claude.ai artifact, not part of the site
+hachtava-artifact.html
