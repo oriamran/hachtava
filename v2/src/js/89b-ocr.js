@@ -4,6 +4,8 @@
    שמחזיק את המפתח, ומקבל בחזרה רשימת מילים מנוקדות.
    בלי כתובת שרת הכפתור פשוט לא מוצג, והמשחק נשאר אופליין.
    ========================================================== */
+/* \u05dc\u05d0\u05df \u05e4\u05d5\u05e0\u05d9\u05dd \u05db\u05e9\u05e0\u05d2\u05de\u05e8\u05ea \u05d4\u05de\u05db\u05e1\u05d4. \u05e9\u05e0\u05d4 \u05db\u05d0\u05df. */
+H.CONTACT = 'hachtava@example.com';
 H.OCR_KEY = 'hachtava_v2_ocr_url';
 H.DEV_KEY = 'hachtava_v2_device';
 /* מזהה מכשיר, כדי שהמכסה תהיה לכל משתמש ולא אחת לכולם.
@@ -85,6 +87,7 @@ H.readPhoto = async function(){
 
 /* כמה סריקות נשארו החודש */
 H.renderQuota = function(){
+  const c = H.$('contactline'); if(c) c.textContent = H.CONTACT;
   const el = H.$('quotamsg');
   if(!el) return;
   if(!H.ocrUrl() || !H.quota){ el.style.display = 'none'; return; }
@@ -97,8 +100,9 @@ H.renderQuota = function(){
   }
   const left = Math.max(0, H.quota.limit - H.quota.used);
   el.className = left ? 'note' : 'note bad';
-  el.textContent = left
-    ? '\u05e0\u05e9\u05d0\u05e8\u05d5 ' + left + ' \u05e1\u05e8\u05d9\u05e7\u05d5\u05ea \u05d4\u05d7\u05d5\u05d3\u05e9'
-    : '\u05dc\u05d0 \u05e0\u05e9\u05d0\u05e8\u05d5 \u05e1\u05e8\u05d9\u05e7\u05d5\u05ea \u05d4\u05d7\u05d5\u05d3\u05e9';
+  /* \u05d0\u05d7\u05ea, \u05dc\u05d0 "1 \u05e1\u05e8\u05d9\u05e7\u05d5\u05ea" */
+  el.textContent = left === 0 ? '\u05dc\u05d0 \u05e0\u05e9\u05d0\u05e8\u05d5 \u05e1\u05e8\u05d9\u05e7\u05d5\u05ea \u05d4\u05d7\u05d5\u05d3\u05e9'
+    : left === 1 ? '\u05e0\u05e9\u05d0\u05e8\u05d4 \u05e1\u05e8\u05d9\u05e7\u05d4 \u05d0\u05d7\u05ea \u05d4\u05d7\u05d5\u05d3\u05e9'
+    : '\u05e0\u05e9\u05d0\u05e8\u05d5 ' + left + ' \u05e1\u05e8\u05d9\u05e7\u05d5\u05ea \u05d4\u05d7\u05d5\u05d3\u05e9';
   if(!left) H.$('upgradebox').style.display = '';
 };
