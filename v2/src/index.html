@@ -224,6 +224,20 @@
     <div id="rep-fresh"></div>
   </section>
 
+  <!-- ============ עורך ניקוד ============ -->
+  <section class="screen" id="s-nikud">
+    <h2>ניקוד ✏️</h2>
+    <p class="sub">בחר מילה, בחר אות, ואז בחר לה תנועה</p>
+    <div class="photowrap" id="photowrap2" style="display:none" onclick="H.togglePhoto()">
+      <img alt="דף ההכתבה">
+    </div>
+    <div id="nk-words" class="nkwords"></div>
+    <div id="nk-preview" class="nkpreview"></div>
+    <div id="nk-letters" class="nkletters"></div>
+    <div id="nk-pad" class="nkpad"></div>
+    <div class="row"><button class="go" onclick="H.finishNikud()">✔️ סיימתי</button></div>
+  </section>
+
   <!-- ============ הורים ============ -->
   <section class="screen" id="s-settings">
     <h2>מסך הורים ⚙️</h2>
@@ -234,10 +248,22 @@
     <label class="check"><input type="checkbox" id="peekIn"> הצג את המילה לרגע לפני כל שאלה</label>
     <label class="lbl">שם ההכתבה<input id="topicIn" placeholder="חגי תשרי"></label>
     <label class="lbl">הפרס על אלבום מלא<input id="prizeIn" placeholder="חטיף MARS"></label>
+    <label class="lbl">צילום דף ההכתבה</label>
+    <p class="note" id="photohint" style="text-align:start">צלם את הדף והוא יישאר על המסך בזמן שאתה מקליד.</p>
+    <div class="row">
+      <label class="mini photobtn">📷 צלם או בחר<input type="file" accept="image/*" capture="environment" onchange="H.pickPhoto(this)"></label>
+      <button class="mini" onclick="H.clearPhoto()">🗑️ הסר צילום</button>
+    </div>
+    <div class="photowrap" id="photowrap" style="display:none" onclick="H.togglePhoto()">
+      <img alt="דף ההכתבה">
+      <span class="phototip">הקש להגדלה</span>
+    </div>
+
     <label class="lbl">מילים — אחת בכל שורה</label>
     <div id="nikpad" class="nikpad"></div>
     <textarea id="wordsIn" rows="10"></textarea>
-    <p class="note">להוספת ניקוד: לחץ אחרי האות בתיבה, ואז על הסימן למעלה.</p>
+    <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button></div>
+    <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
     <div class="row">

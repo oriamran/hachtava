@@ -19,12 +19,12 @@
   font-display:block;
 }
 /* כל מקום שמוצגת בו מילה מההכתבה */
-.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,#wordsIn{
+.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,.nkword,.nkpreview,.nkletter,.nkv,#wordsIn{
   font-family:'KtavYad','Arial Hebrew',sans-serif;
 }
 body.dfus .front,body.dfus .tile,body.dfus .bigword,body.dfus .misword,
 body.dfus .bt,body.dfus .bubble,body.dfus .falling,body.dfus .stk-w,body.dfus .peek,
-body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus #wordsIn{
+body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus .nkword,body.dfus .nkpreview,body.dfus .nkletter,body.dfus .nkv,body.dfus #wordsIn{
   font-family:"Arial Hebrew","Heebo",Arial,sans-serif;
 }
 body:not(.dfus) .front{font-size:23px}
@@ -492,6 +492,54 @@ body.nav .wrap{padding-top:36px}
   box-shadow:0 6px 0 #9fdcc6;
 }
 
+/* ---------- עורך ניקוד ---------- */
+.nkwords{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.nkword{
+  background:#fff;color:var(--ink);border-radius:999px;padding:9px 14px;font-size:17px;
+  min-height:44px;box-shadow:0 4px 0 var(--cardEdge);
+}
+.nkword.on{background:linear-gradient(135deg,var(--sun),var(--sunDeep));color:#fff;box-shadow:0 4px 0 #c97a00}
+.nkpreview{
+  text-align:center;font-size:40px;font-weight:800;color:var(--ink);
+  background:rgba(255,255,255,.62);border-radius:18px;padding:12px;margin-bottom:12px;
+  min-height:64px;word-break:break-word;
+}
+.nkletters{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.nkletter{
+  min-width:56px;min-height:64px;border-radius:16px;background:#fff;color:var(--ink);
+  font-size:32px;font-weight:800;box-shadow:0 5px 0 var(--cardEdge);padding:0 8px;
+}
+.nkletter.on{background:linear-gradient(135deg,#d9c9ff,var(--grape));box-shadow:0 5px 0 var(--plum)}
+.nkspace{display:inline-flex;align-items:center;color:var(--ink2);font-size:26px;padding:0 4px}
+.nkpad{display:flex;flex-direction:column;gap:9px}
+.nkrow{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.nkv{
+  min-width:56px;min-height:60px;border-radius:14px;background:#fff;color:var(--ink);
+  font-size:26px;font-weight:800;box-shadow:0 4px 0 var(--cardEdge);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 6px;
+}
+.nkv small{font-size:10px;font-weight:700;color:var(--ink2)}
+.nkv.on{background:linear-gradient(135deg,#8ff0cd,var(--mint));box-shadow:0 4px 0 #17917a}
+.nkv.on small{color:#05463f}
+.nkv.mod{background:#fff6e0}
+.nkv.clr{background:#ffe3ea}
+
+/* ---------- צילום דף ההכתבה ---------- */
+.photobtn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.photobtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.photowrap{
+  position:relative;margin-top:10px;border-radius:16px;overflow:hidden;
+  background:#fff;box-shadow:0 5px 0 var(--cardEdge);max-height:190px;cursor:zoom-in;
+}
+.photowrap img{display:block;width:100%;height:auto;object-fit:cover}
+.photowrap.big{max-height:none;cursor:zoom-out}
+.phototip{
+  position:absolute;bottom:6px;inset-inline-end:8px;
+  background:rgba(43,34,80,.72);color:#fff;font-size:11px;font-weight:800;
+  padding:3px 9px;border-radius:999px;
+}
+.photowrap.big .phototip{display:none}
+
 </style>
 </head>
 <body>
@@ -704,6 +752,20 @@ body.nav .wrap{padding-top:36px}
     <div id="rep-fresh"></div>
   </section>
 
+  <!-- ============ עורך ניקוד ============ -->
+  <section class="screen" id="s-nikud">
+    <h2>ניקוד ✏️</h2>
+    <p class="sub">בחר מילה, בחר אות, ואז בחר לה תנועה</p>
+    <div class="photowrap" id="photowrap2" style="display:none" onclick="H.togglePhoto()">
+      <img alt="דף ההכתבה">
+    </div>
+    <div id="nk-words" class="nkwords"></div>
+    <div id="nk-preview" class="nkpreview"></div>
+    <div id="nk-letters" class="nkletters"></div>
+    <div id="nk-pad" class="nkpad"></div>
+    <div class="row"><button class="go" onclick="H.finishNikud()">✔️ סיימתי</button></div>
+  </section>
+
   <!-- ============ הורים ============ -->
   <section class="screen" id="s-settings">
     <h2>מסך הורים ⚙️</h2>
@@ -714,10 +776,22 @@ body.nav .wrap{padding-top:36px}
     <label class="check"><input type="checkbox" id="peekIn"> הצג את המילה לרגע לפני כל שאלה</label>
     <label class="lbl">שם ההכתבה<input id="topicIn" placeholder="חגי תשרי"></label>
     <label class="lbl">הפרס על אלבום מלא<input id="prizeIn" placeholder="חטיף MARS"></label>
+    <label class="lbl">צילום דף ההכתבה</label>
+    <p class="note" id="photohint" style="text-align:start">צלם את הדף והוא יישאר על המסך בזמן שאתה מקליד.</p>
+    <div class="row">
+      <label class="mini photobtn">📷 צלם או בחר<input type="file" accept="image/*" capture="environment" onchange="H.pickPhoto(this)"></label>
+      <button class="mini" onclick="H.clearPhoto()">🗑️ הסר צילום</button>
+    </div>
+    <div class="photowrap" id="photowrap" style="display:none" onclick="H.togglePhoto()">
+      <img alt="דף ההכתבה">
+      <span class="phototip">הקש להגדלה</span>
+    </div>
+
     <label class="lbl">מילים — אחת בכל שורה</label>
     <div id="nikpad" class="nikpad"></div>
     <textarea id="wordsIn" rows="10"></textarea>
-    <p class="note">להוספת ניקוד: לחץ אחרי האות בתיבה, ואז על הסימן למעלה.</p>
+    <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button></div>
+    <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
     <div class="row">
@@ -2427,6 +2501,7 @@ H.openSettings = function(){
     };
     pad.appendChild(b);
   });
+  H.renderPhoto();
   H.show('settings');
 };
 H.applySettings = function(){
@@ -2617,6 +2692,184 @@ H.resetHand = function(){
   if(!confirm('למחוק את פרופיל כתב היד? (' + hs.samples + ' דגימות)')) return;
   H.state.hand = {}; H.save(); H.renderReport();
   H.toast('הפרופיל נמחק', 'no');
+};
+
+/* ===== 88-nikud.js ===== */
+/* ==========================================================
+   עורך ניקוד בהקשה.
+   המקלדת הישנה דרשה למקם סמן אחרי כל אות — בטלפון זה כמעט
+   בלתי אפשרי. כאן בוחרים אות, ואז בוחרים לה תנועה.
+   ========================================================== */
+H.VOWELS = [
+  ['ְ','שווא'], ['ַ','פתח'],  ['ָ','קמץ'],
+  ['ֵ','צירה'], ['ֶ','סגול'], ['ִ','חיריק'],
+  ['ֹ','חולם'],  ['ֻ','קבוץ'],
+  ['ֱ','חטף סגול'], ['ֲ','חטף פתח'], ['ֳ','חטף קמץ']
+];
+H.DAGESH = 'ּ'; H.SHIN = 'ׁ'; H.SIN = 'ׂ';
+H.isVowel = c => H.VOWELS.some(v => v[0] === c);
+
+/* פירוק אשכול לחלקיו, ובנייה מחדש בסדר קבוע: אות, דגש, נקודה, תנועה */
+H.parseCluster = function(cl){
+  const o = {base: cl[0], dagesh:false, shin:false, sin:false, vowel:''};
+  for(const c of cl.slice(1)){
+    if(c === H.DAGESH) o.dagesh = true;
+    else if(c === H.SHIN) o.shin = true;
+    else if(c === H.SIN) o.sin = true;
+    else if(H.isVowel(c)) o.vowel = c;
+  }
+  return o;
+};
+H.buildCluster = o =>
+  o.base + (o.dagesh ? H.DAGESH : '') + (o.shin ? H.SHIN : '') + (o.sin ? H.SIN : '') + (o.vowel || '');
+
+H.nk = {word:0, letter:-1};
+
+H.openNikud = function(){
+  H.nk = {word:0, letter:-1};
+  H.renderPhoto();
+  H.renderNikud();
+  H.show('nikud');
+};
+H.renderNikud = function(){
+  const words = H.words();
+  if(!words.length) return;
+  if(H.nk.word >= words.length) H.nk.word = 0;
+
+  /* בחירת המילה */
+  const wb = H.$('nk-words'); wb.innerHTML = '';
+  words.forEach((w, i) => {
+    const el = H.el('button', 'nkword' + (i === H.nk.word ? ' on' : ''), w);
+    el.onclick = () => { H.sfx.tap(); H.nk.word = i; H.nk.letter = -1; H.renderNikud(); };
+    wb.appendChild(el);
+  });
+
+  /* אותיות המילה */
+  const word = words[H.nk.word];
+  const cl = H.clusters(word);
+  const lb = H.$('nk-letters'); lb.innerHTML = '';
+  cl.forEach((ch, i) => {
+    if(ch === ' '){ lb.appendChild(H.el('span', 'nkspace', '·')); return; }
+    const el = H.el('button', 'nkletter' + (i === H.nk.letter ? ' on' : ''), ch);
+    el.onclick = () => { H.sfx.tap(); H.nk.letter = (H.nk.letter === i ? -1 : i); H.renderNikud(); };
+    lb.appendChild(el);
+  });
+
+  /* לוח התנועות — רק אחרי שנבחרה אות */
+  const pb = H.$('nk-pad');
+  pb.innerHTML = '';
+  if(H.nk.letter < 0){
+    pb.appendChild(H.el('p', 'note', 'בחר אות למעלה כדי לנקד אותה'));
+    H.$('nk-preview').textContent = word;
+    return;
+  }
+  const cur = H.parseCluster(cl[H.nk.letter]);
+  const set = (fn) => {
+    fn(cur);
+    const c2 = H.clusters(H.words()[H.nk.word]);
+    c2[H.nk.letter] = H.buildCluster(cur);
+    H.pack().list[H.nk.word] = c2.join('');
+    H.save(); H.syncStats(); H.renderNikud();
+  };
+
+  const row1 = H.el('div', 'nkrow');
+  H.VOWELS.forEach(([m, name]) => {
+    const on = cur.vowel === m;
+    const b = H.el('button', 'nkv' + (on ? ' on' : ''), cur.base + m + '<small>' + name + '</small>');
+    b.onclick = () => set(o => { o.vowel = on ? '' : m; });
+    row1.appendChild(b);
+  });
+  pb.appendChild(row1);
+
+  const row2 = H.el('div', 'nkrow');
+  [[H.DAGESH, 'דגש', 'dagesh'],
+   [H.SHIN,   'שׁין', 'shin'],
+   [H.SIN,    'שׂין', 'sin']].forEach(([m, name, key]) => {
+    const b = H.el('button', 'nkv mod' + (cur[key] ? ' on' : ''), cur.base + m + '<small>' + name + '</small>');
+    b.onclick = () => set(o => {
+      o[key] = !o[key];
+      if(key === 'shin' && o.shin) o.sin = false;
+      if(key === 'sin'   && o.sin) o.shin = false;
+    });
+    row2.appendChild(b);
+  });
+  const clr = H.el('button', 'nkv clr', '✖<small>נקה</small>');
+  clr.onclick = () => set(o => { o.vowel=''; o.dagesh=false; o.shin=false; o.sin=false; });
+  row2.appendChild(clr);
+  pb.appendChild(row2);
+
+  H.$('nk-preview').textContent = H.words()[H.nk.word];
+};
+H.finishNikud = function(){
+  H.refresh();
+  H.openSettings();
+};
+
+/* ===== 89-photo.js ===== */
+/* ==========================================================
+   צילום דף ההכתבה כהפניה בזמן ההקלדה.
+   לא זיהוי אוטומטי — התמונה פשוט נשארת על המסך מעל תיבת
+   המילים, כדי שלא צריך לצאת לאפליקציית התמונות ולחזור.
+   נשמרת במפתח נפרד, כדי שלא תנפח את קוד הגיבוי.
+   ========================================================== */
+H.PHOTO_KEY = 'hachtava_v2_photo';
+H.PHOTO_MAX = 1000;          /* צלע ארוכה, פיקסלים */
+H.PHOTO_Q   = 0.72;
+
+H.loadPhoto = function(){
+  try{ return localStorage.getItem(H.PHOTO_KEY) || ''; }catch(e){ return ''; }
+};
+H.savePhoto = function(url){
+  try{
+    if(url) localStorage.setItem(H.PHOTO_KEY, url);
+    else localStorage.removeItem(H.PHOTO_KEY);
+    return true;
+  }catch(e){
+    alert('התמונה גדולה מדי לאחסון המכשיר');
+    return false;
+  }
+};
+/* מקטין לפני שמירה — תמונה מהטלפון היא כמה מגה, ואין בזה צורך */
+H.pickPhoto = function(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const s = Math.min(1, H.PHOTO_MAX / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width  = Math.round(img.width  * s);
+    c.height = Math.round(img.height * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const url = c.toDataURL('image/jpeg', H.PHOTO_Q);
+    if(H.savePhoto(url)){
+      H.renderPhoto();
+      H.toast('התמונה נשמרה ✔️', 'good');
+    }
+    URL.revokeObjectURL(img.src);
+  };
+  img.onerror = () => alert('לא הצלחתי לקרוא את התמונה');
+  img.src = URL.createObjectURL(f);
+  input.value = '';
+};
+H.clearPhoto = function(){
+  if(!H.loadPhoto()) return;
+  if(!confirm('להסיר את הצילום?')) return;
+  H.savePhoto(''); H.renderPhoto();
+};
+H.togglePhoto = function(){
+  const w = H.$('photowrap');
+  w.classList.toggle('big');
+};
+H.renderPhoto = function(){
+  const url = H.loadPhoto();
+  ['photowrap','photowrap2'].forEach(id => {
+    const w = H.$(id); if(!w) return;
+    w.style.display = url ? '' : 'none';
+    const img = w.querySelector('img');
+    if(img && img.getAttribute('src') !== url) img.src = url;
+  });
+  const hint = H.$('photohint');
+  if(hint) hint.style.display = url ? 'none' : '';
 };
 
 /* ===== 90-main.js ===== */

@@ -45,6 +45,7 @@ H.openSettings = function(){
     };
     pad.appendChild(b);
   });
+  H.renderPhoto();
   H.show('settings');
 };
 H.applySettings = function(){
