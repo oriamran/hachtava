@@ -223,9 +223,11 @@ body.nav .wrap{padding-top:36px}
   position:relative;height:56vh;min-height:300px;border-radius:24px;overflow:hidden;
   background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.18));
 }
+.bubfield{--bub:74px}
 .bubble{
-  position:absolute;bottom:0;width:62px;height:62px;border-radius:50%;
-  font-size:26px;font-weight:800;color:var(--ink);
+  position:absolute;bottom:0;width:var(--bub);height:var(--bub);border-radius:50%;
+  font-size:calc(var(--bub) * 0.42);font-weight:800;color:var(--ink);
+  margin-inline-start:calc(var(--bub) / -2);
   background:hsla(var(--hue),85%,82%,.95);
   box-shadow:inset 0 -6px 0 hsla(var(--hue),70%,70%,.7), 0 3px 8px rgba(43,34,80,.18);
 }
@@ -345,13 +347,16 @@ body.nav .wrap{padding-top:36px}
   background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.18));
   touch-action:none;
 }
+.catchfield{--fall:64px}
 .falling{
   position:absolute;top:0;transform:translateY(-50px);
-  width:54px;height:54px;margin-inline-start:-27px;border-radius:16px;
-  background:#fff;box-shadow:0 4px 0 var(--cardEdge);
+  width:var(--fall);height:var(--fall);margin-inline-start:calc(var(--fall) / -2);
+  border-radius:18px;background:#fff;box-shadow:0 4px 0 var(--cardEdge);
   display:flex;align-items:center;justify-content:center;
-  font-size:25px;font-weight:800;color:var(--ink);
+  font-size:calc(var(--fall) * 0.44);font-weight:800;color:var(--ink);
 }
+.basket{width:calc(var(--fall) * 1.15);margin-inline-start:calc(var(--fall) * -0.575);
+        font-size:calc(var(--fall) * 0.8)}
 .basket{
   position:absolute;bottom:6px;inset-inline-start:50%;margin-inline-start:-30px;
   width:60px;height:52px;font-size:42px;line-height:1;text-align:center;
@@ -1692,6 +1697,9 @@ H.game({
     const step = () => {
       if(H.screen !== 'bubbles') return;
       const h = field.clientHeight || 300, wdt = field.clientWidth || 300;
+      /* הבועה גדלה עם השדה. גודל קבוע נראה זעיר במסך רחב. */
+      const bs = Math.max(64, Math.min(120, Math.round(wdt / 4.6)));
+      field.style.setProperty('--bub', bs + 'px');
       /* יצירת בועה חדשה */
       if(--r.spawnAt <= 0){
         r.spawnAt = 34;
@@ -2068,7 +2076,9 @@ H.game({
     const r = H.run, field = H.$('catchfield');
     const step = () => {
       if(H.screen !== 'catch') return;
-      const h = field.clientHeight || 300;
+      const h = field.clientHeight || 300, wdt = field.clientWidth || 300;
+      const fs = Math.max(56, Math.min(104, Math.round(wdt / 5.2)));
+      field.style.setProperty('--fall', fs + 'px');
       if(--r.spawnAt <= 0){
         r.spawnAt = 46;
         /* מעדיפים את האות המבוקשת, שלא יוצף במסיחים */
@@ -2087,7 +2097,8 @@ H.game({
         d._y += d._v;
         d.style.transform = 'translateY(' + d._y + 'px)';
         /* אזור הסל: 40px התחתונים */
-        if(d._y > h - 64 && d._y < h - 8 && Math.abs(d._x - r.bx) < 0.12){
+        const half = (fs * 0.6) / wdt;          /* חצי רוחב פגיעה ביחס לשדה */
+        if(d._y > h - fs - 12 && d._y < h - 8 && Math.abs(d._x - r.bx) < half){
           this.caught(d);
           d.remove(); r.items.splice(i, 1);
           continue;

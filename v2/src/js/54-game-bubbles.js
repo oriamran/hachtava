@@ -21,6 +21,9 @@ H.game({
     const step = () => {
       if(H.screen !== 'bubbles') return;
       const h = field.clientHeight || 300, wdt = field.clientWidth || 300;
+      /* הבועה גדלה עם השדה. גודל קבוע נראה זעיר במסך רחב. */
+      const bs = Math.max(64, Math.min(120, Math.round(wdt / 4.6)));
+      field.style.setProperty('--bub', bs + 'px');
       /* יצירת בועה חדשה */
       if(--r.spawnAt <= 0){
         r.spawnAt = 34;

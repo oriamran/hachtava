@@ -34,7 +34,9 @@ H.game({
     const r = H.run, field = H.$('catchfield');
     const step = () => {
       if(H.screen !== 'catch') return;
-      const h = field.clientHeight || 300;
+      const h = field.clientHeight || 300, wdt = field.clientWidth || 300;
+      const fs = Math.max(56, Math.min(104, Math.round(wdt / 5.2)));
+      field.style.setProperty('--fall', fs + 'px');
       if(--r.spawnAt <= 0){
         r.spawnAt = 46;
         /* מעדיפים את האות המבוקשת, שלא יוצף במסיחים */
@@ -53,7 +55,8 @@ H.game({
         d._y += d._v;
         d.style.transform = 'translateY(' + d._y + 'px)';
         /* אזור הסל: 40px התחתונים */
-        if(d._y > h - 64 && d._y < h - 8 && Math.abs(d._x - r.bx) < 0.12){
+        const half = (fs * 0.6) / wdt;          /* חצי רוחב פגיעה ביחס לשדה */
+        if(d._y > h - fs - 12 && d._y < h - 8 && Math.abs(d._x - r.bx) < half){
           this.caught(d);
           d.remove(); r.items.splice(i, 1);
           continue;
