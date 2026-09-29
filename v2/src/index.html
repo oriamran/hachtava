@@ -258,12 +258,17 @@
       <img alt="דף ההכתבה">
       <span class="phototip">הקש להגדלה</span>
     </div>
+    <button class="go" id="ocrbtn" style="display:none" onclick="H.readPhoto()">🔍 קרא את המילים מהצילום</button>
+    <p class="note" id="ocrmsg"></p>
 
     <label class="lbl">מילים — אחת בכל שורה</label>
     <div id="nikpad" class="nikpad"></div>
     <textarea id="wordsIn" rows="10"></textarea>
     <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
+    <label class="lbl">כתובת שרת הקריאה<input id="ocrUrlIn" placeholder="ריק = בלי קריאה מצילום" onchange="H.setOcrUrl(this.value)"></label>
+    <p class="note" style="text-align:start">רק עם כתובת שרת אפשר לקרוא מילים מצילום. בלעדיה המשחק עובד אופליין במלואו.</p>
+
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
     <div class="row">

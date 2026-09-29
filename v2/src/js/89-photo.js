@@ -60,6 +60,7 @@ H.renderPhoto = function(){
     const img = w.querySelector('img');
     if(img && img.getAttribute('src') !== url) img.src = url;
   });
+  if(H.renderOcr) H.renderOcr();
   const hint = H.$('photohint');
   if(hint) hint.style.display = url ? 'none' : '';
 };

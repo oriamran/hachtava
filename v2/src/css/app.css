@@ -511,3 +511,7 @@ body.nav .wrap{padding-top:36px}
   padding:3px 9px;border-radius:999px;
 }
 .photowrap.big .phototip{display:none}
+.note.ok{color:var(--good);font-weight:800}
+.note.bad{color:var(--bad);font-weight:800}
+#ocrbtn{width:100%;margin-top:10px}
+#ocrbtn:disabled{opacity:.6}
