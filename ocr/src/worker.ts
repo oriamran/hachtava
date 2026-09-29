@@ -6,11 +6,18 @@
    משתמש במכסה החינמית של Google AI Studio. אין כאן תלויות
    חיצוניות — רק fetch — כדי שהפריסה תהיה פקודה אחת.
    ========================================================== */
+import { verifyGoogle, type User } from "./auth";
+import { loadState, saveState } from "./sync";
+
 export interface Env {
-  GOOGLE_API_KEY: string;
+  GOOGLE_API_KEY: string;       /* למודל הראייה */
+  GOOGLE_CLIENT_ID: string;     /* להתחברות */
   ALLOWED_ORIGINS: string;
   MODEL?: string;
-  RATE: KVNamespace;
+  SCAN_TOKEN?: string;          /* אם מוגדר — סריקה דורשת אותו */
+  ALLOWED_EMAILS?: string;      /* ואם מוגדר — רק החשבונות האלה */
+  RATE: KVNamespace;            /* מכסות ומגבלות קצב */
+  DATA: KVNamespace;            /* התקדמות המשתמשים */
 }
 
 const MAX_BYTES     = 6_000_000;   /* תמונה אחרי הקטנה בצד הלקוח */
@@ -23,7 +30,12 @@ const FREE_PER_MONTH = 3;          /* מכסת הסריקות החופשית, ל
 const ID_RE = /^[0-9a-f-]{8,40}$/i;
 const month = () => new Date().toISOString().slice(0, 7);
 const TYPES = ["image/jpeg", "image/png", "image/webp"];
-const DEFAULT_MODEL = "gemini-2.5-flash";
+/* רשימה, לא מודל אחד: המכסה החינמית נופלת מדי פעם בעומס,
+   ואז עוברים לבא בתור במקום להחזיר שגיאה למשתמש. */
+/* נמדד: gemini-flash-lite-latest מחזיר עשר מילים עבריות תקינות
+   ומנוקדות — וכולן מומצאות. הוא לא קורא את התמונה אלא מנחש לפי
+   הקשר. לכן הוא לא ברשימה: עדיף להיכשל מאשר ללמד מילה שגויה. */
+const DEFAULT_MODELS = "gemini-3.8-flash,gemini-flash-latest";
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 
 const PROMPT = `בתמונה מופיע דף הכתבה של ילד בבית ספר יסודי בישראל.
@@ -82,11 +94,39 @@ export default {
     const head    = cors(origin, allowed);
 
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: head });
-    if (req.method !== "POST")    return json({ error: "use POST" }, 405, head);
+
+    const path = new URL(req.url).pathname.replace(/\/+$/, "");
+
+    /* ---- סנכרון ההתקדמות. דורש התחברות, ולכן מזוהה ויציב. ---- */
+    if (path === "/sync") {
+      const tok = (req.headers.get("Authorization") || "").replace(/^Bearer /, "");
+      const user = await verifyGoogle(tok, env.GOOGLE_CLIENT_ID);
+      if (!user) return json({ error: "\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05d3\u05e8\u05e9\u05ea" }, 401, head);
+
+      if (req.method === "GET") {
+        const r = await loadState(env, user);
+        return new Response(await r.text(), { status: 200, headers: { ...head, "Content-Type": "application/json; charset=utf-8" } });
+      }
+      if (req.method === "POST") {
+        let b: { state?: unknown; at?: number };
+        try { b = await req.json(); } catch { return json({ error: "bad json" }, 400, head); }
+        const out = await saveState(env, user, b.state, Number(b.at) || Date.now());
+        return json(out, out.ok ? 200 : (out.stale ? 409 : 413), head);
+      }
+      return json({ error: "use GET or POST" }, 405, head);
+    }
+
+    if (req.method !== "POST") return json({ error: "use POST" }, 405, head);
 
     /* רק הדפים שלנו. לא הגנה מוחלטת, אבל עוצרת שימוש מדפדפן זר. */
     if (allowed.length && (!origin || !allowed.includes(origin)))
       return json({ error: "origin not allowed" }, 403, head);
+
+    /* ---- נעילת הסריקה ----
+       כל עוד זה בבנייה, רק מי שמחזיק את הקוד סורק. כשיהיה
+       חיבור גוגל, ALLOWED_EMAILS יחליף את זה בזהות אמיתית. */
+    if (env.SCAN_TOKEN && req.headers.get("X-Scan-Token") !== env.SCAN_TOKEN)
+      return json({ error: "\u05d4\u05e1\u05e8\u05d9\u05e7\u05d4 \u05e1\u05d2\u05d5\u05e8\u05d4 \u05db\u05e8\u05d2\u05e2", locked: true }, 403, head);
 
     /* מגבלת קצב לפי IP — בלעדיה הכתובת פתוחה וכל אחד יכול לשרוף את המכסה */
     const ip  = req.headers.get("CF-Connecting-IP") || "unknown";
@@ -99,9 +139,18 @@ export default {
     let body: { image?: string; mediaType?: string; deviceId?: string };
     try { body = await req.json(); } catch { return json({ error: "bad json" }, 400, head); }
 
-    /* מכסה חודשית לכל מכשיר, ומנוי שמבטל אותה */
-    const dev = String(body.deviceId || "");
-    if (!ID_RE.test(dev)) return json({ error: "missing device id" }, 400, head);
+    /* מכסה חודשית. חשבון מזוהה עדיף על מזהה מכשיר, שאפשר
+       לאפס בניקוי אחסון — זו כל הנקודה של ההתחברות. */
+    const tok = (req.headers.get("Authorization") || "").replace(/^Bearer /, "");
+    const user: User | null = tok ? await verifyGoogle(tok, env.GOOGLE_CLIENT_ID) : null;
+    const emails = (env.ALLOWED_EMAILS || "").split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
+    if (emails.length) {
+      if (!user) return json({ error: "\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05d3\u05e8\u05e9\u05ea", locked: true }, 401, head);
+      if (!emails.includes((user.email || "").toLowerCase()))
+        return json({ error: "\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05d4\u05d6\u05d4 \u05dc\u05d0 \u05de\u05d5\u05e8\u05e9\u05d4", locked: true }, 403, head);
+    }
+    const dev = user ? ("g" + user.sub) : String(body.deviceId || "");
+    if (!user && !ID_RE.test(dev)) return json({ error: "missing device id" }, 400, head);
     const sub = await env.RATE.get(`sub:${dev}`);
     const unlimited = !!sub && sub > new Date().toISOString().slice(0, 10);
     const qKey = `q:${dev}:${month()}`;
@@ -119,39 +168,52 @@ export default {
     if (!TYPES.includes(mediaType))      return json({ error: "unsupported type" }, 400, head);
     if (b64.length * 0.75 > MAX_BYTES)   return json({ error: "image too large" }, 413, head);
 
-    const model = env.MODEL || DEFAULT_MODEL;
-    let res: Response;
-    try {
-      res = await fetch(`${BASE}/models/${model}:generateContent?key=${env.GOOGLE_API_KEY}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { inline_data: { mime_type: mediaType, data: b64 } },
-              { text: PROMPT }
-            ]
-          }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: SCHEMA,
-            temperature: 0
-          }
-        })
-      });
-    } catch {
-      return json({ error: "אין חיבור לשרת המודל" }, 502, head);
+    const models = String(env.MODEL || DEFAULT_MODELS).split(",").map(m => m.trim()).filter(Boolean);
+    const payload = JSON.stringify({
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: mediaType, data: b64 } },
+          { text: PROMPT }
+        ]
+      }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: SCHEMA,
+        temperature: 0
+      }
+    });
+
+    let res: Response | null = null;
+    let lastStatus = 0, lastDetail = "", usedModel = "";
+    for (const model of models) {
+      usedModel = model;
+      try {
+        res = await fetch(`${BASE}/models/${model}:generateContent?key=${env.GOOGLE_API_KEY}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload
+        });
+      } catch {
+        return json({ error: "\u05d0\u05d9\u05df \u05d7\u05d9\u05d1\u05d5\u05e8 \u05dc\u05e9\u05e8\u05ea \u05d4\u05de\u05d5\u05d3\u05dc" }, 502, head);
+      }
+      if (res.ok) break;
+      lastStatus = res.status;
+      lastDetail = await res.text().catch(() => "");
+      /* עמוס או לא קיים — ננסה את הבא. שאר השגיאות אמיתיות. */
+      if (res.status !== 503 && res.status !== 429 && res.status !== 404) break;
+      res = null;
     }
 
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      if (res.status === 404)
-        return json({ error: `המודל "${model}" לא נמצא.` + await modelHint(env.GOOGLE_API_KEY) }, 502, head);
-      if (res.status === 429)
-        return json({ error: "נגמרה המכסה החינמית לעת עתה. נסה מאוחר יותר." }, 429, head);
-      if (res.status === 400 && /API_KEY|api key/i.test(detail))
-        return json({ error: "מפתח ה-API לא תקין" }, 500, head);
-      return json({ error: `שגיאה מהמודל (${res.status})` }, 502, head);
+    if (!res || !res.ok) {
+      if (lastStatus === 404)
+        return json({ error: `\u05d4\u05de\u05d5\u05d3\u05dc \u05dc\u05d0 \u05e0\u05de\u05e6\u05d0.` + await modelHint(env.GOOGLE_API_KEY) }, 502, head);
+      if (lastStatus === 429)
+        return json({ error: "\u05e0\u05d2\u05de\u05e8\u05d4 \u05d4\u05de\u05db\u05e1\u05d4 \u05d4\u05d7\u05d9\u05e0\u05de\u05d9\u05ea \u05dc\u05e2\u05ea \u05e2\u05ea\u05d4. \u05e0\u05e1\u05d4 \u05de\u05d0\u05d5\u05d7\u05e8 \u05d9\u05d5\u05ea\u05e8." }, 429, head);
+      if (lastStatus === 503)
+        return json({ error: "\u05db\u05dc \u05d4\u05de\u05d5\u05d3\u05dc\u05d9\u05dd \u05e2\u05de\u05d5\u05e1\u05d9\u05dd \u05db\u05e8\u05d2\u05e2. \u05e0\u05e1\u05d4 \u05e9\u05d5\u05d1 \u05d1\u05e2\u05d5\u05d3 \u05d3\u05e7\u05d4." }, 503, head);
+      if (lastStatus === 400 && /API_KEY|api key/i.test(lastDetail))
+        return json({ error: "\u05de\u05e4\u05ea\u05d7 \u05d4-API \u05dc\u05d0 \u05ea\u05e7\u05d9\u05df" }, 500, head);
+      return json({ error: `\u05e9\u05d2\u05d9\u05d0\u05d4 \u05de\u05d4\u05de\u05d5\u05d3\u05dc (${lastStatus})`, detail: lastDetail.slice(0, 400) }, 502, head);
     }
 
     let data: any;
@@ -178,7 +240,9 @@ export default {
     return json({
       words,
       note: typeof out.note === "string" ? out.note : "",
-      quota: { used: unlimited ? 0 : usedMonth + 1, limit: FREE_PER_MONTH, unlimited }
+      model: usedModel,
+      quota: { used: unlimited ? 0 : usedMonth + 1, limit: FREE_PER_MONTH, unlimited,
+               signedIn: !!user }
     }, 200, head);
   }
 };
