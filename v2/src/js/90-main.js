@@ -3,7 +3,8 @@ H.refresh = function(){
   H.$('topic').textContent = H.topic() || '';
   H.$('hello').textContent = H.state.name
     ? 'היי ' + H.state.name + '!' : 'היי!';
-  H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport(); H.paint();
+  H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport();
+  H.renderChallenge(); H.paint();
 };
 
 H.boot = function(){

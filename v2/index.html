@@ -104,7 +104,9 @@ body.nav .wrap{padding-top:36px}
   padding:14px 26px;font-size:18px;box-shadow:var(--drop);
 }
 .mini{
-  background:#fff;color:var(--ink);padding:11px 18px;font-size:15px;box-shadow:var(--drop);
+  /* 44px הוא המינימום שאצבע פוגעת בו בביטחון. 11px ריפוד נתן 42. */
+  background:#fff;color:var(--ink);padding:12px 18px;font-size:15px;
+  min-height:46px;box-shadow:var(--drop);
 }
 .go:active,.mini:active,.menu:active,.station:active,.gamecard:active{
   transform:translateY(4px);box-shadow:0 2px 0 rgba(43,34,80,.18);
@@ -360,8 +362,8 @@ body.nav .wrap{padding-top:36px}
 /* ---------- חבילות מילים ---------- */
 .packlist{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
 .packchip{
-  background:#fff;color:var(--ink);border-radius:999px;padding:9px 15px;font-size:14px;
-  box-shadow:0 4px 0 var(--cardEdge);
+  background:#fff;color:var(--ink);border-radius:999px;padding:11px 16px;font-size:14px;
+  min-height:46px;box-shadow:0 4px 0 var(--cardEdge);
 }
 .packchip small{color:var(--ink2);margin-inline-start:5px;font-size:12px}
 .packchip.on{background:linear-gradient(135deg,var(--sun),var(--sunDeep));color:#fff;box-shadow:0 4px 0 #c97a00}
@@ -480,6 +482,16 @@ body.nav .wrap{padding-top:36px}
   box-shadow:0 6px 0 #a8d4ea;
 }
 
+/* ---------- אתגר היום ---------- */
+.menu.chal{
+  background:linear-gradient(135deg,#ffe9f0,#ffd0e0);
+  box-shadow:0 6px 0 #f0aec4;
+}
+.menu.chal.done{
+  background:linear-gradient(135deg,#eafff5,#c9f5e4);
+  box-shadow:0 6px 0 #9fdcc6;
+}
+
 </style>
 </head>
 <body>
@@ -521,6 +533,7 @@ body.nav .wrap{padding-top:36px}
     <p class="topic" id="topic"></p>
 
     <div class="tiles">
+      <button class="menu wide chal" id="chalbtn" onclick="H.startChallenge()"></button>
       <button class="menu big-map" data-go="map">
         <span class="m-e">🗺️</span><b>המסע</b><small>תחנות שנפתחות אחת אחרי השנייה</small>
       </button>
@@ -1292,6 +1305,7 @@ H.stars = function(){
 H.endRound = function(){
   const r = H.run, stars = H.stars();
   H.logEnd(r.right, r.wrong);
+  if(r.challenge) return H.finishChallenge();
   const xp = 20 + r.right * 8 + (stars === 3 ? 25 : 0);
   const perfect = r.wrong === 0;
   H.finish({
@@ -1334,6 +1348,56 @@ H.variants = function(word, n){
     if(s !== word) out.add(s);
   }
   return [...out].slice(0, n);
+};
+
+/* ===== 45-challenge.js ===== */
+/* ==========================================================
+   אתגר היום. פעם ביום, שלוש מילים, ומשחק אחד שמשתנה כל יום.
+   הסיבה לקיומו היא לא תרגול נוסף אלא סיבה לחזור מחר.
+   ========================================================== */
+H.CHALLENGE_WORDS = 3;
+
+H.challengeDone = () => H.state.daily.chal === H.today();
+/* אותו משחק לכל המכשירים באותו יום, ומשתנה מיום ליום */
+H.challengeGame = function(){
+  const d = H.today();
+  let h = 0;
+  for(let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0;
+  return H.GAMES[h % H.GAMES.length];
+};
+H.startChallenge = function(){
+  if(H.challengeDone()) return H.toast('אתגר היום כבר הושלם — חזור מחר 🌞');
+  const g = H.challengeGame();
+  H.run = {game:g, station:undefined, challenge:true,
+           queue:H.pickWords(H.CHALLENGE_WORDS), total:0, right:0, wrong:0, word:null};
+  H.run.total = H.run.queue.length;
+  H.logStart();
+  g.start();
+};
+H.finishChallenge = function(){
+  const r = H.run, stars = H.stars(), perfect = r.wrong === 0;
+  H.state.daily.chal = H.today();
+  H.save();
+  H.finish({
+    emoji: perfect ? '🏆' : '🎯',
+    title: perfect ? 'אתגר היום הושלם!' : 'סיימת את אתגר היום',
+    text: 'נכון ' + r.right + ' מתוך ' + r.total +
+          '<br>חזור מחר לאתגר חדש 🌞',
+    stars,
+    xp: 60 + r.right * 10 + (perfect ? 40 : 0)
+  });
+  H.confetti(50);
+};
+H.renderChallenge = function(){
+  const b = H.$('chalbtn');
+  if(!b) return;
+  const done = H.challengeDone(), g = H.challengeGame();
+  b.classList.toggle('done', done);
+  b.innerHTML = '<span class="m-e">' + (done ? '✅' : '🎯') + '</span>' +
+    '<b>' + (done ? 'אתגר היום הושלם' : 'אתגר היום') + '</b>' +
+    '<small>' + (done
+      ? 'חזור מחר למשחק אחר'
+      : g.e + ' ' + g.name + ' · ' + H.CHALLENGE_WORDS + ' מילים · בונוס גדול') + '</small>';
 };
 
 /* ===== 50-game-memory.js ===== */
@@ -2561,7 +2625,8 @@ H.refresh = function(){
   H.$('topic').textContent = H.topic() || '';
   H.$('hello').textContent = H.state.name
     ? 'היי ' + H.state.name + '!' : 'היי!';
-  H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport(); H.paint();
+  H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport();
+  H.renderChallenge(); H.paint();
 };
 
 H.boot = function(){

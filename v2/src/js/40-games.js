@@ -45,6 +45,7 @@ H.stars = function(){
 H.endRound = function(){
   const r = H.run, stars = H.stars();
   H.logEnd(r.right, r.wrong);
+  if(r.challenge) return H.finishChallenge();
   const xp = 20 + r.right * 8 + (stars === 3 ? 25 : 0);
   const perfect = r.wrong === 0;
   H.finish({
