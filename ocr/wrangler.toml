@@ -1,7 +1,6 @@
 name = "hachtava-ocr"
 main = "src/worker.ts"
 compatibility_date = "2026-01-01"
-compatibility_flags = ["nodejs_compat"]
 
 # מגבלת קצב לפי כתובת IP. יוצרים עם:
 #   npx wrangler kv namespace create RATE
@@ -13,3 +12,5 @@ id = "PASTE_KV_ID_HERE"
 [vars]
 # רק דפים מהמקורות האלה רשאים לקרוא לשרת.
 ALLOWED_ORIGINS = "https://oriamran.github.io,http://localhost:8788"
+# אם המודל לא נמצא, השרת מחזיר בשגיאה את השמות הזמינים
+MODEL = "gemini-2.5-flash"

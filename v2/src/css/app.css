@@ -515,3 +515,12 @@ body.nav .wrap{padding-top:36px}
 .note.bad{color:var(--bad);font-weight:800}
 #ocrbtn{width:100%;margin-top:10px}
 #ocrbtn:disabled{opacity:.6}
+
+/* ---------- חומת המכסה ---------- */
+.upgrade{
+  background:linear-gradient(135deg,#fff3cd,#ffe0a3);border-radius:18px;
+  padding:14px;margin-top:10px;line-height:1.55;
+}
+.upgrade b{font-size:16px}
+.upgrade p{margin:6px 0 0;font-size:14px;color:var(--ink2);font-weight:700}
+.upgrade .upgrade-contact{color:var(--ink)}

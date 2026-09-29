@@ -47,6 +47,7 @@ H.openSettings = function(){
   });
   H.renderPhoto();
   H.renderOcr();
+  H.renderQuota();
   H.show('settings');
 };
 H.applySettings = function(){
