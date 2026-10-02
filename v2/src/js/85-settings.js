@@ -48,7 +48,6 @@ H.openSettings = function(){
   H.renderPhoto();
   H.renderOcr();
   H.renderQuota();
-  H.renderAccount();
   H.show('settings');
 };
 H.applySettings = function(){
