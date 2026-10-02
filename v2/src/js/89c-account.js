@@ -96,7 +96,10 @@ H.onGoogle = function(resp){
   if(!p) return H.toast('ההתחברות נכשלה', 'no');
   H.setAcct({tok: resp.credential, exp: p.exp, email: p.email || ''});
   H.renderAccount();
-  H.afterSignIn();
+  const onWelcome = H.screen === 'welcome';
+  if(onWelcome){ H.state.authSeen = true; H.save(); }
+  const r = H.afterSignIn();
+  if(onWelcome) r.then(H.afterWelcome);
 };
 H.signOut = function(){
   H.setAcct(null);
@@ -110,6 +113,11 @@ H.loadGsi = () => new Promise((ok, no) => {
   s.onload = ok; s.onerror = no;
   document.head.appendChild(s);
 });
+H.renderGoogleBtn = async function(el){
+  await H.loadGsi();
+  google.accounts.id.initialize({client_id: H.GOOGLE_CLIENT_ID, callback: H.onGoogle});
+  google.accounts.id.renderButton(el, {theme:'outline', size:'large', text:'signup_with', locale:'he'});
+};
 H.renderAccount = async function(){
   const msg = H.$('acctmsg'), btn = H.$('gbtn'), box = H.$('acctbtns');
   if(!msg) return;
@@ -128,9 +136,7 @@ H.renderAccount = async function(){
     ? 'ההתחברות פגה. התחבר שוב כדי להמשיך לגבות (' + (H.acct.email || '') + ')'
     : 'התחבר כדי לשמור את ההתקדמות בענן ולהעביר בין מכשירים. לא חובה.';
   try{
-    await H.loadGsi();
-    google.accounts.id.initialize({client_id: H.GOOGLE_CLIENT_ID, callback: H.onGoogle});
-    google.accounts.id.renderButton(btn, {theme:'outline', size:'large', text:'signin_with', locale:'he'});
+    await H.renderGoogleBtn(btn);
   }catch(e){
     msg.textContent += ' (אין חיבור ל-Google כרגע)';
   }
@@ -141,4 +147,24 @@ H.onSaved = function(){
   if(!H.acctConfigured() || !H.tokenOk()) return;
   clearTimeout(H._pushT);
   H._pushT = setTimeout(() => H.cloudPush(true), 10000);
+};
+
+/* ---------- מסך הרשמה בכניסה ----------
+   מופיע פעם אחת, לפני בחירת השם והדמות, ורק כשההתחברות מוגדרת —
+   אחרת זה מסך שאי אפשר לעבור דרכו חוץ מ"אחר כך". */
+H.needsWelcome = () => !H.state.authSeen && !H.state.onboarded && H.acctConfigured();
+H.startWelcome = async function(){
+  H.show('welcome');
+  H.$('backbtn').classList.remove('on');
+  try{ await H.renderGoogleBtn(H.$('wbtn')); }
+  catch(e){ H.$('wmsg').textContent = 'אין חיבור ל-Google כרגע. אפשר להירשם מאוחר יותר ממסך ההורים.'; }
+};
+H.skipWelcome = function(){
+  H.state.authSeen = true; H.save();
+  H.startOnboard();
+};
+/* אחרי כניסה: אם שוחזרה התקדמות קיימת — ישר הביתה. אחרת בוחרים שם ודמות */
+H.afterWelcome = function(){
+  H.refresh();
+  if(H.needsOnboard()) H.startOnboard(); else H.show('home');
 };

@@ -15,7 +15,8 @@ H.boot = function(){
   } }catch(e){}
   H.initVoice();
   H.refresh();
-  if(H.needsOnboard()) H.startOnboard(); else H.show('home');
+  if(H.needsWelcome()) H.startWelcome();
+  else if(H.needsOnboard()) H.startOnboard(); else H.show('home');
 
   /* כפתורים קבועים */
   H.$('backbtn').onclick   = () => { H.sfx.tap(); H.home(); };
