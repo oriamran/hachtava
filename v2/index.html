@@ -829,9 +829,11 @@ body.nav .wrap{padding-top:36px}
     <textarea id="wordsIn" rows="10"></textarea>
     <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
+    <div id="ocrcfg">
     <label class="lbl">כתובת שרת הקריאה<input id="ocrUrlIn" placeholder="ריק = בלי קריאה מצילום" onchange="H.setOcrUrl(this.value)"></label>
     <label class="lbl">קוד גישה לסריקה<input id="scanTokIn" placeholder="ריק = בלי קוד" onchange="H.setScanToken(this.value)"></label>
     <p class="note" style="text-align:start">רק עם כתובת שרת אפשר לקרוא מילים מצילום. בלעדיה המשחק עובד אופליין במלואו.</p>
+    </div>
 
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
@@ -3033,7 +3035,11 @@ H.deviceId = function(){
   }catch(e){ return '00000000-0000-0000-0000-000000000000'; }
 };
 H.quota = null;
+/* מתג כללי: קריאת מילים מצילום כבויה כרגע. כדי להחזיר — לשנות ל-true.
+   כבוי = אין כתובת שרת, אין כפתור קריאה, ושום תמונה לא יוצאת מהמכשיר. */
+H.OCR_ENABLED = false;
 H.ocrUrl  = function(){
+  if(!H.OCR_ENABLED) return '';
   try{ return localStorage.getItem(H.OCR_KEY) || ''; }catch(e){ return ''; }
 };
 H.setOcrUrl = function(u){
@@ -3046,9 +3052,11 @@ H.renderOcr = function(){
   if(inp && document.activeElement !== inp) inp.value = H.ocrUrl();
   const t = H.$('scanTokIn');
   if(t && document.activeElement !== t) t.value = H.scanToken();
+  const cfg = H.$('ocrcfg'); if(cfg) cfg.style.display = H.OCR_ENABLED ? '' : 'none';
   if(btn) btn.style.display = (H.ocrUrl() && H.loadPhoto()) ? '' : 'none';
 };
 H.readPhoto = async function(){
+  if(!H.OCR_ENABLED) return;
   const url = H.ocrUrl(), photo = H.loadPhoto();
   if(!url || !photo) return;
   const btn = H.$('ocrbtn'), msg = H.$('ocrmsg');

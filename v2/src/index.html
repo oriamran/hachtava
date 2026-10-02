@@ -276,9 +276,11 @@
     <textarea id="wordsIn" rows="10"></textarea>
     <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
+    <div id="ocrcfg">
     <label class="lbl">כתובת שרת הקריאה<input id="ocrUrlIn" placeholder="ריק = בלי קריאה מצילום" onchange="H.setOcrUrl(this.value)"></label>
     <label class="lbl">קוד גישה לסריקה<input id="scanTokIn" placeholder="ריק = בלי קוד" onchange="H.setScanToken(this.value)"></label>
     <p class="note" style="text-align:start">רק עם כתובת שרת אפשר לקרוא מילים מצילום. בלעדיה המשחק עובד אופליין במלואו.</p>
+    </div>
 
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
