@@ -30,11 +30,7 @@ H.deviceId = function(){
   }catch(e){ return '00000000-0000-0000-0000-000000000000'; }
 };
 H.quota = null;
-/* מתג כללי: קריאת מילים מצילום כבויה כרגע. כדי להחזיר — לשנות ל-true.
-   כבוי = אין כתובת שרת, אין כפתור קריאה, ושום תמונה לא יוצאת מהמכשיר. */
-H.OCR_ENABLED = false;
 H.ocrUrl  = function(){
-  if(!H.OCR_ENABLED) return '';
   try{ return localStorage.getItem(H.OCR_KEY) || ''; }catch(e){ return ''; }
 };
 H.setOcrUrl = function(u){
@@ -47,11 +43,9 @@ H.renderOcr = function(){
   if(inp && document.activeElement !== inp) inp.value = H.ocrUrl();
   const t = H.$('scanTokIn');
   if(t && document.activeElement !== t) t.value = H.scanToken();
-  const cfg = H.$('ocrcfg'); if(cfg) cfg.style.display = H.OCR_ENABLED ? '' : 'none';
   if(btn) btn.style.display = (H.ocrUrl() && H.loadPhoto()) ? '' : 'none';
 };
 H.readPhoto = async function(){
-  if(!H.OCR_ENABLED) return;
   const url = H.ocrUrl(), photo = H.loadPhoto();
   if(!url || !photo) return;
   const btn = H.$('ocrbtn'), msg = H.$('ocrmsg');
