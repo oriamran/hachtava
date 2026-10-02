@@ -7,6 +7,12 @@ H.STRAY_MAX = 0.62;   /* כמה דיו מותר מחוץ למילה */
 H.RATIO_MIN = 0.55;   /* כמות דיו ביחס למילה — זה מה שפוסל שרבוט */
 H.RATIO_MAX = 1.70;
 H.MIN_INK   = 10;
+/* קו האצבע בעובי קבוע, אז ככל שהילד כותב קטן יותר הוא ממלא יחסית יותר.
+   בלי התאמה, כתיבה קטנה נפסלת כ"שרבוט" למרות שהיא תקינה.
+   לכל כתיבה קטנה מוסיפים לתקרה חלק קבוע מהפער (נמדד בדגימות). */
+H.SMALL_ALLOW = 0.375;
+H.SIZE_MIN    = 0.25;   /* מתחת לזה לא מקלים עוד */
+H.ratioMax = size => H.RATIO_MAX + H.SMALL_ALLOW * (1 / Math.max(H.SIZE_MIN, Math.min(1, size || 1)) - 1);
 /* מצב מבחן: נפתח למילה רק אחרי שהיא כבר נכבשה במשחקי האריחים,
    כלומר כשידוע שהילד יודע לאיית אותה. אז אפשר לדרוש גם צורה. */
 H.TEST_FRAC = 0.70;   /* איזה חלק מהאותיות חייב להיות מזוהה */
@@ -40,7 +46,7 @@ H.game({
       fb.className = 'fb no'; fb.textContent = 'עדיין לא כתבת כלום ✍️';
       return;
     }
-    if(res.ratio > H.RATIO_MAX){
+    if(res.ratio > H.ratioMax(res.size)){
       fb.className = 'fb no';
       fb.textContent = 'זה לא מילה — נקה וכתוב שוב';
       H.sfx.bad();
@@ -202,7 +208,12 @@ H.padScore = function(){
   }
   /* כמה תאים מהרשת מלאים — שרבוט ממלא הרבה יותר ממילה */
   const ratio = I.cells / T.cells;
-  return {cover: inter / T.cells, stray: I.cells ? only / I.cells : 1, ratio, empty:false};
+  /* רוחב הכתיבה ביחס לרוחב המילה המוצגת. 1 = בגודל המילה או גדול ממנה */
+  const cols = H.inkCols(im, p.W, p.H);
+  let ix0 = -1, ix1 = -1;
+  for(let x = 0; x < p.W; x++) if(cols[x]){ if(ix0 < 0) ix0 = x; ix1 = x; }
+  const size = (p.tx1 > p.tx0 && ix0 >= 0) ? (ix1 - ix0) / (p.tx1 - p.tx0) : 1;
+  return {cover: inter / T.cells, stray: I.cells ? only / I.cells : 1, ratio, size, empty:false};
 };
 
 /* ---------- משוב חזותי: מה שנכתב מול המילה ---------- */
