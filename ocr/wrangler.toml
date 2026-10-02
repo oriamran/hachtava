@@ -17,7 +17,7 @@ id = "98901eac17944c2293f979350b516917"
 
 [vars]
 # רק דפים מהמקורות האלה רשאים לקרוא לשרת.
-ALLOWED_ORIGINS = "https://oriamran.github.io,http://localhost:8788"
+ALLOWED_ORIGINS = "https://hachtava.onrender.com,https://oriamran.github.io,http://localhost:8788"
 # אם המודל לא נמצא, השרת מחזיר בשגיאה את השמות הזמינים
 # ללא gemini-flash-lite — הוא ממציא מילים במקום לקרוא אותן
 MODEL = "gemini-3.8-flash,gemini-flash-latest"

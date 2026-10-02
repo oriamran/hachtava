@@ -62,8 +62,8 @@ const SCHEMA = {
 
 const cors = (origin: string | null, allowed: string[]) => ({
   "Access-Control-Allow-Origin": (origin && allowed.includes(origin)) ? origin : (allowed[0] || "*"),
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Scan-Token",
   "Access-Control-Max-Age": "86400"
 });
 const json = (body: unknown, status: number, headers: Record<string, string>) =>

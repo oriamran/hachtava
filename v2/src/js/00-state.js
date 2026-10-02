@@ -94,7 +94,10 @@ H.load = function(){
   H.checkDaily();
 };
 H.save = function(){
+  /* חותמת שינוי אחרונה — לפיה הענן מחליט איזה עותק חדש יותר */
+  if(!H._keepMod) H.state._mod = Date.now();
   try { localStorage.setItem(H.KEY, JSON.stringify(H.state)); } catch(e){}
+  if(H.onSaved) H.onSaved();
 };
 H.syncStats = function(){
   const st = H.state.stats;

@@ -276,6 +276,17 @@
     <label class="lbl">קוד גישה לסריקה<input id="scanTokIn" placeholder="ריק = בלי קוד" onchange="H.setScanToken(this.value)"></label>
     <p class="note" style="text-align:start">רק עם כתובת שרת אפשר לקרוא מילים מצילום. בלעדיה המשחק עובד אופליין במלואו.</p>
 
+    <h3>חשבון הורה</h3>
+    <div id="acctbox">
+      <p class="note" id="acctmsg" style="text-align:start"></p>
+      <div id="gbtn" class="row"></div>
+      <div class="row" id="acctbtns" style="display:none">
+        <button class="mini" onclick="H.cloudSyncNow()">☁️ גבה עכשיו</button>
+        <button class="mini" onclick="H.cloudRestore()">⬇️ שחזר מהענן</button>
+        <button class="mini" onclick="H.signOut()">התנתק</button>
+      </div>
+    </div>
+
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
     <div class="row">
