@@ -119,9 +119,6 @@ H.delPack = function(id){
 };
 
 /* ---------- רצף ימים ---------- */
-/* מטבעות בונוס בקפיצות של רצף. מקבלים פעם אחת בכל רצף, ביום שמגיעים אליו */
-H.STREAK_BONUS = {3: 30, 7: 70, 14: 150};
-H.streakBonus = 0;                       /* נקבע ביום חדש, וההודעה מוצגת בכניסה */
 H.checkDaily = function(){
   const today = new Date().toDateString();
   const d = H.state.daily;
@@ -129,8 +126,6 @@ H.checkDaily = function(){
   const yday = new Date(Date.now() - 864e5).toDateString();
   d.streak = (d.last === yday) ? d.streak + 1 : 1;
   d.last = today;
-  H.streakBonus = H.STREAK_BONUS[d.streak] || 0;
-  if(H.streakBonus) H.state.coins += H.streakBonus;
   H.save();
   return true;                 /* יום חדש */
 };
@@ -159,28 +154,15 @@ H.buy = function(id, cost){
 };
 
 /* ---------- התקדמות במילים ---------- */
-/* חזרה מרווחת: מילה שנלמדה חוזרת אחרי כמה ימים, ובכל פעם שעונים נכון
-   כשהיא "בשלה" הרווח גדל. מדבקה שכבר באלבום לא נלקחת בחזרה. */
-H.IVL_DAYS = [1, 3, 7, 14, 30];
-H.dueMs = s => H.IVL_DAYS[Math.min(s.lv || 0, H.IVL_DAYS.length - 1)] * 864e5;
-H.isDue = function(s){
-  if(!s || s.run < H.MASTER_AT) return false;
-  /* שמירה ישנה בלי תאריך: מתייחסים אליה כבשלה */
-  return !s.last || Date.now() - s.last >= H.dueMs(s);
-};
 H.hit = function(word){
   const s = H.state.stats[word]; if(!s) return;
-  const wasMastered = s.run >= H.MASTER_AT, wasDue = H.isDue(s);
   s.ok++; s.run++;
-  /* הרווח גדל רק כשענו נכון על מילה שהגיע זמנה — לא על כל פגיעה באותו יום */
-  if(wasMastered){ if(wasDue){ s.lv = (s.lv || 0) + 1; s.last = Date.now(); } }
-  else { s.lv = 0; s.last = Date.now(); }
   if(s.run >= H.MASTER_AT && !H.state.album.includes(word)) H.state.album.push(word);
   H.save();
 };
 H.miss = function(word){
   const s = H.state.stats[word]; if(!s) return;
-  s.bad++; s.run = 0; s.lv = 0; s.last = Date.now(); H.save();
+  s.bad++; s.run = 0; H.save();
 };
 /* יומן תרגול לדוח ההורים */
 H.today = () => new Date().toISOString().slice(0,10);
@@ -200,8 +182,7 @@ H.pickWords = function(n){
   const pool = H.words().slice(), out = [];
   const weight = w => {
     const s = H.state.stats[w] || {bad:0, run:0};
-    return 1 + s.bad*3 + Math.max(0, H.MASTER_AT - s.run)*2
-             + (H.isDue(s) ? 6 : 0);          /* הגיע הזמן לחזור עליה */
+    return 1 + s.bad*3 + Math.max(0, H.MASTER_AT - s.run)*2;
   };
   n = Math.min(n, pool.length);
   while(out.length < n && pool.length){
