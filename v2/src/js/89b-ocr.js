@@ -30,6 +30,10 @@ H.deviceId = function(){
   }catch(e){ return '00000000-0000-0000-0000-000000000000'; }
 };
 H.quota = null;
+/* כתובת השרת — משמשת גם לסנכרון, לא רק לסריקה */
+H.apiUrl  = function(){
+  try{ return localStorage.getItem(H.OCR_KEY) || ''; }catch(e){ return ''; }
+};
 H.ocrUrl  = function(){
   try{ return localStorage.getItem(H.OCR_KEY) || ''; }catch(e){ return ''; }
 };
