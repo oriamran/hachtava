@@ -119,6 +119,9 @@ H.delPack = function(id){
 };
 
 /* ---------- רצף ימים ---------- */
+/* מטבעות בונוס בקפיצות של רצף. מקבלים פעם אחת בכל רצף, ביום שמגיעים אליו */
+H.STREAK_BONUS = {3: 30, 7: 70, 14: 150};
+H.streakBonus = 0;                       /* נקבע ביום חדש, וההודעה מוצגת בכניסה */
 H.checkDaily = function(){
   const today = new Date().toDateString();
   const d = H.state.daily;
@@ -126,6 +129,8 @@ H.checkDaily = function(){
   const yday = new Date(Date.now() - 864e5).toDateString();
   d.streak = (d.last === yday) ? d.streak + 1 : 1;
   d.last = today;
+  H.streakBonus = H.STREAK_BONUS[d.streak] || 0;
+  if(H.streakBonus) H.state.coins += H.streakBonus;
   H.save();
   return true;                 /* יום חדש */
 };
