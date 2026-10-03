@@ -11,7 +11,7 @@
    סולם השלבים (H.stage): 0 חדשה, 1 הוכרה, 2 זוהתה, 3 הורכבה, 4 נכתבה.
    ========================================================== */
 H.PLAN_STEPS = 3;
-H.PLAN_GROUPS = {recog:['pick','memory','bubbles'], assemble:['build','missing','anagram'], write:['write']};
+H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky'], assemble:['build','missing','anagram','proof','flash'], write:['write','parent']};
 H.GROUP_TITLE = {recog:'מכירים את המילים', assemble:'מרכיבים את המילים', write:'כותבים מהזיכרון', review:'חוזרים על מה שלמדנו'};
 H.PLAN_PREFS = [
   ['recog', 'assemble', 'write', 'review'],
@@ -54,7 +54,10 @@ H.planStep = function(slot, b){
     if(g === 'write') ws = ws.concat(b.review);          /* חזרה מרווחת יושבת בשלב הכתיבה */
     if(!ws.length) continue;
     const grp = g === 'review' ? 'write' : g;
-    return {group: g, words: ws.slice(0, R).map(H.disp), options: H.PLAN_GROUPS[grp]};
+    const words = ws.slice(0, R).map(H.disp);
+    /* משחק שאין לו מה לעשות עם המילים האלה (למשל אות קשה) לא מוצע */
+    const options = H.PLAN_GROUPS[grp].filter(id => { const gm = H.byId(id); return gm && (!gm.canPlay || gm.canPlay(words)); });
+    return {group: g, words, options};
   }
   return null;
 };

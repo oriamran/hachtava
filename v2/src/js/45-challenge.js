@@ -10,7 +10,9 @@ H.challengeGame = function(){
   const d = H.today();
   let h = 0;
   for(let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0;
-  return H.GAMES[h % H.GAMES.length];
+  const ws = H.words().map(H.disp);
+  const pool = H.GAMES.filter(g => !g.adult && (!g.canPlay || g.canPlay(ws)));
+  return pool[h % pool.length];
 };
 H.startChallenge = function(){
   if(H.challengeDone()) return H.toast('אתגר היום כבר הושלם — חזור מחר 🌞');

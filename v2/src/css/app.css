@@ -630,3 +630,11 @@ body.nav .wrap{padding-top:36px}
 .introcard{background:var(--card);border-radius:var(--r);padding:26px 16px;box-shadow:var(--drop);text-align:center;margin:10px 0 16px}
 .introword{font-size:56px;line-height:1.4;margin-bottom:10px}
 .introhint{color:var(--ink2);font-size:15px;line-height:1.6;margin:12px 0 0}
+
+/* ---------- משחקים חדשים ---------- */
+.parentword{font-size:54px;text-align:center;margin:14px 0;line-height:1.4}
+.flashwrap{text-align:center;margin:10px 0}
+.flashword{font-size:56px;line-height:1.4;min-height:80px}
+.flashbarbg{height:8px;background:#fff;border-radius:99px;overflow:hidden;margin:6px 24px}
+.flashbar{height:100%;width:100%;background:var(--sunDeep);border-radius:99px}
+.tipcat{margin:18px 4px 8px}

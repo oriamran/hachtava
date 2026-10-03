@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-YV2a/c8Y+e35iYalTQE3hh53XhWsvAAzIkaVhyqE90U=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-h9bYP7a1wHa78LU8JY51IVt5CZZomTRc3bsNo+kJB+U=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DveFyWmNcyUw9BALrl0zxc9GHwMp08+d4Q1HrN+vCG8=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-sGW1pDQhoXdTFZS5aHy2McWbu41tGL2Ap9Jj/OULyJ8=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -666,6 +666,14 @@ body.nav .wrap{padding-top:36px}
 .introword{font-size:56px;line-height:1.4;margin-bottom:10px}
 .introhint{color:var(--ink2);font-size:15px;line-height:1.6;margin:12px 0 0}
 
+/* ---------- משחקים חדשים ---------- */
+.parentword{font-size:54px;text-align:center;margin:14px 0;line-height:1.4}
+.flashwrap{text-align:center;margin:10px 0}
+.flashword{font-size:56px;line-height:1.4;min-height:80px}
+.flashbarbg{height:8px;background:#fff;border-radius:99px;overflow:hidden;margin:6px 24px}
+.flashbar{height:100%;width:100%;background:var(--sunDeep);border-radius:99px}
+.tipcat{margin:18px 4px 8px}
+
 </style>
 </head>
 <body>
@@ -803,6 +811,52 @@ body.nav .wrap{padding-top:36px}
       <button class="go" id="buildcheck">✅ בדיקה</button>
       <button class="mini" id="buildhint">💡 רמז</button>
     </div>
+  </section>
+
+  <!-- ============ הכתבה עם הורה ============ -->
+  <section class="screen" id="s-parent">
+    <p class="sub">הקשב וכתוב את המילה <b>במחברת</b>. אחר כך המבוגר בודק.</p>
+    <p class="sub"><b id="parentn"></b></p>
+    <div class="row"><button class="mini" data-say>🔊 שמע שוב</button></div>
+    <div id="parentword" class="parentword" style="display:none"></div>
+    <div class="row"><button class="go" id="parentreveal" onclick="H.byId('parent').reveal()">👀 בדיקה (למבוגר)</button></div>
+    <div class="row" id="parentmark" style="display:none">
+      <button class="go" onclick="H.byId('parent').mark(true)">✅ כתב נכון</button>
+      <button class="mini" onclick="H.byId('parent').mark(false)">❌ טעה</button>
+    </div>
+  </section>
+
+  <!-- ============ תפוס את הטעות ============ -->
+  <section class="screen" id="s-proof">
+    <p class="sub">אחת המילים כתובה לא נכון. תפוס אותה!</p>
+    <div id="proofopts" class="pickopts"></div>
+    <div id="prooffb" class="fb"></div>
+  </section>
+
+  <!-- ============ האות הקשה ============ -->
+  <section class="screen" id="s-tricky">
+    <p class="sub">לחץ על האות שנשמעת כמו אות אחרת</p>
+    <div class="row"><button class="mini" data-say>🔊 שמע שוב</button></div>
+    <div id="trickytiles" class="slots"></div>
+    <div id="trickyfb" class="fb"></div>
+  </section>
+
+  <!-- ============ הבזק ============ -->
+  <section class="screen" id="s-flash">
+    <p class="sub">הסתכל על המילה, ואז הרכב אותה מהזיכרון</p>
+    <div class="flashwrap">
+      <div id="flashword" class="flashword"></div>
+      <div class="flashbarbg"><div id="flashbar" class="flashbar"></div></div>
+    </div>
+    <div id="flasharea" style="display:none">
+      <div id="flslots" class="slots"></div>
+      <div id="flpool" class="pool"></div>
+      <div class="row">
+        <button class="go" onclick="H.byId('flash').check()">✅ בדיקה</button>
+        <button class="mini" onclick="H.byId('flash').peek()">👀 הבזק שוב</button>
+      </div>
+    </div>
+    <div id="flashfb" class="fb"></div>
   </section>
 
   <!-- ============ שמע ובחר ============ -->
@@ -1248,7 +1302,8 @@ H.isDue = function(s){
 /* סולם שלבים לכל מילה: 0 חדשה, 1 הוכרה, 2 זוהתה, 3 הורכבה, 4 נכתבה מהזיכרון.
    מילה בלי שלב שמור (התקדמות ישנה) מוסקת מהנתונים שיש. */
 H.STAGE_GROUPS = {pick:'recog', memory:'recog', bubbles:'recog',
-                  build:'assemble', anagram:'assemble', missing:'assemble', 'catch':'assemble', write:'write'};
+                  build:'assemble', anagram:'assemble', missing:'assemble', 'catch':'assemble',
+                  proof:'assemble', flash:'assemble', tricky:'recog', write:'write', parent:'write'};
 H.STAGE_TARGET = {recog: 2, assemble: 3, write: 4};
 H.stage = function(word){
   const s = H.state.stats[H.sk(word)];
@@ -1891,7 +1946,9 @@ H.challengeGame = function(){
   const d = H.today();
   let h = 0;
   for(let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0;
-  return H.GAMES[h % H.GAMES.length];
+  const ws = H.words().map(H.disp);
+  const pool = H.GAMES.filter(g => !g.adult && (!g.canPlay || g.canPlay(ws)));
+  return pool[h % pool.length];
 };
 H.startChallenge = function(){
   if(H.challengeDone()) return H.toast('אתגר היום כבר הושלם — חזור מחר 🌞');
@@ -2940,6 +2997,217 @@ H.renderPlay = function(){
     box.appendChild(el);
   });
 };
+
+/* ===== 62-game-parent.js ===== */
+/* ========== 9. הכתבה עם הורה: כותבים במחברת, ההורה בודק ==========
+   הילד כותב על נייר, וההורה מסתכל ולוחץ נכון או טעות. זה קרוב להכתבה בכיתה,
+   מתאים לכתיבה ביד (שנתמכת במחקר), ולא תלוי בזיהוי כתב של האפליקציה. */
+H.game({
+  id:'parent', e:'👨‍👩‍👧', name:'הכתבה עם הורה',
+  desc:'כותבים במחברת, ההורה בודק',
+  adult:true,                                    /* צריך מבוגר, לא נכנס לאתגר היומי */
+  start(){ H.show('parent'); this.next(); },
+  next(){
+    const w = H.nextWord();
+    if(!w) return H.endRound();
+    H.run.revealed = false;
+    H.$('parentword').textContent = '';
+    H.$('parentword').style.display = 'none';
+    H.$('parentmark').style.display = 'none';
+    H.$('parentreveal').style.display = '';
+    H.$('parentn').textContent = (H.run.total - H.run.queue.length) + ' / ' + H.run.total;
+    setTimeout(() => H.say(w), 300);
+  },
+  reveal(){
+    const r = H.run;
+    if(!r.word || r.revealed) return;
+    r.revealed = true; H.sfx.tap();
+    H.$('parentword').textContent = r.word;
+    H.$('parentword').style.display = '';
+    H.$('parentreveal').style.display = 'none';
+    H.$('parentmark').style.display = '';
+  },
+  mark(ok){
+    const r = H.run;
+    if(!r.word || !r.revealed) return;
+    r.revealed = false;                           /* מונע לחיצה כפולה */
+    if(ok) H.right(); else H.wrong();
+    setTimeout(() => this.next(), 350);
+  }
+});
+
+/* ===== 63-game-proof.js ===== */
+/* ========== 10. תפוס את הטעות ==========
+   ארבע מילים, אחת כתובה עם אות דומה בצליל. ללמוד לזהות כתיב שגוי הוא
+   בדיקה עצמית, והטעות היא מהסוג שבאמת נפוצה (ת/ט, כ/ק, א/ע...). */
+H.game({
+  id:'proof', e:'🔍', name:'תפוס את הטעות',
+  desc:'איזו מילה כתובה לא נכון?',
+  start(){ H.show('proof'); this.next(); },
+  next(){
+    const w = H.nextWord();
+    if(!w) return H.endRound();
+    const bad = H.variants(w, 1)[0];
+    if(!bad) return this.next();                  /* אין לה גרסה שגויה הגיונית, מדלגים */
+    const seen = new Set([H.sk(w)]), others = [];
+    H.shuffle(H.words().map(H.disp)).forEach(x => {
+      if(others.length < 3 && !seen.has(H.sk(x))){ seen.add(H.sk(x)); others.push(x); }
+    });
+    const opts = H.shuffle([{t: bad, wrong: true}].concat(others.map(t => ({t, wrong: false}))));
+    const box = H.$('proofopts'); box.innerHTML = '';
+    opts.forEach(o => {
+      const b = H.el('button', 'bigword', o.t);
+      b.onclick = () => this.choose(b, o.wrong);
+      box.appendChild(b);
+    });
+    H.run.bad = bad;
+    H.$('prooffb').textContent = '';
+  },
+  choose(btn, isWrong){
+    const r = H.run;
+    if(r.picked) return;
+    r.picked = true;
+    const fb = H.$('prooffb');
+    if(isWrong){
+      H.right(); btn.classList.add('right');
+      fb.innerHTML = '<span class="ok">🎉 תפסת! הכתיב הנכון: <b>' + H.esc(r.word) + '</b></span>';
+    } else {
+      H.wrong(); btn.classList.add('wrongpick');
+      [...H.$('proofopts').children].forEach(b => { if(b.textContent === r.bad) b.classList.add('right'); });
+      fb.innerHTML = '<span class="no">הטעות הייתה כאן 👆 הכתיב הנכון: <b>' + H.esc(r.word) + '</b></span>';
+    }
+    setTimeout(() => { r.picked = false; this.next(); }, isWrong ? 1500 : 2600);
+  }
+});
+
+/* ===== 64-game-tricky.js ===== */
+/* ========== 11. האות הקשה ==========
+   אחת האסטרטגיות שה-EEF מזכירה היא לזהות את החלקים הקשים במילה וללמוד
+   אותם במפורש. כאן הילד לוחץ על האות שנשמעת כמו אות אחרת (ת/ט, כ/ק, א/ע...),
+   ואז נאמר לו מה היא. מבוסס על H.trickyParts, שמחשב את זה מהמילה עצמה. */
+H.game({
+  id:'tricky', e:'🎯', name:'האות הקשה',
+  desc:'איזו אות נשמעת כמו אות אחרת?',
+  canPlay: words => words.filter(w => H.trickyParts(w).length).length >= 2,
+  start(){
+    if(!this.canPlay(H.run.queue)){
+      H.toast('אין אותיות קשות ברשימה הזאת'); return H.home();
+    }
+    H.show('tricky'); this.next();
+  },
+  next(){
+    const w = H.nextWord();
+    if(!w) return H.endRound();
+    const parts = H.trickyParts(w);
+    if(!parts.length) return this.next();         /* אין במילה אות קשה, מדלגים */
+    H.run.parts = parts;
+    const box = H.$('trickytiles'); box.innerHTML = '';
+    H.clusters(w).forEach((c, i) => {
+      if(c === ' '){ box.appendChild(H.el('span', 'nkspace', '·')); return; }
+      const b = H.el('button', 'tile big', c);
+      b.onclick = () => this.choose(b, i);
+      box.appendChild(b);
+    });
+    H.$('trickyfb').textContent = '';
+    setTimeout(() => H.say(w), 250);
+  },
+  choose(btn, i){
+    const r = H.run;
+    if(r.picked) return;
+    r.picked = true;
+    const hit = r.parts.find(p => p.i === i), fb = H.$('trickyfb');
+    const tiles = [...H.$('trickytiles').querySelectorAll('.tile')];
+    if(hit){
+      H.right(); btn.classList.add('right');
+      fb.innerHTML = '<span class="ok">🎉 נכון! <b>' + H.esc(hit.ch) + '</b> ' + H.esc(hit.why) + '</span>';
+    } else {
+      H.wrong(); btn.classList.add('wrongpick');
+      const clusters = H.clusters(r.word);
+      let k = 0;
+      clusters.forEach((c, idx) => { if(c === ' ') return; if(r.parts.some(p => p.i === idx)) tiles[k].classList.add('right'); k++; });
+      fb.innerHTML = '<span class="no">' + H.trickyHint(r.word) + '</span>';
+    }
+    setTimeout(() => { r.picked = false; this.next(); }, hit ? 1500 : 2600);
+  }
+});
+
+/* ===== 65-game-flash.js ===== */
+/* ========== 12. הבזק ==========
+   המילה מופיעה לכמה שניות ונעלמת, והילד מרכיב אותה מאריחים. זה גשר בין
+   הרכבה (המילה לפניך) לכתיבה מהזיכרון (אין כלום), ונשען על
+   "הסתכל, כסה, כתוב, בדוק". ההוכחות על השיטה מעורבות, ולכן היא רק שלב אחד בסולם. */
+H.game({
+  id:'flash', e:'⚡', name:'הבזק',
+  desc:'מסתכלים ומרכיבים מהזיכרון',
+  start(){ H.show('flash'); this.next(); },
+  next(){
+    const w = H.nextWord();
+    if(!w) return H.endRound();
+    const letters = H.clusters(w), extra = [];
+    let guard = 0;
+    while(extra.length < 3 && guard++ < 120){
+      const c = H.randTile(true);
+      if(!letters.includes(c) && !extra.includes(c)) extra.push(c);
+    }
+    H.run.tiles = H.shuffle(letters.concat(extra).map((ch, i) => ({id:i, ch})));
+    H.run.answer = [];
+    H.$('flashfb').textContent = '';
+    this.flash(w, Math.min(4500, 1800 + w.length * 300));
+    setTimeout(() => H.say(w), 250);
+  },
+  /* מציג את המילה, ואז מסתיר אותה ופותח את האריחים */
+  flash(w, ms){
+    const r = H.run;
+    H.$('flashword').textContent = w;
+    H.$('flashword').style.visibility = 'visible';
+    H.$('flasharea').style.display = 'none';
+    const bar = H.$('flashbar'); bar.style.transition = 'none'; bar.style.width = '100%';
+    requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = 'width ' + ms + 'ms linear'; bar.style.width = '0'; }));
+    clearTimeout(r.ft);
+    r.ft = setTimeout(() => {
+      if(H.run !== r || r.word !== w) return;       /* יצא מהמשחק או עבר מילה */
+      H.$('flashword').style.visibility = 'hidden';
+      H.$('flasharea').style.display = '';
+      this.render();
+    }, ms);
+  },
+  render(){
+    const r = H.run, slots = H.$('flslots'), pool = H.$('flpool');
+    slots.innerHTML = ''; pool.innerHTML = '';
+    if(!r.answer.length) slots.appendChild(H.el('div', 'hint-empty', 'הרכב את המילה שראית'));
+    r.answer.forEach((tid, pos) => {
+      const t = r.tiles.find(x => x.id === tid);
+      const el = H.el('button', 'tile' + (t.ch === ' ' ? ' space' : ''), t.ch === ' ' ? 'רווח' : t.ch);
+      el.onclick = () => { H.sfx.tap(); r.answer.splice(pos, 1); this.render(); };
+      slots.appendChild(el);
+    });
+    r.tiles.forEach(t => {
+      const el = H.el('button', 'tile' + (t.ch === ' ' ? ' space' : '') + (r.answer.includes(t.id) ? ' used' : ''), t.ch === ' ' ? 'רווח' : t.ch);
+      el.onclick = () => { H.sfx.tap(); r.answer.push(t.id); this.render(); };
+      pool.appendChild(el);
+    });
+  },
+  check(){
+    const r = H.run;
+    if(!r.answer.length) return;
+    const got = r.answer.map(id => r.tiles.find(t => t.id === id).ch).join('');
+    if(got === r.word){
+      H.right();
+      H.$('flashfb').innerHTML = '<span class="ok">🎉 זכרת!</span>';
+      H.speak(r.word);
+      setTimeout(() => this.next(), 950);
+    } else {
+      H.wrong();
+      H.$('flashfb').innerHTML = '<span class="no">כמעט… הנה שוב</span>';
+      r.answer = [];
+      this.flash(r.word, Math.min(4500, 2200 + r.word.length * 300));   /* מבזיקים שוב, ומנסים עוד פעם */
+    }
+  },
+  peek(){
+    const r = H.run; if(!r.word) return;
+    this.flash(r.word, 1500);
+  }
+});
 
 /* ===== 70-shop.js ===== */
 /* ========== חנות: דמויות, כובעים, רקעים ========== */
@@ -4222,38 +4490,56 @@ H.endTour = function(){
 
 /* ---------- טיפים להורים ---------- */
 H.TIPS = [
-  {e:'⏱️', t:'קצר ותכוף מנצח',
+  {cat:'a', e:'⏱️', t:'קצר ותכוף מנצח',
    p:'מחקרים על חזרה מרווחת מראים שזכירה טובה יותר כשמפזרים את התרגול על פני ימים, ולא דוחסים אותו. גם אצל ילדים. לכן המשחק מחזיר מילה שנלמדה אחרי יום, שלושה, שבוע, שבועיים וחודש. כמה דקות ביום עדיפות על שעה פעם בשבוע.',
    src:['מדריך חינוכי: חזרה מרווחת ושליפה', 'https://www.edresearch.edu.au/guides-resources/practice-guides/spacing-and-retrieval-practice-guide-full-publication']},
-  {e:'🧠', t:'לנסות להיזכר לפני שמסתכלים',
+  {cat:'a', e:'🧠', t:'לנסות להיזכר לפני שמסתכלים',
    p:'ניסיון לשלוף מילה מהזיכרון, גם כשטועים, מחזק למידה יותר מקריאה חוזרת. במחקרים על למידת מילים אצל ילדים, שליפה חוזרת שיפרה זכירה. במשחק הכתיבה הילד כותב בלי לראות, ורק אחרי טעות מופיע קו עזר. כדאי לא להציץ בשבילו.',
    src:['מחקר: שליפה ולמידת מילים בילדים', 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8084525/']},
-  {e:'📓', t:'אחרי המשחק, גם מחברת',
+  {cat:'a', e:'📓', t:'אחרי המשחק, גם מחברת',
    p:'במחקר על ילדים בני חמש, מי שתרגל כתיבה ביד למד אותיות, איות וקריאה טוב יותר ממי שהקליד. לכן כדאי להוסיף כמה מילים במחברת אחרי הסבב. זה מחקר אחד על גיל צעיר, ולא הכרעה סופית.',
    src:['מחקר: כתיבה ביד מול הקלדה', 'https://www.sciencedirect.com/science/article/pii/S0022096525000013']},
-  {e:'🧩', t:'אם יש קושי בכתיבה או דיסלקציה',
+  {cat:'a', e:'🧩', t:'אם יש קושי בכתיבה או דיסלקציה',
    p:'במחקר על ילדים עם דיסלקציה, איות מילים חדשות היה טוב יותר אחרי למידה בהקלדה מאשר בכתיבה ביד. אם הכתיבה קשה לילד, אפשר להתחיל במשחקים של הרכבת אותיות (הרכבה, ערבוביה, תפוס) ולהוסיף כתיבה בהדרגה. התייעצו עם איש מקצוע.',
    src:['מחקר: קורא רגיל וקורא עם דיסלקציה', 'https://www.sciencedirect.com/science/article/pii/S095947522500043X']},
-  {e:'✅', t:'לתת משוב ספציפי, ולא רק לבדוק',
+  {cat:'a', e:'✅', t:'לתת משוב ספציפי, ולא רק לבדוק',
    p:'ההמלצה של קרן החינוך הבריטית (EEF) לגילאי 5 עד 7: ללמד איות במפורש ולא רק לבחון, לתרגל הרבה, ולתת משוב ברור על מה בדיוק צריך לתקן. למשל "שים לב לאות האחרונה", ולא רק "טעות". שיטת "הסתכל, אמור, כסה, כתוב, בדוק" נמצאת שם כגישה מבטיחה. הראיות על דרכי לימוד איות מוגבלות.',
    src:['EEF: שיפור האוריינות בכיתות הנמוכות', 'https://dera.ioe.ac.uk/id/eprint/29344/1/KS1_Literacy_Guidance_2017.pdf']},
-  {e:'🎁', t:'פרס: הפתעה ולא הבטחה',
+  {cat:'b', e:'🎁', t:'פרס: הפתעה ולא הבטחה',
    p:'בסקירה גדולה של 128 מחקרים, פרס מוחשי שהובטח מראש הפחית עניין פנימי בפעילות, ויותר אצל ילדים. פרס שלא הובטח לא הזיק. מילות עידוד ענייניות על מה שהצליח הועילו, כל עוד לא נאמרו בטון שולט. המשחק נותן פרס בסוף האלבום, ולכן כדאי להציג אותו כחגיגה.',
    src:['סקירה: פרסים ומוטיבציה פנימית (Deci ואחרים)', 'https://depts.washington.edu/techdocs/papers/deciExtrinsicRewardsAndIntrinsicMotivation99.pdf']},
-  {e:'📵', t:'להחליט ביחד מתי נגמר',
+  {cat:'b', e:'📵', t:'להחליט ביחד מתי נגמר',
    p:'בעדכון של פברואר 2026, ארגון רופאי הילדים האמריקאי הפסיק להמליץ על מספר שעות קבוע, והעביר את הדגש לאיכות התוכן, ולשאלה מה המסך דוחק (שינה, תנועה, שיחה). הוא ממליץ על תוכנית משפחתית משותפת. כדאי לקבוע ביחד "שלושה סבבים וזהו". ההערה שלנו: אתגר יומי ורצף ימים משמשים בגרסה הזו כדי לעודד חזרה, ולכן חשוב שהסיום יהיה ברור.',
    src:['EdSurge: ההמלצות החדשות של AAP', 'https://www.edsurge.com/news/2026-02-05-new-aap-screen-time-recommendations-focus-less-on-screens-more-on-family-time']},
-  {e:'🔡', t:'למה בכיתה ג׳ מורידים את הניקוד',
+  {cat:'a', e:'🔡', t:'למה בכיתה ג׳ מורידים את הניקוד',
    p:'בעברית לומדים לקרוא תחילה בכתב מנוקד, שבו התנועות כתובות. בסביבות כיתה ד׳ עוברים לכתב לא מנוקד, שבו רוב התנועות לא מופיעות. מחקר על התפתחות הקריאה בעברית מתאר את המעבר הזה. לכן בכיתות ג׳ עד ו׳ ההגדרה ברירת מחדל בלי ניקוד, ואפשר להפעיל אותו ידנית.',
    src:['Share & Bar-On: התפתחות הקריאה בעברית', 'https://doi.org/10.1177/0022219417718198']}
+  ,{cat:'b', e:'🤝', t:'עזרה בשיעורי בית: לתמוך, לא לשלוט',
+   p:'מטא־אנליזה של 28 מחקרים (כ־378 אלף תלמידים) מצאה שהקשר הכולל בין מעורבות הורים בשיעורי בית להישגים חלש ואף שלילי מעט. מה שכן קשור להישגים טובים יותר: תמיכה באוטונומיה, כלומר לשאול, לעודד ולתת לילד לנסות בעצמו. שליטה, או עזרה במתן התשובה, לא נקשרו להישגים. לכן כדאי לשבת לידו, לא במקומו.',
+   src:['Parental Homework Involvement and Achievement: A Three-Level Meta-Analysis', 'https://www.psicothema.com/pdf/4826.pdf']},
+  {cat:'b', e:'😴', t:'שינה טובה היא חלק מהלמידה',
+   p:'מחקרים בילדים מראים שזכירה של חומר חדש, כולל מילים חדשות, משתפרת אחרי שינה בהשוואה לאותו פרק זמן ער. תרגול קצר בערב ואז שינה מספקת הם שילוב סביר. זה מחקרי מעבדה, ולא הבטחה לשיפור בציון.',
+   src:['Sleep enhances memory consolidation in children', 'https://pubmed.ncbi.nlm.nih.gov/24329882/']},
+  {cat:'c', e:'🎨', t:'סגנונות למידה: לא כדאי להתאים, אלא לגוון',
+   p:'מקובל לחשוב שיש ילדים "חזותיים", "שמיעתיים" או "תנועתיים", ושצריך ללמד כל אחד לפי הסגנון שלו. מטא־אנליזה מ־2024 (21 מחקרים) מצאה שהתאמה כזו עוזרת מעט מאוד, ורק ב־26% מהמדידות הופיע הדפוס שהתיאוריה מנבאת. המחברים הסיקו שהתועלת קטנה ונדירה מכדי להצדיק התאמה, והמליצו על הוראה מגוונת. לכן במשחק יש שמיעה, ראייה, הרכבה וכתיבה לכל ילד, ולא מסלול "לפי סגנון".',
+   src:['מטא־אנליזה 2024: השערת ההתאמה לסגנון למידה', 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11270031/']},
+  {cat:'c', e:'🌱', t:'שבח על מאמץ: כן, אבל בלי ציפיות מוגזמות',
+   p:'מטא־אנליזה מ־2023 מצאה שהתערבויות של "גישת צמיחה" משפרות הישגים מעט מאוד (בערך d=0.09). מטא־אנליזה נוספת מאותה שנה הסיקה שבמחקרים שנעשו בקפדנות רבה אין השפעה מובהקת. במחקר בבית ספר יסודי, האמונות של הילדים השתנו אבל הביצועים לא. לכן שבח ספציפי על מאמץ ואסטרטגיה ("ניסית להרכיב מחדש") הוא הרגל סביר, אבל לא תחליף לתרגול.',
+   src:['מחקר בכיתות יסוד: גישת צמיחה (2025)', 'https://doi.org/10.3390/educsci15030327']}
 ];
+H.TIP_CATS = {a:'איך לתרגל', b:'ההורה והבית', c:'מיתוסים ומה שלא הוכח'};
 H.renderTips = function(){
   const box = H.$('tipsbody'); box.innerHTML = '';
-  H.TIPS.forEach(t => {
-    const c = H.el('div', 'tipcard');
-    c.innerHTML = '<span class="tip-e">' + t.e + '</span><div><b>' + t.t + '</b><p>' + t.p + '</p>' +
-      (t.src ? '<a class="tip-src" target="_blank" rel="noopener noreferrer" href="' + t.src[1] + '">מקור: ' + t.src[0] + '</a>' : '') + '</div>';
-    box.appendChild(c);
+  Object.keys(H.TIP_CATS).forEach(cat => {
+    const list = H.TIPS.filter(t => t.cat === cat);
+    if(!list.length) return;
+    box.appendChild(H.el('h3', 'tipcat', H.TIP_CATS[cat]));
+    list.forEach(t => {
+      const c = H.el('div', 'tipcard');
+      c.innerHTML = '<span class="tip-e">' + t.e + '</span><div><b>' + t.t + '</b><p>' + t.p + '</p>' +
+        (t.src ? '<a class="tip-src" target="_blank" rel="noopener noreferrer" href="' + t.src[1] + '">מקור: ' + t.src[0] + '</a>' : '') + '</div>';
+      box.appendChild(c);
+    });
   });
 };
 
@@ -4271,7 +4557,7 @@ H.renderTips = function(){
    סולם השלבים (H.stage): 0 חדשה, 1 הוכרה, 2 זוהתה, 3 הורכבה, 4 נכתבה.
    ========================================================== */
 H.PLAN_STEPS = 3;
-H.PLAN_GROUPS = {recog:['pick','memory','bubbles'], assemble:['build','missing','anagram'], write:['write']};
+H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky'], assemble:['build','missing','anagram','proof','flash'], write:['write','parent']};
 H.GROUP_TITLE = {recog:'מכירים את המילים', assemble:'מרכיבים את המילים', write:'כותבים מהזיכרון', review:'חוזרים על מה שלמדנו'};
 H.PLAN_PREFS = [
   ['recog', 'assemble', 'write', 'review'],
@@ -4314,7 +4600,10 @@ H.planStep = function(slot, b){
     if(g === 'write') ws = ws.concat(b.review);          /* חזרה מרווחת יושבת בשלב הכתיבה */
     if(!ws.length) continue;
     const grp = g === 'review' ? 'write' : g;
-    return {group: g, words: ws.slice(0, R).map(H.disp), options: H.PLAN_GROUPS[grp]};
+    const words = ws.slice(0, R).map(H.disp);
+    /* משחק שאין לו מה לעשות עם המילים האלה (למשל אות קשה) לא מוצע */
+    const options = H.PLAN_GROUPS[grp].filter(id => { const gm = H.byId(id); return gm && (!gm.canPlay || gm.canPlay(words)); });
+    return {group: g, words, options};
   }
   return null;
 };
