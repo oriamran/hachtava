@@ -8,14 +8,14 @@ H.byId = id => H.GAMES.find(g => g.id === id);
 H.ROUND = 5;              /* מילים בסיבוב */
 H.run = null;             /* הסיבוב הנוכחי */
 
-H.startRound = function(gameId, station){
+H.startRound = function(gameId, station, words, extra){
   const g = H.byId(gameId);
-  H.run = {
+  H.run = Object.assign({
     game: g, station,
-    queue: H.pickWords(H.roundSize()),
+    queue: words ? words.slice() : H.pickWords(H.roundSize()),
     total: 0, right: 0, wrong: 0,
     word: null
-  };
+  }, extra || {});
   H.run.total = H.run.queue.length;
   H.logStart();
   g.start();
@@ -28,12 +28,17 @@ H.nextWord = function(){
 };
 H.right = function(xp){
   const r = H.run;
-  r.right++; H.hit(r.word); H.sfx.good();
+  r.right++;
+  if(r.pretest) H.setStage(r.word, 2);        /* בוחן פתיחה: מילה שהוכרה מדלגת, בלי לספור כרצף */
+  else H.hit(r.word, r.game && r.game.id);
+  H.sfx.good();
   if(xp) { H.state.xp += 0; }
 };
 H.wrong = function(){
   const r = H.run;
-  r.wrong++; H.miss(r.word); H.sfx.bad();
+  r.wrong++;
+  if(!r.pretest) H.miss(r.word);
+  H.sfx.bad();
 };
 /* כוכבים לפי דיוק: 3 = בלי טעויות */
 H.stars = function(){
@@ -45,6 +50,7 @@ H.stars = function(){
 H.endRound = function(){
   const r = H.run, stars = H.stars();
   H.logEnd(r.right, r.wrong, r.game && r.game.id);
+  if(r.plan) return H.planRoundDone();
   if(r.challenge) return H.finishChallenge();
   const xp = 20 + r.right * 8 + (stars === 3 ? 25 : 0);
   const perfect = r.wrong === 0;

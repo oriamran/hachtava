@@ -82,6 +82,7 @@
     </div>
 
     <div class="tiles">
+      <button class="menu wide plan" id="planbtn" onclick="H.openPlan()"></button>
       <button class="menu wide chal" id="chalbtn" onclick="H.startChallenge()"></button>
       <button class="menu big-map" data-go="map">
         <span class="m-e">🗺️</span><b>המסע</b><small>תחנות שנפתחות אחת אחרי השנייה</small>
@@ -250,6 +251,22 @@
     <div id="rep-done"></div>
     <h3>עוד לא תורגלו</h3>
     <div id="rep-fresh"></div>
+  </section>
+
+  <!-- ============ התרגול של היום ============ -->
+  <section class="screen" id="s-plan">
+    <h2>התרגול של היום 📅</h2>
+    <div id="plandots" class="plandots"></div>
+    <div id="planbody"></div>
+  </section>
+  <section class="screen" id="s-intro">
+    <p class="sub">מילה חדשה <b id="intro-n"></b></p>
+    <div class="introcard">
+      <div id="intro-w" class="introword"></div>
+      <button class="mini" onclick="H.introSay()">🔊 שמע</button>
+      <p id="intro-hint" class="introhint"></p>
+    </div>
+    <div class="row"><button class="go" id="intro-next" onclick="H.introNext()">הבא ➜</button></div>
   </section>
 
   <!-- ============ מדריך ============ -->

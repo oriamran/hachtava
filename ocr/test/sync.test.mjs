@@ -82,5 +82,10 @@ await saveState(e2, user(7), { xp: 2, packs: [{ id: "p", list: ["a", "b"] }], pa
 ok("registration time is set once and kept", c1 > 0 && JSON.parse(e2.DATA._m.get("s:u7")).created === c1);
 ok("admin list exposes registration time", (await adminList(e2)).users[0].created === c1);
 
+console.log("word stage ladder");
+const lad = sanitizeState({ stats: { a: { ok: 1, st: 3 }, b: { ok: 1, st: 99 }, c: { ok: 1, st: "x" }, d: { ok: 1 } } });
+ok("stage kept and clamped to 0..4", lad.stats.a.st === 3 && lad.stats.b.st === 4);
+ok("a non-numeric or missing stage is dropped", !("st" in lad.stats.c) && !("st" in lad.stats.d));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

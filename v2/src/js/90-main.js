@@ -4,7 +4,7 @@ H.refresh = function(){
   H.$('hello').textContent = H.state.name
     ? 'היי ' + H.state.name + '!' : 'היי!';
   H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport();
-  H.renderChallenge(); H.renderLevels(); H.renderAccount(); H.paint();
+  H.renderChallenge(); H.renderPlanBtn(); H.renderLevels(); H.renderAccount(); H.paint();
 };
 
 H.boot = function(){

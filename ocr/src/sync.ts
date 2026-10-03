@@ -56,8 +56,10 @@ export function sanitizeState(raw: unknown): Obj | null {
   const stats: Obj = {};
   if (isObj(raw.stats)) for (const k of Object.keys(raw.stats).slice(0, 2000)) {
     const v = raw.stats[k]; if (!isObj(v) || !okKey(k)) continue;
-    stats[k.slice(0, 60)] = { ok: num(v.ok, 0, 1e6), bad: num(v.bad, 0, 1e6), run: num(v.run, 0, 1e6),
-                              lv: num(v.lv, 0, 20), last: num(v.last, 0, 8.64e15) };
+    const e: Obj = { ok: num(v.ok, 0, 1e6), bad: num(v.bad, 0, 1e6), run: num(v.run, 0, 1e6),
+                     lv: num(v.lv, 0, 20), last: num(v.last, 0, 8.64e15) };
+    if (typeof v.st === "number") e.st = num(v.st, 0, 4);     /* שלב בסולם: 0 חדשה עד 4 נכתבה */
+    stats[k.slice(0, 60)] = e;
   }
   s.stats = stats;
 

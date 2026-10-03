@@ -50,11 +50,16 @@ H.cleanState = function(raw){
     const key = H.cleanText(H.strip(k), 60);
     const cur = {ok: num(v.ok,0,1e6), bad: num(v.bad,0,1e6), run: num(v.run,0,1e6),
                  lv: num(v.lv,0,20), last: num(v.last,0,8.64e15)};
+    if(typeof v.st === 'number') cur.st = num(v.st,0,4);
     const prev = s.stats[key];
     /* שתי גרסאות של אותה מילה (עם ובלי ניקוד) נמזגות: סוכמים ניסיונות, לוקחים את הרצף הגבוה */
     s.stats[key] = prev ? {ok: prev.ok+cur.ok, bad: prev.bad+cur.bad, run: Math.max(prev.run,cur.run),
-                           lv: Math.max(prev.lv,cur.lv), last: Math.max(prev.last,cur.last)} : cur;
+                           lv: Math.max(prev.lv,cur.lv), last: Math.max(prev.last,cur.last),
+                           st: (prev.st === undefined && cur.st === undefined) ? undefined : Math.max(prev.st||0, cur.st||0)} : cur;
   });
+  const pl = isO(raw.plan) ? raw.plan : {};
+  s.plan = {d: T(pl.d, 12), n: num(pl.n, 0, 9), intro: T(pl.intro, 12), pre: {}};
+  keys(pl.pre, 20).forEach(k => { if(pl.pre[k] === true) s.plan.pre[H.cleanText(k, 40)] = true; });
   s.stars = {};
   keys(raw.stars, 100).forEach(k => { s.stars[H.cleanText(k, 6)] = num(raw.stars[k], 0, 3); });
   s.log = {};

@@ -611,3 +611,22 @@ body.nav .wrap{padding-top:36px}
 .mini.tb{min-height:40px;padding:8px 7px;font-size:12px;white-space:nowrap;flex:0 1 auto}
 
 .tip-src{display:inline-block;margin-top:6px;font-size:12px;color:var(--plum);text-decoration:underline}
+
+/* ---------- התרגול של היום ---------- */
+.menu.plan{background:linear-gradient(135deg,#e6f7ef,#d3f0e4)}
+.menu.plan.done{opacity:.75}
+.plandots{display:flex;gap:10px;justify-content:center;margin:6px 0 14px}
+.plandots i{width:14px;height:14px;border-radius:50%;background:#fff;opacity:.6}
+.plandots i.on{background:var(--sunDeep);opacity:1;transform:scale(1.2)}
+.plandots i.done{background:var(--good);opacity:1}
+.plancard{background:var(--card);border-radius:var(--r);padding:22px 16px;box-shadow:var(--drop);text-align:center}
+.plancard h2{margin:8px 0}
+.plancard p{color:var(--ink2);line-height:1.6;margin:6px 0 12px}
+.plan-e{font-size:56px;line-height:1.1}
+.planwords{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 14px}
+.planwords span{background:#f1edff;border-radius:999px;padding:6px 12px;font-size:20px}
+.planchips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.planchips .lvchip{flex:0 1 auto;min-height:44px;padding:8px 12px}
+.introcard{background:var(--card);border-radius:var(--r);padding:26px 16px;box-shadow:var(--drop);text-align:center;margin:10px 0 16px}
+.introword{font-size:56px;line-height:1.4;margin-bottom:10px}
+.introhint{color:var(--ink2);font-size:15px;line-height:1.6;margin:12px 0 0}

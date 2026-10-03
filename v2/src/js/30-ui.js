@@ -95,6 +95,7 @@ H.finish = function(opt){
   }
   H.endAgain = opt.onAgain || null;
   H.$('againbtn').style.display = opt.onAgain ? '' : 'none';
+  H.$('againbtn').textContent = opt.againLabel || '🔁 עוד פעם';
   if(opt.xp) H.reward(opt.xp);
   if((opt.stars||0) >= 3) H.confetti(60);
   H.show('end');

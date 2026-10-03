@@ -66,6 +66,7 @@ H.blank = () => ({
   stars: {},                 /* לכל תחנה במפה: 0..3 כוכבים */
   album: [],                 /* מילים שנכבשו */
   daily: {last: '', streak: 0},
+  plan: {d: '', n: 0, intro: '', pre: {}},   /* התרגול של היום */
   wins: 0
 });
 
@@ -182,9 +183,28 @@ H.isDue = function(s){
   /* שמירה ישנה בלי תאריך: מתייחסים אליה כבשלה */
   return !s.last || Date.now() - s.last >= H.dueMs(s);
 };
-H.hit = function(word){
+/* סולם שלבים לכל מילה: 0 חדשה, 1 הוכרה, 2 זוהתה, 3 הורכבה, 4 נכתבה מהזיכרון.
+   מילה בלי שלב שמור (התקדמות ישנה) מוסקת מהנתונים שיש. */
+H.STAGE_GROUPS = {pick:'recog', memory:'recog', bubbles:'recog',
+                  build:'assemble', anagram:'assemble', missing:'assemble', 'catch':'assemble', write:'write'};
+H.STAGE_TARGET = {recog: 2, assemble: 3, write: 4};
+H.stage = function(word){
+  const s = H.state.stats[H.sk(word)];
+  if(!s) return 0;
+  if(typeof s.st === 'number') return s.st;
+  return s.run >= H.MASTER_AT ? 4 : (s.ok > 0 ? 2 : 0);
+};
+H.setStage = function(word, n){
   const k = H.sk(word);
   const s = H.state.stats[k] || (H.state.stats[k] = {ok:0, bad:0, run:0});
+  s.st = Math.max(0, Math.min(4, n));
+};
+H.hit = function(word, gameId){
+  const k = H.sk(word);
+  const cur = H.stage(word);
+  const s = H.state.stats[k] || (H.state.stats[k] = {ok:0, bad:0, run:0});
+  const target = H.STAGE_TARGET[H.STAGE_GROUPS[gameId]] || cur;
+  s.st = Math.max(cur, target);               /* עולים בסולם, לא יורדים בהצלחה */
   const wasMastered = s.run >= H.MASTER_AT, wasDue = H.isDue(s);
   s.ok++; s.run++;
   /* הרווח גדל רק כשענו נכון על מילה שהגיע זמנה — לא על כל פגיעה באותו יום */
@@ -196,7 +216,11 @@ H.hit = function(word){
 H.miss = function(word){
   const k = H.sk(word);
   const s = H.state.stats[k] || (H.state.stats[k] = {ok:0, bad:0, run:0});
-  s.bad++; s.run = 0; s.lv = 0; s.last = Date.now(); H.save();
+  const cur = H.stage(word);
+  s.bad++; s.run = 0; s.lv = 0; s.last = Date.now();
+  if(cur >= 2) s.st = cur - 1;                /* טעות מורידה שלב אחד, לא מחזירה להתחלה */
+  else s.st = cur;
+  H.save();
 };
 /* יומן תרגול לדוח ההורים */
 H.today = () => new Date().toISOString().slice(0,10);
