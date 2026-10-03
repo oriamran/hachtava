@@ -93,8 +93,11 @@ H.load = function(){
   H.syncStats();
   H.checkDaily();
 };
-H.save = function(){
+/* fromServer: שחזור מהשרת שומר את החותמת המקורית, אחרת הוא היה "נכתב עכשיו" */
+H.save = function(fromServer){
+  if(fromServer !== true) H.state.updatedAt = Date.now();
   try { localStorage.setItem(H.KEY, JSON.stringify(H.state)); } catch(e){}
+  if(H.pushSoon) H.pushSoon();
 };
 H.syncStats = function(){
   const st = H.state.stats;

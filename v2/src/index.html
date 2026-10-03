@@ -276,6 +276,18 @@
     <label class="lbl">קוד גישה לסריקה<input id="scanTokIn" placeholder="ריק = בלי קוד" onchange="H.setScanToken(this.value)"></label>
     <p class="note" style="text-align:start">רק עם כתובת שרת אפשר לקרוא מילים מצילום. בלעדיה המשחק עובד אופליין במלואו.</p>
 
+    <h3>חשבון וסנכרון</h3>
+    <div id="accbox">
+      <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ריק = בלי התחברות" onchange="H.setClientId(this.value)"></label>
+      <div id="gbtn" class="gbtn"></div>
+      <p class="note" id="accmsg" style="text-align:start"></p>
+      <div class="row">
+        <button class="mini" id="syncnow" style="display:none" onclick="H.syncNow()">🔄 סנכרן עכשיו</button>
+        <button class="mini" id="signoutbtn" style="display:none" onclick="H.signOut()">התנתק</button>
+      </div>
+      <p class="note" style="text-align:start">ההתחברות היא להורה בלבד. הילד לא מתחבר, והמשחק עובד גם בלי חשבון.</p>
+    </div>
+
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
     <div class="row">

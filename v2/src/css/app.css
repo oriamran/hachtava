@@ -524,3 +524,6 @@ body.nav .wrap{padding-top:36px}
 .upgrade b{font-size:16px}
 .upgrade p{margin:6px 0 0;font-size:14px;color:var(--ink2);font-weight:700}
 .upgrade .upgrade-contact{color:var(--ink)}
+
+/* ---------- התחברות ---------- */
+.gbtn{display:flex;justify-content:center;margin-top:10px;min-height:44px}

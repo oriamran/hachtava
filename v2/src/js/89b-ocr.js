@@ -58,7 +58,8 @@ H.readPhoto = async function(){
     const res = await fetch(url, {
       method: 'POST',
       headers: Object.assign({'Content-Type': 'application/json'},
-               H.scanToken() ? {'X-Scan-Token': H.scanToken()} : {}),
+               H.scanToken() ? {'X-Scan-Token': H.scanToken()} : {},
+               H.authHeader ? H.authHeader() : {}),
       body: JSON.stringify({image: photo, mediaType: m ? m[1] : 'image/jpeg',
                             deviceId: H.deviceId()})
     });

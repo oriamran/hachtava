@@ -9,6 +9,7 @@ H.refresh = function(){
 
 H.boot = function(){
   H.load();
+  if(H.loadAcc) H.loadAcc();
   try{ if(localStorage.getItem('hachtava_script') === 'dfus'){
     document.body.classList.add('dfus');
     H.$('ktbtn').textContent = 'דפוס 🔤';
