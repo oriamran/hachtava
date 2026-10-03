@@ -35,8 +35,9 @@ H.game({
     } else {
       H.wrong(); btn.classList.add('wrongpick');
       [...H.$('proofopts').children].forEach(b => { if(b.textContent === r.bad) b.classList.add('right'); });
-      fb.innerHTML = '<span class="no">הטעות הייתה כאן 👆 הכתיב הנכון: <b>' + H.esc(r.word) + '</b></span>';
+      fb.innerHTML = '<span class="no">הטעות הייתה כאן 👆 הכתיב הנכון:</span><div id="proofseg" class="segbox"></div>';
+      r.cancelSeg = H.segmentShow(r.word, H.$('proofseg'));
     }
-    setTimeout(() => { r.picked = false; this.next(); }, isWrong ? 1500 : 2600);
+    setTimeout(() => { if(r.cancelSeg) r.cancelSeg(); r.picked = false; this.next(); }, isWrong ? 1500 : H.segmentMs(r.word) + 1200);
   }
 });

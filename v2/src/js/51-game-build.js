@@ -47,9 +47,10 @@ H.game({
       setTimeout(() => this.next(), 950);
     } else {
       H.wrong();
-      H.$('buildfb').innerHTML = '<span class="no">כמעט… נסה שוב</span>';
+      H.$('buildfb').innerHTML = '<span class="no">כמעט… ככה זה נבנה:</span><div id="buildseg" class="segbox"></div>';
+      if(r.cancelSeg) r.cancelSeg();
+      r.cancelSeg = H.segmentShow(r.word, H.$('buildseg'));
       r.answer = []; this.render();
-      setTimeout(() => H.say(r.word), 350);
     }
   },
   hint(){

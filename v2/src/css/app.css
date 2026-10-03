@@ -638,3 +638,16 @@ body.nav .wrap{padding-top:36px}
 .flashbarbg{height:8px;background:#fff;border-radius:99px;overflow:hidden;margin:6px 24px}
 .flashbar{height:100%;width:100%;background:var(--sunDeep);border-radius:99px}
 .tipcat{margin:18px 4px 8px}
+
+/* ---------- הדגמה מפורקת וחיפוש מילים ---------- */
+.segbox{margin-top:8px}
+.seg{display:inline-flex;gap:4px;direction:rtl}
+.seg b{font-size:34px;padding:2px 8px;border-radius:12px;background:#f1edff;color:var(--ink);transition:background .15s,transform .15s}
+.seg b.on{background:var(--sun);transform:scale(1.15)}
+.searchgrid{display:grid;gap:4px;max-width:360px;margin:10px auto;direction:rtl}
+.scell{aspect-ratio:1;font-size:24px;padding:0;background:#fff;border-radius:10px;box-shadow:0 3px 0 var(--cardEdge);color:var(--ink)}
+.scell.first{background:var(--sun)}
+.scell.found{background:linear-gradient(135deg,#8ff0cd,var(--mint));color:#05463f}
+.searchlist{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
+.searchlist span{background:#fff;border-radius:999px;padding:4px 12px;font-size:16px;letter-spacing:2px}
+.searchlist span.done{background:#d9f7ea;color:#05463f;text-decoration:line-through}

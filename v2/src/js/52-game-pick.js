@@ -25,8 +25,9 @@ H.game({
     } else {
       H.wrong(); btn.classList.add('wrongpick');
       [...H.$('pickopts').children].forEach(b => { if(b.textContent === H.run.word) b.classList.add('right'); });
-      H.$('pickfb').innerHTML = '<span class="no">זו הנכונה 👆</span>';
+      H.$('pickfb').innerHTML = '<span class="no">זו הנכונה 👆</span><div id="pickseg" class="segbox"></div>';
+      H.run.cancelSeg = H.segmentShow(H.run.word, H.$('pickseg'));
     }
-    setTimeout(() => { H.run.picked = false; this.next(); }, ok ? 850 : 1900);
+    setTimeout(() => { if(H.run.cancelSeg) H.run.cancelSeg(); H.run.picked = false; this.next(); }, ok ? 850 : H.segmentMs(H.run.word) + 1200);
   }
 });

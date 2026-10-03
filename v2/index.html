@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-wOPzf6OawypbyH75kCxYxsSiRyrfj3Kz4m3VGgSwkI0=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-sGW1pDQhoXdTFZS5aHy2McWbu41tGL2Ap9Jj/OULyJ8=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-eNaoMpbJEyYF1vusdSWGK5SaDsJ1MGhIcDKok40pC7I=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-rUAYeVgRSXcMXwHm8QKrs0e14Y339uMbRZD4hzsokNo=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -674,6 +674,19 @@ body.nav .wrap{padding-top:36px}
 .flashbar{height:100%;width:100%;background:var(--sunDeep);border-radius:99px}
 .tipcat{margin:18px 4px 8px}
 
+/* ---------- הדגמה מפורקת וחיפוש מילים ---------- */
+.segbox{margin-top:8px}
+.seg{display:inline-flex;gap:4px;direction:rtl}
+.seg b{font-size:34px;padding:2px 8px;border-radius:12px;background:#f1edff;color:var(--ink);transition:background .15s,transform .15s}
+.seg b.on{background:var(--sun);transform:scale(1.15)}
+.searchgrid{display:grid;gap:4px;max-width:360px;margin:10px auto;direction:rtl}
+.scell{aspect-ratio:1;font-size:24px;padding:0;background:#fff;border-radius:10px;box-shadow:0 3px 0 var(--cardEdge);color:var(--ink)}
+.scell.first{background:var(--sun)}
+.scell.found{background:linear-gradient(135deg,#8ff0cd,var(--mint));color:#05463f}
+.searchlist{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
+.searchlist span{background:#fff;border-radius:999px;padding:4px 12px;font-size:16px;letter-spacing:2px}
+.searchlist span.done{background:#d9f7ea;color:#05463f;text-decoration:line-through}
+
 </style>
 </head>
 <body>
@@ -811,6 +824,14 @@ body.nav .wrap{padding-top:36px}
       <button class="go" id="buildcheck">✅ בדיקה</button>
       <button class="mini" id="buildhint">💡 רמז</button>
     </div>
+  </section>
+
+  <!-- ============ חיפוש מילים ============ -->
+  <section class="screen" id="s-search">
+    <p class="sub">מצא את המילים: לחץ על האות הראשונה ואז על האחרונה</p>
+    <div id="searchlist" class="searchlist"></div>
+    <div id="searchgrid" class="searchgrid"></div>
+    <div class="row"><button class="mini" onclick="H.byId('search').hint()">💡 רמז</button></div>
   </section>
 
   <!-- ============ הכתבה עם הורה ============ -->
@@ -1303,7 +1324,7 @@ H.isDue = function(s){
    מילה בלי שלב שמור (התקדמות ישנה) מוסקת מהנתונים שיש. */
 H.STAGE_GROUPS = {pick:'recog', memory:'recog', bubbles:'recog',
                   build:'assemble', anagram:'assemble', missing:'assemble', 'catch':'assemble',
-                  proof:'assemble', flash:'assemble', tricky:'recog', write:'write', parent:'write'};
+                  proof:'assemble', flash:'assemble', tricky:'recog', search:'recog', write:'write', parent:'write'};
 H.STAGE_TARGET = {recog: 2, assemble: 3, write: 4};
 H.stage = function(word){
   const s = H.state.stats[H.sk(word)];
@@ -2084,9 +2105,10 @@ H.game({
       setTimeout(() => this.next(), 950);
     } else {
       H.wrong();
-      H.$('buildfb').innerHTML = '<span class="no">כמעט… נסה שוב</span>';
+      H.$('buildfb').innerHTML = '<span class="no">כמעט… ככה זה נבנה:</span><div id="buildseg" class="segbox"></div>';
+      if(r.cancelSeg) r.cancelSeg();
+      r.cancelSeg = H.segmentShow(r.word, H.$('buildseg'));
       r.answer = []; this.render();
-      setTimeout(() => H.say(r.word), 350);
     }
   },
   hint(){
@@ -2123,9 +2145,10 @@ H.game({
     } else {
       H.wrong(); btn.classList.add('wrongpick');
       [...H.$('pickopts').children].forEach(b => { if(b.textContent === H.run.word) b.classList.add('right'); });
-      H.$('pickfb').innerHTML = '<span class="no">זו הנכונה 👆</span>';
+      H.$('pickfb').innerHTML = '<span class="no">זו הנכונה 👆</span><div id="pickseg" class="segbox"></div>';
+      H.run.cancelSeg = H.segmentShow(H.run.word, H.$('pickseg'));
     }
-    setTimeout(() => { H.run.picked = false; this.next(); }, ok ? 850 : 1900);
+    setTimeout(() => { if(H.run.cancelSeg) H.run.cancelSeg(); H.run.picked = false; this.next(); }, ok ? 850 : H.segmentMs(H.run.word) + 1200);
   }
 });
 
@@ -3074,9 +3097,10 @@ H.game({
     } else {
       H.wrong(); btn.classList.add('wrongpick');
       [...H.$('proofopts').children].forEach(b => { if(b.textContent === r.bad) b.classList.add('right'); });
-      fb.innerHTML = '<span class="no">הטעות הייתה כאן 👆 הכתיב הנכון: <b>' + H.esc(r.word) + '</b></span>';
+      fb.innerHTML = '<span class="no">הטעות הייתה כאן 👆 הכתיב הנכון:</span><div id="proofseg" class="segbox"></div>';
+      r.cancelSeg = H.segmentShow(r.word, H.$('proofseg'));
     }
-    setTimeout(() => { r.picked = false; this.next(); }, isWrong ? 1500 : 2600);
+    setTimeout(() => { if(r.cancelSeg) r.cancelSeg(); r.picked = false; this.next(); }, isWrong ? 1500 : H.segmentMs(r.word) + 1200);
   }
 });
 
@@ -3206,6 +3230,123 @@ H.game({
   peek(){
     const r = H.run; if(!r.word) return;
     this.flash(r.word, 1500);
+  }
+});
+
+/* ===== 66-segment.js ===== */
+/* ==========================================================
+   הדגמה מפורקת: מדגישים את המילה בלוקים של אות+ניקוד, אחד אחרי השני,
+   ומקריאים כל בלוק. אחרי זה המילה השלמה.
+
+   למה: במחקר על משחק איות דיגיטלי בעברית (Elimelech & Aram, 2019, גן חובה),
+   המשוב שעזר הכי הרבה היה פירוק המילה לצלילים לפי הכתיב העברי וחיבור כל צליל
+   לאות שלו. הבלוק של אות עם תנועה הוא יחידת ההוראה המקובלת בעברית.
+   המחקר בגיל צעיר יותר מזה של המשחק, ובלי קול עברי במכשיר נשאר רק החלק החזותי.
+   ========================================================== */
+H.SEG_MS = 650;
+H.segmentMs = w => H.clusters(w).filter(c => c !== ' ').length * H.SEG_MS + 700;
+
+/* box: אלמנט שבו מציגים. מחזיר פונקציית ביטול. */
+H.segmentShow = function(word, box){
+  const parts = H.clusters(word).filter(c => c !== ' ');
+  box.innerHTML = '<span class="seg">' + parts.map(c => '<b>' + H.esc(c) + '</b>').join('') + '</span>';
+  const els = box.querySelectorAll('.seg b');
+  let i = 0, timers = [];
+  const step = () => {
+    els.forEach((e, k) => e.classList.toggle('on', k === i));
+    if(i < parts.length){
+      H.speak(parts[i]);
+      i++;
+      timers.push(setTimeout(step, H.SEG_MS));
+    } else {
+      els.forEach(e => e.classList.add('on'));
+      H.speak(word);
+    }
+  };
+  timers.push(setTimeout(step, 250));
+  return () => timers.forEach(clearTimeout);
+};
+
+/* ===== 67-game-search.js ===== */
+/* ========== 13. חיפוש מילים ==========
+   תשבץ אותיות: מילות הסבב מוסתרות ברשת, בשורות (מימין לשמאל) או בעמודות
+   (מלמעלה למטה). הילד לוחץ על האות הראשונה ואז על האחרונה. סריקה של אותיות
+   מחזקת את סדר האותיות בכל מילה, אבל זה שלב הכרה ולא כתיבה. */
+H.SEARCH_N = 7;
+H.game({
+  id:'search', e:'🔎', name:'חיפוש מילים',
+  desc:'מצא את המילים ברשת האותיות',
+  /* מילים בלי ניקוד וללא רווחים, עד 7 אותיות */
+  clean: w => H.strip(w).replace(/\s+/g, ''),
+  canPlay(words){ return words.filter(w => { const n = H.strip(w).replace(/\s+/g, '').length; return n >= 2 && n <= H.SEARCH_N; }).length >= 2; },
+  start(){
+    const r = H.run, N = H.SEARCH_N;
+    const items = r.queue.map(w => ({w, s: this.clean(w)}))
+      .filter(x => x.s.length >= 2 && x.s.length <= N).sort((a, b) => b.s.length - a.s.length);
+    const grid = Array.from({length: N * N}, () => '');
+    const placed = [];
+    items.forEach(it => {
+      for(let t = 0; t < 250; t++){
+        const vert = Math.random() < .5, row = Math.floor(Math.random() * N), col = Math.floor(Math.random() * N);
+        const cells = [];
+        for(let k = 0; k < it.s.length; k++){
+          const rr = vert ? row + k : row, cc = vert ? col : col + k;
+          if(rr >= N || cc >= N){ cells.length = 0; break; }
+          cells.push(rr * N + cc);
+        }
+        if(!cells.length) continue;
+        if(cells.every((ci, k) => !grid[ci] || grid[ci] === it.s[k])){
+          cells.forEach((ci, k) => grid[ci] = it.s[k]);
+          placed.push({w: it.w, s: it.s, cells, found: false});
+          break;
+        }
+      }
+    });
+    if(placed.length < 2){ H.toast('אין מספיק מילים קצרות לחיפוש'); return H.home(); }
+    const abc = 'אבגדהוזחטיכלמנסעפצקרשת';
+    for(let i = 0; i < grid.length; i++) if(!grid[i]) grid[i] = abc[Math.floor(Math.random() * abc.length)];
+    r.grid = grid; r.placed = placed; r.first = -1; r.queue = []; r.total = placed.length;
+    H.show('search'); this.render();
+  },
+  render(){
+    const r = H.run, box = H.$('searchgrid'), N = H.SEARCH_N;
+    box.style.gridTemplateColumns = 'repeat(' + N + ',1fr)';
+    box.innerHTML = '';
+    const foundCells = new Set();
+    r.placed.forEach(p => { if(p.found) p.cells.forEach(c => foundCells.add(c)); });
+    r.grid.forEach((ch, i) => {
+      const b = H.el('button', 'scell' + (foundCells.has(i) ? ' found' : '') + (r.first === i ? ' first' : ''), ch);
+      b.onclick = () => this.tap(i);
+      box.appendChild(b);
+    });
+    H.$('searchlist').innerHTML = r.placed.map(p => '<span class="' + (p.found ? 'done' : '') + '">' + H.esc(p.found ? p.w : '▢'.repeat(Math.min(p.s.length, 7))) + '</span>').join('');
+  },
+  tap(i){
+    const r = H.run, N = H.SEARCH_N;
+    H.sfx.tap();
+    if(r.first < 0){ r.first = i; return this.render(); }
+    let a = r.first, b = i; r.first = -1;
+    const sameRow = Math.floor(a / N) === Math.floor(b / N), sameCol = a % N === b % N;
+    if(a !== b && (sameRow || sameCol)){
+      if(a > b){ const t = a; a = b; b = t; }              /* סדר הקריאה: עולה */
+      const step = sameRow ? 1 : N, cells = [];
+      for(let c = a; c <= b; c += step) cells.push(c);
+      const s = cells.map(c => r.grid[c]).join('');
+      const hit = r.placed.find(p => !p.found && p.s === s);
+      if(hit){
+        hit.found = true; r.word = hit.w; H.right();
+        H.toast('🎉 ' + hit.w, 'good');
+        this.render();
+        if(r.placed.every(p => p.found)) setTimeout(() => H.endRound(), 700);
+        return;
+      }
+    }
+    r.wrong++; H.sfx.bad();                                   /* בלי לייחס לטעות מילה מסוימת */
+    this.render();
+  },
+  hint(){
+    const p = H.run.placed.find(x => !x.found); if(!p) return;
+    H.run.first = p.cells[0]; this.render();
   }
 });
 
@@ -4551,7 +4692,7 @@ H.renderTips = function(){
    סולם השלבים (H.stage): 0 חדשה, 1 הוכרה, 2 זוהתה, 3 הורכבה, 4 נכתבה.
    ========================================================== */
 H.PLAN_STEPS = 3;
-H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky'], assemble:['build','missing','anagram','proof','flash'], write:['write','parent']};
+H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky','search'], assemble:['build','missing','anagram','proof','flash'], write:['write','parent']};
 H.GROUP_TITLE = {recog:'מכירים את המילים', assemble:'מרכיבים את המילים', write:'כותבים מהזיכרון', review:'חוזרים על מה שלמדנו'};
 H.PLAN_PREFS = [
   ['recog', 'assemble', 'write', 'review'],
