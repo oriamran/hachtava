@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMOV1fOmPXWe6a6gySxkMkBrh01Wb2sOOkpzkI2WpY8=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-zaYDAnxou9MnwskCHkZdmLD/3lh9LJoNX2oeJXXMNig=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Caz2bS2WJqmSqv8mIyqigzdCtZ5kmvXrayWxhQmuYNI=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-zaYDAnxou9MnwskCHkZdmLD/3lh9LJoNX2oeJXXMNig=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -2229,7 +2229,8 @@ H.game({
       H.padClear(); H.padTemplate(true); H.padReveal();
       H.$('writeprompt').textContent = 'ככה כותבים אותה — עבור על הקו';
       H.$('writebtn').textContent = '✅ עברתי';
-      fb.className = 'fb no'; fb.textContent = 'לא בדיוק — נסתכל יחד';
+      fb.className = 'fb no';
+      fb.innerHTML = 'לא בדיוק. ' + (H.trickyHint(r.word) || 'נסתכל יחד');
     } else {
       fb.className = 'fb no'; fb.textContent = 'עוד קצת — עבור על כל האותיות';
       H.sfx.bad();
@@ -2717,6 +2718,34 @@ H.showLetters = function(rep){
 };
 H.clearLetters = function(){
   const b = H.$('letterstrip'); if(b){ b.innerHTML = ''; b.style.display = 'none'; }
+};
+
+/* ---------- משוב ספציפי: איפה בדרך כלל טועים במילה הזו ----------
+   זה לא אומר "הילד טעה באות הזו". זיהוי האות שנכתבה רועש (ראה למעלה),
+   ומשוב שגוי גרוע ממשוב כללי. מה שכן אפשר לדעת בוודאות הוא מה במילה
+   עצמה קשה: אות שנשמעת כמו אות אחרת, וה' שלא נשמעת בסוף מילה.
+   לכן אומרים על מה לשים לב, ולא איפה הטעות. */
+H.trickyParts = function(word){
+  const cl = H.clusters(word), out = [];
+  cl.forEach((c, i) => {
+    if(c === ' ') return;
+    const o = H.parseCluster(c);
+    const alt = H.homophone(c);
+    if(alt){
+      const key = (o.base === 'ש' && o.sin) ? 'שׂ' : o.base;
+      out.push({i, ch: H.buildCluster({base: o.base, dagesh: false, shin: false, sin: o.sin, vowel: ''}),
+                why: 'נשמעת כמו ' + H.HOMO[key]});
+    } else if(o.base === 'ה' && !o.dagesh && !o.vowel && i === cl.length - 1 && cl.length > 2){
+      out.push({i, ch: 'ה', why: 'בסוף המילה, לא נשמעת'});
+    }
+  });
+  return out;
+};
+H.trickyHint = function(word){
+  const seen = new Set();                    /* אות שחוזרת במילה נאמרת פעם אחת */
+  const t = H.trickyParts(word).filter(x => !seen.has(x.ch) && seen.add(x.ch)).slice(0, 2);
+  if(!t.length) return '';
+  return 'שים לב: ' + t.map(x => '<b>' + H.esc(x.ch) + '</b> (' + H.esc(x.why) + ')').join(' · ');
 };
 
 /* ===== 59-handwriting.js ===== */

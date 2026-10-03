@@ -146,3 +146,31 @@ H.showLetters = function(rep){
 H.clearLetters = function(){
   const b = H.$('letterstrip'); if(b){ b.innerHTML = ''; b.style.display = 'none'; }
 };
+
+/* ---------- משוב ספציפי: איפה בדרך כלל טועים במילה הזו ----------
+   זה לא אומר "הילד טעה באות הזו". זיהוי האות שנכתבה רועש (ראה למעלה),
+   ומשוב שגוי גרוע ממשוב כללי. מה שכן אפשר לדעת בוודאות הוא מה במילה
+   עצמה קשה: אות שנשמעת כמו אות אחרת, וה' שלא נשמעת בסוף מילה.
+   לכן אומרים על מה לשים לב, ולא איפה הטעות. */
+H.trickyParts = function(word){
+  const cl = H.clusters(word), out = [];
+  cl.forEach((c, i) => {
+    if(c === ' ') return;
+    const o = H.parseCluster(c);
+    const alt = H.homophone(c);
+    if(alt){
+      const key = (o.base === 'ש' && o.sin) ? 'שׂ' : o.base;
+      out.push({i, ch: H.buildCluster({base: o.base, dagesh: false, shin: false, sin: o.sin, vowel: ''}),
+                why: 'נשמעת כמו ' + H.HOMO[key]});
+    } else if(o.base === 'ה' && !o.dagesh && !o.vowel && i === cl.length - 1 && cl.length > 2){
+      out.push({i, ch: 'ה', why: 'בסוף המילה, לא נשמעת'});
+    }
+  });
+  return out;
+};
+H.trickyHint = function(word){
+  const seen = new Set();                    /* אות שחוזרת במילה נאמרת פעם אחת */
+  const t = H.trickyParts(word).filter(x => !seen.has(x.ch) && seen.add(x.ch)).slice(0, 2);
+  if(!t.length) return '';
+  return 'שים לב: ' + t.map(x => '<b>' + H.esc(x.ch) + '</b> (' + H.esc(x.why) + ')').join(' · ');
+};

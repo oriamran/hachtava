@@ -97,7 +97,8 @@ H.game({
       H.padClear(); H.padTemplate(true); H.padReveal();
       H.$('writeprompt').textContent = 'ככה כותבים אותה — עבור על הקו';
       H.$('writebtn').textContent = '✅ עברתי';
-      fb.className = 'fb no'; fb.textContent = 'לא בדיוק — נסתכל יחד';
+      fb.className = 'fb no';
+      fb.innerHTML = 'לא בדיוק. ' + (H.trickyHint(r.word) || 'נסתכל יחד');
     } else {
       fb.className = 'fb no'; fb.textContent = 'עוד קצת — עבור על כל האותיות';
       H.sfx.bad();
