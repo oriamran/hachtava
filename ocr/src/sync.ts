@@ -46,7 +46,8 @@ export function sanitizeState(raw: unknown): Obj | null {
   const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20) : [];
   s.packs = packs.filter(isObj).map(p => ({
     id: str(p.id, 40), topic: str(p.topic, 80), prize: str(p.prize, 80),
-    list: strList(p.list, 200, 60)
+    list: strList(p.list, 200, 60),
+    draft: p.draft === true, libId: str(p.libId, 40)
   }));
 
   const stats: Obj = {};

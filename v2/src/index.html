@@ -230,12 +230,24 @@
     <div id="rep-fresh"></div>
   </section>
 
+  <!-- ============ ספריית מילים ============ -->
+  <section class="screen" id="s-lib">
+    <h2>ספריית מילים 📚</h2>
+    <p class="sub">מילים מוכנות לפי כיתה ונושא. כל חבילה נכנסת כ<b>טיוטה</b>: הניקוד נכתב על ידי מודל ולא נבדק על ידי מורה, אז עבור על כל מילה ואשר.</p>
+    <div id="libbody"></div>
+  </section>
+
   <!-- ============ עורך ניקוד ============ -->
   <section class="screen" id="s-nikud">
     <h2>ניקוד ✏️</h2>
     <p class="sub">בחר מילה, בחר אות, ואז בחר לה תנועה</p>
     <div class="photowrap" id="photowrap2" style="display:none" onclick="H.togglePhoto()">
       <img alt="דף ההכתבה">
+    </div>
+    <div id="nk-draft" class="draftbox" style="display:none">
+      <b>⚠️ חבילה מוכנה, לא נבדקה</b>
+      <p>עבור על כל מילה למטה. אם משהו לא נכון, תקן אותו. כשהכול תקין, אשר.</p>
+      <button class="go" onclick="H.approvePack()">✅ אישרתי, המילים תקינות</button>
     </div>
     <div id="nk-words" class="nkwords"></div>
     <div id="nk-preview" class="nkpreview"></div>
@@ -284,7 +296,8 @@
     <label class="lbl">מילים — אחת בכל שורה</label>
     <div id="nikpad" class="nikpad"></div>
     <textarea id="wordsIn" rows="10"></textarea>
-    <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button></div>
+    <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button>
+      <button class="mini" onclick="H.openLibrary()">📚 ספריית מילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
     <label class="lbl">כתובת שרת הקריאה<input id="ocrUrlIn" placeholder="ריק = בלי קריאה מצילום" onchange="H.setOcrUrl(this.value)"></label>
     <label class="lbl">קוד גישה לסריקה<input id="scanTokIn" placeholder="ריק = בלי קוד" onchange="H.setScanToken(this.value)"></label>

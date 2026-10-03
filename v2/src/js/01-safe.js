@@ -34,7 +34,8 @@ H.cleanState = function(raw){
   s.pack = T(raw.pack, 40); s.album = L(raw.album, 2000, 60);
 
   const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20).filter(isO) : [];
-  s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60)}));
+  s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60),
+                             draft: p.draft === true, libId: T(p.libId, 40)}));
   if(!s.packs.length) s.packs = base.packs;
   if(!s.packs.some(p => p.id === s.pack)) s.pack = s.packs[0].id;
 

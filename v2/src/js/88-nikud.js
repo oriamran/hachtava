@@ -36,6 +36,7 @@ H.openNikud = function(){
 };
 H.renderNikud = function(){
   const words = H.words();
+  const dr = H.$('nk-draft'); if(dr) dr.style.display = (H.pack() && H.pack().draft) ? '' : 'none';
   if(!words.length) return;
   if(H.nk.word >= words.length) H.nk.word = 0;
 

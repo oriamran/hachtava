@@ -542,3 +542,15 @@ body.nav .wrap{padding-top:36px}
 .admtbl th{background:#efeaff;color:var(--ink2);font-weight:800;padding:9px 8px;text-align:start;white-space:nowrap}
 .admtbl td{padding:9px 8px;border-top:1px solid #eee9fb;white-space:nowrap}
 .admtbl td.em{direction:ltr;text-align:start;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- ספריית מילים ---------- */
+.libgrid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:520px){.libgrid{grid-template-columns:1fr 1fr}}
+.libcard{background:#fff;border-radius:18px;padding:12px;box-shadow:0 5px 0 var(--cardEdge);display:flex;flex-direction:column;gap:8px}
+.lib-h{display:flex;align-items:center;gap:8px}
+.lib-e{font-size:28px}
+.lib-h b{font-size:18px}
+.lib-h small{margin-inline-start:auto;color:var(--ink2);font-weight:700;font-size:12px}
+.lib-w{font-size:19px;color:var(--ink2);line-height:1.6}
+.draftbox{background:linear-gradient(135deg,#fff3cd,#ffe0a3);border-radius:18px;padding:12px;margin-bottom:12px;text-align:center}
+.draftbox p{margin:6px 0 10px;font-size:14px;color:var(--ink2);font-weight:700}

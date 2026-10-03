@@ -29,6 +29,11 @@ const big = { packs: [{ id: "x", list: Array(100000).fill("w") }], stats: Object
 const cb = sanitizeState(big);
 ok("caps list sizes", cb.packs[0].list.length === 200 && Object.keys(cb.stats).length === 2000);
 
+console.log("draft flag");
+const dr = sanitizeState({ packs: [{ id: "p2", topic: "t", list: ["a"], draft: true, libId: "a2/home" }, { id: "p3", topic: "u", list: ["b"], draft: "yes" }], pack: "p2" });
+ok("draft: true survives sanitising", dr.packs[0].draft === true && dr.packs[0].libId === "a2/home");
+ok("a non-boolean draft is NOT treated as true", dr.packs[1].draft === false);
+
 console.log("saveState / load / delete / admin");
 const env = { DATA: kv() };
 const st = { xp: 500, packs: [{ id: "p1", list: ["a", "b", "c"] }], pack: "p1", stats: { a: { run: 3 }, b: { run: 1 } }, album: [], daily: { streak: 4 }, stars: { 0: 3, 1: 2 }, usage: { first: 1000, last: 2000, visits: 7, activeSec: 1800 } };

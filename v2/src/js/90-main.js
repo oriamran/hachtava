@@ -1,6 +1,6 @@
 /* ========== הפעלה ========== */
 H.refresh = function(){
-  H.$('topic').textContent = H.topic() || '';
+  H.$('topic').textContent = (H.topic() || '') + ((H.pack() && H.pack().draft) ? ' \u00b7 \u26a0\ufe0f \u05d8\u05d9\u05d5\u05d8\u05d4, \u05d4\u05de\u05d9\u05dc\u05d9\u05dd \u05dc\u05d0 \u05e0\u05d1\u05d3\u05e7\u05d5' : '');
   H.$('hello').textContent = H.state.name
     ? 'היי ' + H.state.name + '!' : 'היי!';
   H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport();

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-1EXKjajR7LF/0QpW/XPdAO09xEgx95YYz6V98//SRHg=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-ZOwb/xQN+SrrYZ5QXIFiRLEquQdI1qHITyEclRdRYf4=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-9lK7fejV4ZJMQP5+hrlQa2jm3dmYdh8r52UaqW60i2k=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-oxRL3UbBGe8GcSjAPxvqawJQ00QCwkroEAIqbFoAXC0=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -21,12 +21,12 @@
   font-display:block;
 }
 /* כל מקום שמוצגת בו מילה מההכתבה */
-.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,.nkword,.nkpreview,.nkletter,.nkv,#wordsIn{
+.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,.lib-w,.nkword,.nkpreview,.nkletter,.nkv,#wordsIn{
   font-family:'KtavYad','Arial Hebrew',sans-serif;
 }
 body.dfus .front,body.dfus .tile,body.dfus .bigword,body.dfus .misword,
 body.dfus .bt,body.dfus .bubble,body.dfus .falling,body.dfus .stk-w,body.dfus .peek,
-body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus .nkword,body.dfus .nkpreview,body.dfus .nkletter,body.dfus .nkv,body.dfus #wordsIn{
+body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus .lib-w,body.dfus .nkword,body.dfus .nkpreview,body.dfus .nkletter,body.dfus .nkv,body.dfus #wordsIn{
   font-family:"Arial Hebrew","Heebo",Arial,sans-serif;
 }
 body:not(.dfus) .front{font-size:23px}
@@ -578,6 +578,18 @@ body.nav .wrap{padding-top:36px}
 .admtbl td{padding:9px 8px;border-top:1px solid #eee9fb;white-space:nowrap}
 .admtbl td.em{direction:ltr;text-align:start;max-width:170px;overflow:hidden;text-overflow:ellipsis}
 
+/* ---------- ספריית מילים ---------- */
+.libgrid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:520px){.libgrid{grid-template-columns:1fr 1fr}}
+.libcard{background:#fff;border-radius:18px;padding:12px;box-shadow:0 5px 0 var(--cardEdge);display:flex;flex-direction:column;gap:8px}
+.lib-h{display:flex;align-items:center;gap:8px}
+.lib-e{font-size:28px}
+.lib-h b{font-size:18px}
+.lib-h small{margin-inline-start:auto;color:var(--ink2);font-weight:700;font-size:12px}
+.lib-w{font-size:19px;color:var(--ink2);line-height:1.6}
+.draftbox{background:linear-gradient(135deg,#fff3cd,#ffe0a3);border-radius:18px;padding:12px;margin-bottom:12px;text-align:center}
+.draftbox p{margin:6px 0 10px;font-size:14px;color:var(--ink2);font-weight:700}
+
 </style>
 </head>
 <body>
@@ -794,12 +806,24 @@ body.nav .wrap{padding-top:36px}
     <div id="rep-fresh"></div>
   </section>
 
+  <!-- ============ ספריית מילים ============ -->
+  <section class="screen" id="s-lib">
+    <h2>ספריית מילים 📚</h2>
+    <p class="sub">מילים מוכנות לפי כיתה ונושא. כל חבילה נכנסת כ<b>טיוטה</b>: הניקוד נכתב על ידי מודל ולא נבדק על ידי מורה, אז עבור על כל מילה ואשר.</p>
+    <div id="libbody"></div>
+  </section>
+
   <!-- ============ עורך ניקוד ============ -->
   <section class="screen" id="s-nikud">
     <h2>ניקוד ✏️</h2>
     <p class="sub">בחר מילה, בחר אות, ואז בחר לה תנועה</p>
     <div class="photowrap" id="photowrap2" style="display:none" onclick="H.togglePhoto()">
       <img alt="דף ההכתבה">
+    </div>
+    <div id="nk-draft" class="draftbox" style="display:none">
+      <b>⚠️ חבילה מוכנה, לא נבדקה</b>
+      <p>עבור על כל מילה למטה. אם משהו לא נכון, תקן אותו. כשהכול תקין, אשר.</p>
+      <button class="go" onclick="H.approvePack()">✅ אישרתי, המילים תקינות</button>
     </div>
     <div id="nk-words" class="nkwords"></div>
     <div id="nk-preview" class="nkpreview"></div>
@@ -848,7 +872,8 @@ body.nav .wrap{padding-top:36px}
     <label class="lbl">מילים — אחת בכל שורה</label>
     <div id="nikpad" class="nikpad"></div>
     <textarea id="wordsIn" rows="10"></textarea>
-    <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button></div>
+    <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button>
+      <button class="mini" onclick="H.openLibrary()">📚 ספריית מילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
     <label class="lbl">כתובת שרת הקריאה<input id="ocrUrlIn" placeholder="ריק = בלי קריאה מצילום" onchange="H.setOcrUrl(this.value)"></label>
     <label class="lbl">קוד גישה לסריקה<input id="scanTokIn" placeholder="ריק = בלי קוד" onchange="H.setScanToken(this.value)"></label>
@@ -1166,7 +1191,8 @@ H.cleanState = function(raw){
   s.pack = T(raw.pack, 40); s.album = L(raw.album, 2000, 60);
 
   const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20).filter(isO) : [];
-  s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60)}));
+  s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60),
+                             draft: p.draft === true, libId: T(p.libId, 40)}));
   if(!s.packs.length) s.packs = base.packs;
   if(!s.packs.some(p => p.id === s.pack)) s.pack = s.packs[0].id;
 
@@ -3016,6 +3042,7 @@ H.openNikud = function(){
 };
 H.renderNikud = function(){
   const words = H.words();
+  const dr = H.$('nk-draft'); if(dr) dr.style.display = (H.pack() && H.pack().draft) ? '' : 'none';
   if(!words.length) return;
   if(H.nk.word >= words.length) H.nk.word = 0;
 
@@ -3281,7 +3308,7 @@ H.renderQuota = function(){
 /* ===== 90-main.js ===== */
 /* ========== הפעלה ========== */
 H.refresh = function(){
-  H.$('topic').textContent = H.topic() || '';
+  H.$('topic').textContent = (H.topic() || '') + ((H.pack() && H.pack().draft) ? ' \u00b7 \u26a0\ufe0f \u05d8\u05d9\u05d5\u05d8\u05d4, \u05d4\u05de\u05d9\u05dc\u05d9\u05dd \u05dc\u05d0 \u05e0\u05d1\u05d3\u05e7\u05d5' : '');
   H.$('hello').textContent = H.state.name
     ? 'היי ' + H.state.name + '!' : 'היי!';
   H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport();
@@ -3658,6 +3685,76 @@ H.deleteAccount = async function(){
     H.signOut();
     H.setSyncMsg('הנתונים נמחקו מהשרת ✔️');
   }catch(e){ H.setSyncMsg('לא הצלחתי למחוק', true); }
+};
+
+/* ===== 94-library.js ===== */
+/* ==========================================================
+   ספריית מילים מוכנות, לפי כיתה ונושא.
+
+   המילים כתובות על ידי מודל ולא נבדקו על ידי מורה. שגיאת ניקוד
+   בחבילה מוכנה הייתה נלמדת לילד כנכונה, ולכן כל חבילה נכנסת
+   כטיוטה: ההורה פותח אותה בעורך הניקוד, רואה כל מילה, ולוחץ
+   "אישרתי". עד אז מוצג בשוליים שהמילים לא נבדקו.
+   ========================================================== */
+H.LIB = [
+  {id:'a2', name:'כיתות א׳–ב׳', note:'עם ניקוד', topics:[
+    {id:'family', e:'👨‍👩‍👧', name:'משפחה', words:[
+      'אִמָּא','אַבָּא','סַבָּא','סַבְתָּא','אָח','אָחוֹת','תִּינוֹק','יֶלֶד',
+      'יַלְדָּה','דּוֹד','דּוֹדָה','מִשְׁפָּחָה','בֵּן','בַּת','חָבֵר']},
+    {id:'home', e:'🏠', name:'בית', words:[
+      'בַּיִת','דֶּלֶת','חַלּוֹן','שֻׁלְחָן','כִּסֵּא','מִטָּה','מִטְבָּח','סָלוֹן',
+      'גַּג','קִיר','רִצְפָּה','מַפְתֵּחַ','מַנְעוּל','מִקְלַחַת','מַדָּף']},
+    {id:'animals', e:'🐶', name:'חיות', words:[
+      'כֶּלֶב','חָתוּל','סוּס','פָּרָה','כֶּבֶשׂ','עֵז','אַרְיֵה','פִּיל',
+      'קוֹף','דָּג','צִפּוֹר','צָב','אַרְנָב','דֹּב','נָחָשׁ']},
+    {id:'school', e:'🏫', name:'בית ספר', words:[
+      'כִּתָּה','מוֹרָה','מוֹרֶה','תַּלְמִיד','תַּלְמִידָה','סֵפֶר','מַחְבֶּרֶת','עִפָּרוֹן',
+      'עֵט','מַחֲק','לוּחַ','תִּיק','שִׁעוּר','הַפְסָקָה','צֶבַע']},
+    {id:'holidays', e:'🕎', name:'חגים', words:[
+      'שׁוֹפָר','תַּפּוּחַ','דְּבַשׁ','סֻכָּה','לוּלָב','אֶתְרוֹג','חֲנֻכִּיָּה','סְבִיבוֹן',
+      'סוּפְגָּנִיָּה','מְגִלָּה','פּוּרִים','מַצָּה','הַגָּדָה','שַׁבָּת','נֵר']}
+  ]}
+];
+
+H.openLibrary = function(){ H.renderLibrary(); H.show('lib'); };
+
+H.renderLibrary = function(){
+  const box = H.$('libbody'); box.innerHTML = '';
+  const have = new Set(H.state.packs.map(p => p.libId).filter(Boolean));
+  H.LIB.forEach(tier => {
+    box.appendChild(H.el('h3', '', tier.name + ' · ' + tier.note));
+    const grid = H.el('div', 'libgrid');
+    tier.topics.forEach(t => {
+      const id = tier.id + '/' + t.id, added = have.has(id);
+      const el = H.el('div', 'libcard');
+      el.innerHTML = '<div class="lib-h"><span class="lib-e">' + t.e + '</span><b>' + t.name + '</b>' +
+        '<small>' + t.words.length + ' מילים</small></div>' +
+        '<div class="lib-w">' + t.words.slice(0, 5).join(' · ') + ' …</div>';
+      const b = H.el('button', 'mini', added ? '✅ כבר ברשימות שלך' : '➕ הוסף לרשימות שלי');
+      b.disabled = added;
+      b.onclick = () => H.importTopic(tier.id, t.id);
+      el.appendChild(b); grid.appendChild(el);
+    });
+    box.appendChild(grid);
+  });
+};
+
+H.importTopic = function(tierId, topicId){
+  const tier = H.LIB.find(x => x.id === tierId), t = tier && tier.topics.find(x => x.id === topicId);
+  if(!t) return;
+  if(H.state.packs.length >= 20) return H.toast('יש יותר מדי חבילות. מחק אחת קודם.', 'no');
+  const p = H.addPack(t.name, t.words.slice(), H.prize());
+  p.draft = true; p.libId = tierId + '/' + topicId;
+  H.syncStats(); H.save(); H.refresh();
+  H.toast('החבילה נוספה כטיוטה — עבור על הניקוד', 'level');
+  H.openNikud();                       /* ישר לבדיקה, לא לשחק */
+};
+
+/* ההורה עבר על כל המילים ואישר */
+H.approvePack = function(){
+  const p = H.pack(); if(!p) return;
+  p.draft = false; H.save(); H.refresh(); H.renderNikud();
+  H.toast('אושר ✔️', 'good');
 };
 
 </script>
