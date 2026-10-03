@@ -51,6 +51,12 @@
 
   <!-- ============ בית ============ -->
   <section class="screen on" id="s-home">
+    <nav class="homenav" aria-label="תפריט">
+      <button class="mini tb" onclick="H.openSettings()">⚙️ הורים</button>
+      <button class="mini tb" onclick="H.startTour()">❓ מדריך</button>
+      <button class="mini tb" onclick="H.show('tips')">💡 טיפים</button>
+      <button class="mini tb" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
+    </nav>
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
 
@@ -61,7 +67,6 @@
         <span id="homeemail" class="homeemail" style="display:none"></span>
         <button class="mini" id="homesignin" onclick="H.login()">🔐 התחבר עם גוגל</button>
         <button class="mini" id="homesignout" onclick="H.signOut()" disabled>🚪 התנתק</button>
-        <button class="mini" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
       </div>
     </div>
 
@@ -95,12 +100,6 @@
     <button class="menu wide install" id="installbtn" style="display:none" onclick="H.doInstall()">
       <span class="m-e">📲</span><b>התקן על המסך</b><small>כדי שההתקדמות תישמר ויהיה קל לחזור</small>
     </button>
-
-    <div class="row small">
-      <button class="mini" onclick="H.openSettings()">⚙️ הורים</button>
-      <button class="mini" onclick="H.startTour()">❓ מדריך</button>
-      <button class="mini" onclick="H.show('tips')">💡 טיפים להורים</button>
-    </div>
   </section>
 
   <!-- ============ מפה ============ -->

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-bZ+w13u9xVj6wSfwPqft6MT/29gSUuvtozhKY1JizYo=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-1w4+6jGd7k+6ljw5RO1pkFS2SSk8LPddaLwISsf9u/s=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-bZ+w13u9xVj6wSfwPqft6MT/29gSUuvtozhKY1JizYo=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-LIu3I0mplOUf0NuM+eSZaZdTMdRCRhNQfRRHCaxZNlU=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -641,6 +641,10 @@ body.nav .wrap{padding-top:36px}
 .admdet h4{margin:14px 0 6px;font-size:14px}
 .admtbl.small{font-size:12px}
 
+/* תפריט עליון בצד ימין (ב-RTL: תחילת השורה) */
+.homenav{display:flex;flex-wrap:nowrap;gap:4px;justify-content:flex-start;margin:0 0 4px}
+.mini.tb{min-height:40px;padding:8px 7px;font-size:12px;white-space:nowrap;flex:0 1 auto}
+
 </style>
 </head>
 <body>
@@ -678,6 +682,12 @@ body.nav .wrap{padding-top:36px}
 
   <!-- ============ בית ============ -->
   <section class="screen on" id="s-home">
+    <nav class="homenav" aria-label="תפריט">
+      <button class="mini tb" onclick="H.openSettings()">⚙️ הורים</button>
+      <button class="mini tb" onclick="H.startTour()">❓ מדריך</button>
+      <button class="mini tb" onclick="H.show('tips')">💡 טיפים</button>
+      <button class="mini tb" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
+    </nav>
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
 
@@ -688,7 +698,6 @@ body.nav .wrap{padding-top:36px}
         <span id="homeemail" class="homeemail" style="display:none"></span>
         <button class="mini" id="homesignin" onclick="H.login()">🔐 התחבר עם גוגל</button>
         <button class="mini" id="homesignout" onclick="H.signOut()" disabled>🚪 התנתק</button>
-        <button class="mini" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
       </div>
     </div>
 
@@ -722,12 +731,6 @@ body.nav .wrap{padding-top:36px}
     <button class="menu wide install" id="installbtn" style="display:none" onclick="H.doInstall()">
       <span class="m-e">📲</span><b>התקן על המסך</b><small>כדי שההתקדמות תישמר ויהיה קל לחזור</small>
     </button>
-
-    <div class="row small">
-      <button class="mini" onclick="H.openSettings()">⚙️ הורים</button>
-      <button class="mini" onclick="H.startTour()">❓ מדריך</button>
-      <button class="mini" onclick="H.show('tips')">💡 טיפים להורים</button>
-    </div>
   </section>
 
   <!-- ============ מפה ============ -->
