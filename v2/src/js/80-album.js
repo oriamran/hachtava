@@ -4,7 +4,7 @@ H.STICKERS = ['🍎','🍌','🍇','🍓','🍉','🥝','🍑','🍍',
 H.renderAlbum = function(){
   const box = H.$('albumlist'); box.innerHTML = '';
   H.words().forEach((w, i) => {
-    const s = H.state.stats[w] || {run:0};
+    const s = H.state.stats[H.sk(w)] || {run:0};
     const got = H.isEarned(w);
     const el = H.el('div', 'sticker' + (got ? ' got' : ''));
     el.innerHTML = '<span class="stk-e">' + (got ? H.STICKERS[i % H.STICKERS.length] : '❓') + '</span>' +

@@ -58,5 +58,29 @@ ok("admin: 2 registered, most recent first", adm.total === 2 && adm.users[0].ema
 await deleteState(env, user(1));
 ok("delete removes the account's data", (await loadState(env, user(1))).state === null && (await adminList(env)).total === 1);
 
+console.log("admin metrics: games, progress, stuck words");
+const rich = sanitizeState({ level: "f6", nikud: "weird", tour: true, xp: 240,
+  packs: [{ id: "p", list: ["שָׁלוֹם", "בַּיִת", "ספר"] }], pack: "p", album: ["ספר"],
+  stats: { "שלום": { ok: 1, bad: 5, run: 0 }, "בית": { ok: 4, bad: 2, run: 1 }, "ספר": { ok: 3, bad: 3, run: 0 } },
+  letters: { "ש": { ok: 1, bad: 9 }, "ב": { ok: 20, bad: 1 }, "ל": { ok: 1, bad: 1 } },
+  log: { "2026-09-30": { sec: 300 } },
+  usage: { first: 1, last: 2, visits: 3, activeSec: 4,
+    games: { write: { sec: 600, rounds: 5, right: 12, wrong: 3 }, "BAD KEY": { sec: 9 }, __proto__: { sec: 1 } },
+    hist: { "2026-09-29": { xp: 100, e: 1 }, "2026-09-30": { xp: 240, e: 2 }, "nope": { xp: 1 } } } });
+ok("grade kept, bad nikud mode falls back to auto", rich.level === "f6" && rich.nikud === "auto" && rich.tour === true);
+ok("only well-formed game ids and dates survive", Object.keys(rich.usage.games).join() === "write" && Object.keys(rich.usage.hist).length === 2);
+const rs = summarize(user(9), rich);
+ok("earned counts nikud-stripped words (ספר via album)", rs.earned === 1 && rs.words === 3, JSON.stringify([rs.earned, rs.words]));
+ok("stuck: worst first, mastered words excluded", rs.stuck.length === 2 && rs.stuck[0].w === "שלום" && !rs.stuck.some(x => x.w === "ספר"), JSON.stringify(rs.stuck));
+ok("weak letters need 5+ tries, worst rate first", rs.weakLetters.length === 2 && rs.weakLetters[0].l === "ש", JSON.stringify(rs.weakLetters));
+ok("progress series and per-game totals present", rs.hist.length === 2 && rs.hist[1][1] === 240 && rs.games.write.sec === 600 && rs.days[0][1] === 300);
+const e2 = { DATA: kv() };
+await saveState(e2, user(7), { xp: 1, packs: [{ id: "p", list: ["a", "b"] }], pack: "p" }, 5);
+const c1 = JSON.parse(e2.DATA._m.get("s:u7")).created;
+e2.DATA._m.set("s:u7", JSON.stringify({ ...JSON.parse(e2.DATA._m.get("s:u7")), serverAt: 1 }));
+await saveState(e2, user(7), { xp: 2, packs: [{ id: "p", list: ["a", "b"] }], pack: "p" }, 6);
+ok("registration time is set once and kept", c1 > 0 && JSON.parse(e2.DATA._m.get("s:u7")).created === c1);
+ok("admin list exposes registration time", (await adminList(e2)).users[0].created === c1);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -32,5 +32,5 @@ H.finishOnboard = function(){
   H.state.onboarded = true;
   H.save();
   H.sfx.great(); H.confetti(28);
-  H.refresh(); H.show('home');
+  H.refresh(); H.startTour();                /* אחרי בחירת הדמות — מדריך */
 };

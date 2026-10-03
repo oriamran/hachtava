@@ -4,7 +4,7 @@ H.refresh = function(){
   H.$('hello').textContent = H.state.name
     ? 'היי ' + H.state.name + '!' : 'היי!';
   H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport();
-  H.renderChallenge(); H.paint();
+  H.renderChallenge(); H.renderLevels(); H.renderAccount(); H.paint();
 };
 
 H.boot = function(){
@@ -16,7 +16,9 @@ H.boot = function(){
   } }catch(e){}
   H.initVoice();
   H.refresh();
-  if(H.needsOnboard()) H.startOnboard(); else H.show('home');
+  if(H.needsOnboard()) H.startOnboard();
+  else if(!H.state.tour) H.startTour();      /* גם מי שכבר שיחק רואה את המדריך פעם אחת */
+  else H.show('home');
 
   /* כפתורים קבועים */
   H.$('backbtn').onclick   = () => { H.sfx.tap(); H.home(); };

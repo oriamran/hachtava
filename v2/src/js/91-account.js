@@ -58,25 +58,30 @@ H.loadGsi = function(){
 /* שני הכפתורים תמיד מוצגים. מה שמשתנה הוא אם אפשר ללחוץ עליהם,
    והטקסט שמסביר למה. כפתור שנעלם בלי הסבר נראה כמו משהו שלא קיים. */
 H.renderAccount = async function(){
-  const box = H.$('accbox'); if(!box) return;
   const cidIn = H.$('cidIn');
   if(cidIn && document.activeElement !== cidIn) cidIn.value = H.clientId();
-  const login = H.$('loginbtn'), out = H.$('signoutbtn'), sync = H.$('syncnow');
-  const g = H.$('gbtn'), msg = H.$('accmsg');
+  const $ = id => H.$(id) || {style:{}, classList:{toggle(){}}};     /* מסך שלא קיים לא מפיל */
+  const login = $('loginbtn'), out = $('signoutbtn'), sync = $('syncnow');
+  const g = $('gbtn'), hg = $('homeg'), msg = $('accmsg');
+  const hin = $('homesignin'), hout = $('homesignout'), hmail = $('homeemail');
 
   if(H.signedIn()){
     login.disabled = true;  login.textContent = '✅ מחובר';
     out.disabled = false;   sync.style.display = '';
-    H.$('adminbtn').style.display = ''; H.$('delbtn').style.display = '';
-    g.innerHTML = '';
+    hin.style.display = 'none'; hout.disabled = false; hout.style.display = '';
+    hmail.style.display = ''; hmail.textContent = '✅ ' + H.acc.email;
+    $('adminbtn').style.display = ''; $('delbtn').style.display = '';
+    g.innerHTML = ''; hg.innerHTML = '';
     msg.className = 'note ok';
-    msg.textContent = 'מחובר כע' + H.acc.email + ' · ההתקדמות מסתנכרנת';
+    msg.textContent = 'מחובר: ' + H.acc.email + ' · ההתקדמות מסתנכרנת';
     return;
   }
   login.disabled = false; login.textContent = '🔐 התחבר עם גוגל';
   out.disabled = true;    sync.style.display = 'none';
-  H.$('adminbtn').style.display = 'none'; H.$('delbtn').style.display = 'none';
-  g.innerHTML = '';
+  hin.style.display = ''; hout.disabled = true; hout.style.display = '';
+  hmail.style.display = 'none';
+  $('adminbtn').style.display = 'none'; $('delbtn').style.display = 'none';
+  g.innerHTML = ''; hg.innerHTML = '';
   if(!H.clientId()){
     msg.className = 'note';
     msg.textContent = 'אי אפשר להתחבר עדיין: חסר Client ID מגוגל. כשיהיה, הדבק אותו בשדה למעלה.';
@@ -89,7 +94,9 @@ H.renderAccount = async function(){
       client_id: H.clientId(), callback: H.onCredential,
       auto_select: false, use_fedcm_for_prompt: true
     });
-    google.accounts.id.renderButton(g, {theme:'outline', size:'large', text:'signin_with', locale:'iw', shape:'pill'});
+    const o = {theme:'outline', size:'large', text:'signin_with', locale:'iw', shape:'pill'};
+    if(g.nodeType)  google.accounts.id.renderButton(g, o);
+    if(hg.nodeType) google.accounts.id.renderButton(hg, o);
   }catch(e){
     msg.className = 'note bad';
     msg.textContent = 'אין חיבור לגוגל. התחברות דורשת אינטרנט.';

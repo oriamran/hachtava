@@ -2,7 +2,7 @@
 H.game({
   id:'anagram', e:'🔀', name:'ערבוביה',
   desc:'סדר את האותיות לפני שייגמר הזמן',
-  SEC: 25,
+  get SEC(){ return H.grade().ana; },      /* קבוע לפי הכיתה */
   start(){ H.show('anagram'); this.next(); },
   next(){
     const w = H.nextWord();

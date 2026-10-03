@@ -12,7 +12,7 @@ H.startRound = function(gameId, station){
   const g = H.byId(gameId);
   H.run = {
     game: g, station,
-    queue: H.pickWords(H.ROUND),
+    queue: H.pickWords(H.roundSize()),
     total: 0, right: 0, wrong: 0,
     word: null
   };
@@ -44,7 +44,7 @@ H.stars = function(){
 };
 H.endRound = function(){
   const r = H.run, stars = H.stars();
-  H.logEnd(r.right, r.wrong);
+  H.logEnd(r.right, r.wrong, r.game && r.game.id);
   if(r.challenge) return H.finishChallenge();
   const xp = 20 + r.right * 8 + (stars === 3 ? 25 : 0);
   const perfect = r.wrong === 0;
@@ -97,7 +97,7 @@ H.variants = function(word, n){
     const c = cl.slice();
     let mode = Math.floor(Math.random()*4);
     /* כשיש במילה אות עם חבר הומופוני, זו הטעות המועדפת */
-    if(homo.length && Math.random() < 0.55) mode = 4;
+    if(homo.length && Math.random() < H.grade().homo) mode = 4;
     const i = (mode === 4) ? homo[Math.floor(Math.random()*homo.length)] : Math.floor(Math.random()*c.length);
     if(c[i] === ' ') continue;
     if(mode === 4){                                   /* אות דומה בצליל */

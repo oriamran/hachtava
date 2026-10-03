@@ -30,7 +30,7 @@ H.game({
     const r = H.run;
     r.guide = false;
     /* המילה כבר נכבשה באריחים — אז כאן זה כבר מבחן, לא תרגול */
-    r.testMode = (H.state.stats[w] || {run:0}).run >= H.MASTER_AT;
+    r.testMode = (H.state.stats[H.sk(w)] || {run:0}).run >= H.MASTER_AT;
     H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters(); H.hideCompare();
     H.$('writeprompt').textContent = r.testMode
       ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'

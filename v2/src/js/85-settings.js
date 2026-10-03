@@ -51,10 +51,12 @@ H.openSettings = function(){
   H.renderAccount();
   H.show('settings');
 };
+/* המילים שבתיבה, נקיות ובלי מספור */
+H.readWordsIn = () => H.$('wordsIn').value.split('\n')
+  .map(x => H.cleanText(x.replace(/^\s*\d+[.)\.\s]\s*/, '').trim(), 60))
+  .filter(x => x.length);
 H.applySettings = function(){
-  const list = H.$('wordsIn').value.split('\n')
-    .map(x => H.cleanText(x.replace(/^\s*\d+[.)\.\s]\s*/, '').trim(), 60))
-    .filter(x => x.length);
+  const list = H.readWordsIn();
   if(list.length < 2) return alert('צריך לפחות שתי מילים');
   H.state.name = H.cleanText(H.$('nameIn').value.trim(), 30);
   H.state.peekAlways = H.$('peekIn').checked;

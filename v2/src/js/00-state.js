@@ -54,7 +54,8 @@ H.RINGS = [
 
 H.blank = () => ({
   name: '', onboarded: false, peekAlways: false,
-  usage: {first: 0, last: 0, visits: 0, activeSec: 0},
+  level: 'a2', nikud: 'auto', tour: false,
+  usage: {first: 0, last: 0, visits: 0, activeSec: 0, games: {}, hist: {}},
   avatar: 'fox', hat: 'none', ring: 'sun',
   owned: ['fox','panda','frog','cat','none','sun','mint'],
   xp: 0, coins: 0,
@@ -105,10 +106,14 @@ H.save = function(fromServer){
   try { localStorage.setItem(H.KEY, JSON.stringify(H.state)); } catch(e){}
   if(H.pushSoon) H.pushSoon();
 };
+/* התקדמות שמורה לפי המילה בלי ניקוד, כך שמעבר בין מצב עם ניקוד לבלי
+   לא מאפס כלום. (מורה ומורה היו שתי מילים; במצב בלי ניקוד הן אחת.) */
+H.sk = w => H.strip(w);
 H.syncStats = function(){
   const st = H.state.stats;
-  H.words().forEach(w => { if(!st[w]) st[w] = {ok:0, bad:0, run:0}; });
-  Object.keys(st).forEach(w => { if(!H.words().includes(w)) delete st[w]; });
+  H.words().forEach(w => { const k = H.sk(w); if(!st[k]) st[k] = {ok:0, bad:0, run:0}; });
+  /* בלי מחיקה. הגרסה הקודמת מחקה התקדמות של כל מילה שלא בחבילה הפעילה, כלומר
+     החלפת חבילה איפסה את החזרה המרווחת של הקודמת. */
 };
 H.pack  = () => H.state.packs.find(p => p.id === H.state.pack);
 H.words = () => (H.pack() || H.state.packs[0]).list;
@@ -178,40 +183,57 @@ H.isDue = function(s){
   return !s.last || Date.now() - s.last >= H.dueMs(s);
 };
 H.hit = function(word){
-  const s = H.state.stats[word]; if(!s) return;
+  const k = H.sk(word);
+  const s = H.state.stats[k] || (H.state.stats[k] = {ok:0, bad:0, run:0});
   const wasMastered = s.run >= H.MASTER_AT, wasDue = H.isDue(s);
   s.ok++; s.run++;
   /* הרווח גדל רק כשענו נכון על מילה שהגיע זמנה — לא על כל פגיעה באותו יום */
   if(wasMastered){ if(wasDue){ s.lv = (s.lv || 0) + 1; s.last = Date.now(); } }
   else { s.lv = 0; s.last = Date.now(); }
-  if(s.run >= H.MASTER_AT && !H.state.album.includes(word)) H.state.album.push(word);
+  if(s.run >= H.MASTER_AT && !H.state.album.includes(k)) H.state.album.push(k);
   H.save();
 };
 H.miss = function(word){
-  const s = H.state.stats[word]; if(!s) return;
+  const k = H.sk(word);
+  const s = H.state.stats[k] || (H.state.stats[k] = {ok:0, bad:0, run:0});
   s.bad++; s.run = 0; s.lv = 0; s.last = Date.now(); H.save();
 };
 /* יומן תרגול לדוח ההורים */
 H.today = () => new Date().toISOString().slice(0,10);
 H.logStart = function(){ H._t0 = Date.now(); };
-H.logEnd = function(right, wrong){
+/* בסוף כל סבב: יומן יומי לדוח ההורים, פירוט לפי משחק (כמה זמן, כמה סבבים,
+   כמה נכון וכמה לא), וצילום יומי של ההתקדמות לגרף. מינימלי: זה מה שנשלח לשרת. */
+H.logEnd = function(right, wrong, gameId){
   const d = H.today();
   const e = H.state.log[d] || (H.state.log[d] = {sec:0, right:0, wrong:0, rounds:0});
-  if(H._t0){ e.sec += Math.min(900, Math.round((Date.now() - H._t0)/1000)); H._t0 = 0; }
+  let dt = 0;
+  if(H._t0){ dt = Math.min(900, Math.round((Date.now() - H._t0)/1000)); e.sec += dt; H._t0 = 0; }
   e.right += right; e.wrong += wrong; e.rounds++;
+
+  const u = H.usage();
+  u.games = u.games || {}; u.hist = u.hist || {};
+  if(gameId){
+    const g = u.games[gameId] || (u.games[gameId] = {sec:0, rounds:0, right:0, wrong:0});
+    g.sec += dt; g.rounds++; g.right += right; g.wrong += wrong;
+  }
+  u.hist[d] = {xp: H.state.xp, e: H.mastered()};
+  const ks = Object.keys(u.hist).sort();
+  if(ks.length > 120) ks.slice(0, ks.length - 120).forEach(k => delete u.hist[k]);
   H.save();
 };
 
 /* נכבשה = נענתה נכון פעם אחת לפחות MASTER_AT ברצף. טעות בחזרה מאפסת את הרצף
    הנוכחי, אבל לא לוקחת מהילד מדבקה שרכש. */
-H.isEarned = w => H.state.album.includes(w) || ((H.state.stats[w]||{}).run >= H.MASTER_AT);
+H.isEarned = w => { const k = H.sk(w); return H.state.album.includes(k) || ((H.state.stats[k]||{}).run >= H.MASTER_AT); };
 H.mastered = () => H.words().filter(H.isEarned).length;
 
 /* בחירה משוקללת — מילים חלשות חוזרות יותר */
 H.pickWords = function(n){
-  const pool = H.words().slice(), out = [];
+  let pool = H.words().slice(), out = [];
+  /* בלי ניקוד שתי מילים שנבדלות רק בניקוד הן אחת, ואסור שתיהן באותו סיבוב */
+  if(!H.nikudOn()){ const seen = new Set(); pool = pool.filter(w => { const k = H.sk(w); if(seen.has(k)) return false; seen.add(k); return true; }); }
   const weight = w => {
-    const s = H.state.stats[w] || {bad:0, run:0};
+    const s = H.state.stats[H.sk(w)] || {bad:0, run:0};
     return 1 + s.bad*3 + Math.max(0, H.MASTER_AT - s.run)*2
              + (H.isDue(s) ? 6 : 0);          /* הגיע הזמן לחזור עליה */
   };
@@ -223,5 +245,5 @@ H.pickWords = function(n){
       if(r <= 0){ out.push(pool.splice(i,1)[0]); break; }
     }
   }
-  return out;
+  return H.nikudOn() ? out : out.map(H.strip);
 };

@@ -23,7 +23,10 @@ H.LIB = [
     {id:'holidays', e:'🕎', name:'חגים', words:[
       'שׁוֹפָר','תַּפּוּחַ','דְּבַשׁ','סֻכָּה','לוּלָב','אֶתְרוֹג','חֲנֻכִּיָּה','סְבִיבוֹן',
       'סוּפְגָּנִיָּה','מְגִלָּה','פּוּרִים','מַצָּה','הַגָּדָה','שַׁבָּת','נֵר']}
-  ]}
+  ]},
+  /* שכבות שעוד לא נכתבו: מוצגות כדי שההורה יידע שהן בדרך */
+  {id:'d4', name:'כיתות ג׳–ד׳', note:'בלי ניקוד', soon:true, topics:[]},
+  {id:'f6', name:'כיתות ה׳–ו׳', note:'בלי ניקוד', soon:true, topics:[]}
 ];
 
 H.openLibrary = function(){ H.renderLibrary(); H.show('lib'); };
@@ -33,6 +36,7 @@ H.renderLibrary = function(){
   const have = new Set(H.state.packs.map(p => p.libId).filter(Boolean));
   H.LIB.forEach(tier => {
     box.appendChild(H.el('h3', '', tier.name + ' · ' + tier.note));
+    if(tier.soon){ box.appendChild(H.el('div', 'libsoon', '\u05d1\u05e7\u05e8\u05d5\u05d1 \u00b7 \u05d4\u05de\u05d9\u05dc\u05d9\u05dd \u05e2\u05d5\u05d3 \u05d1\u05db\u05ea\u05d9\u05d1\u05d4')); return; }
     const grid = H.el('div', 'libgrid');
     tier.topics.forEach(t => {
       const id = tier.id + '/' + t.id, added = have.has(id);

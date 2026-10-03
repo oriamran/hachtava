@@ -6,7 +6,7 @@ H.renderReport = function(){
 
   /* --- מילים לפי מצב --- */
   const rank = words.map(w => {
-    const s = st[w] || {ok:0, bad:0, run:0};
+    const s = st[H.sk(w)] || {ok:0, bad:0, run:0};
     const tries = s.ok + s.bad;
     return {w, s, tries, rate: tries ? s.ok / tries : 0, done: s.run >= H.MASTER_AT};
   });

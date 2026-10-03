@@ -30,22 +30,21 @@ H.deviceId = function(){
   }catch(e){ return '00000000-0000-0000-0000-000000000000'; }
 };
 H.quota = null;
-H.ocrUrl  = function(){
-  try{ return localStorage.getItem(H.OCR_KEY) || ''; }catch(e){ return ''; }
-};
-H.setOcrUrl = function(u){
-  u = (u || '').trim().replace(/\/+$/, '');
-  try{ u ? localStorage.setItem(H.OCR_KEY, u) : localStorage.removeItem(H.OCR_KEY); }catch(e){}
-  H.renderOcr();
-};
+/* כתובת השרת. מוגדרת כאן פעם אחת, והסנכרון, לוח הניהול והסריקה כולם נשענים עליה.
+   היא גם הכתובת היחידה שמדיניות האבטחה של הדף מאפשרת לפנות אליהד. */
+H.API_DEFAULT = 'https://hachtava-ocr.milim1.workers.dev';
+/* סריקת דף מצולם. נעולה בדיוק בשני מקומות שצריך להדליק יחד:
+   כאן (true) ובשרת (SCANS_ENABLED="true" ואז wrangler deploy). */
+H.SCANS_OPEN = false;
+H.ocrUrl  = () => H.API_DEFAULT;
+H.setOcrUrl = function(){ H.renderOcr(); };
 H.renderOcr = function(){
-  const btn = H.$('ocrbtn'), inp = H.$('ocrUrlIn');
-  if(inp && document.activeElement !== inp) inp.value = H.ocrUrl();
-  const t = H.$('scanTokIn');
-  if(t && document.activeElement !== t) t.value = H.scanToken();
-  if(btn) btn.style.display = (H.ocrUrl() && H.loadPhoto()) ? '' : 'none';
+  const btn = H.$('ocrbtn'); if(!btn) return;
+  /* הכפתור תמיד גלוי, כדי שההורה ידע שהאפשרות קיימת. כשנעול הוא מושבת. */
+  btn.disabled = !(H.SCANS_OPEN && H.loadPhoto());
 };
 H.readPhoto = async function(){
+  if(!H.SCANS_OPEN) return;
   const url = H.ocrUrl(), photo = H.loadPhoto();
   if(!url || !photo) return;
   const btn = H.$('ocrbtn'), msg = H.$('ocrmsg');

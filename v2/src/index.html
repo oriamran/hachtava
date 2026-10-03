@@ -54,6 +54,27 @@
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
 
+    <!-- חשבון: תמיד גלוי במסך הראשי -->
+    <div class="homeacc" id="homeacc">
+      <div id="homeg" class="gbtn"></div>
+      <div class="homeacc-row">
+        <span id="homeemail" class="homeemail" style="display:none"></span>
+        <button class="mini" id="homesignin" onclick="H.login()">🔐 התחבר עם גוגל</button>
+        <button class="mini" id="homesignout" onclick="H.signOut()" disabled>🚪 התנתק</button>
+      </div>
+    </div>
+
+    <!-- התאמה לכיתה: גלויה מההתחלה, כדי שהמשחק יתאים לילד לפני שמתחילים -->
+    <div class="levelcard" id="levelcard">
+      <div class="lv-title">🎚️ מי משחק?</div>
+      <div class="lv-chips" id="lvchips"></div>
+      <p class="lv-hint" id="lvhint"></p>
+      <div class="lv-toggles">
+        <button class="mini" id="tgNikud" onclick="H.cycleNikud()"></button>
+        <button class="mini" id="ktbtn">כתב ✏️</button>
+      </div>
+    </div>
+
     <div class="tiles">
       <button class="menu wide chal" id="chalbtn" onclick="H.startChallenge()"></button>
       <button class="menu big-map" data-go="map">
@@ -76,7 +97,8 @@
 
     <div class="row small">
       <button class="mini" onclick="H.openSettings()">⚙️ הורים</button>
-      <button class="mini" id="ktbtn">כתב ✏️</button>
+      <button class="mini" onclick="H.startTour()">❓ מדריך</button>
+      <button class="mini" onclick="H.show('tips')">💡 טיפים להורים</button>
     </div>
   </section>
 
@@ -230,6 +252,28 @@
     <div id="rep-fresh"></div>
   </section>
 
+  <!-- ============ מדריך ============ -->
+  <section class="screen" id="s-tour">
+    <div class="tour-card">
+      <div id="tour-e" class="tour-e"></div>
+      <h2 id="tour-t"></h2>
+      <p id="tour-p"></p>
+    </div>
+    <div id="tour-dots" class="tour-dots"></div>
+    <div class="row">
+      <button class="mini" id="tour-skip" onclick="H.endTour()">דלג</button>
+      <button class="mini" id="tour-prev" onclick="H.prevTour()">הקודם</button>
+      <button class="go" id="tour-next" onclick="H.nextTour()">הבא</button>
+    </div>
+  </section>
+
+  <!-- ============ טיפים להורים ============ -->
+  <section class="screen" id="s-tips">
+    <h2>טיפים להורים 💡</h2>
+    <p class="sub">מבוסס על מחקרים על למידה. הם לא תחליף למורה של ילדכם.</p>
+    <div id="tipsbody"></div>
+  </section>
+
   <!-- ============ ספריית מילים ============ -->
   <section class="screen" id="s-lib">
     <h2>ספריית מילים 📚</h2>
@@ -284,7 +328,7 @@
       <img alt="דף ההכתבה">
       <span class="phototip">הקש להגדלה</span>
     </div>
-    <button class="go" id="ocrbtn" style="display:none" onclick="H.readPhoto()">🔍 קרא את המילים מהצילום</button>
+    <button class="go soonbtn" id="ocrbtn" disabled onclick="H.readPhoto()">🔍 קרא את המילים מהצילום <span class="soon">בקרוב</span></button>
     <p class="note" id="ocrmsg"></p>
     <p class="note" id="quotamsg" style="display:none"></p>
     <div class="upgrade" id="upgradebox" style="display:none">
@@ -299,9 +343,6 @@
     <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button>
       <button class="mini" onclick="H.openLibrary()">📚 ספריית מילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
-    <label class="lbl">כתובת שרת הקריאה<input id="ocrUrlIn" placeholder="ריק = בלי קריאה מצילום" onchange="H.setOcrUrl(this.value)"></label>
-    <label class="lbl">קוד גישה לסריקה<input id="scanTokIn" placeholder="ריק = בלי קוד" onchange="H.setScanToken(this.value)"></label>
-    <p class="note" style="text-align:start">רק עם כתובת שרת אפשר לקרוא מילים מצילום. בלעדיה המשחק עובד אופליין במלואו.</p>
 
     <h3>חשבון וסנכרון</h3>
     <div id="accbox">

@@ -29,6 +29,17 @@ H.buildCluster = o =>
 H.nk = {word:0, letter:-1};
 
 H.openNikud = function(){
+  /* מה שהוקלד בתיבה נשמר לפני שפותחים את העורך, אחרת הוא רואה חבילה ריקה */
+  const ta = H.$('wordsIn');
+  if(ta && H.$('s-settings').classList.contains('on')){
+    const list = H.readWordsIn();
+    if(list.length < 1) return alert('\u05e7\u05d5\u05d3\u05dd \u05d4\u05e7\u05dc\u05d9\u05d3\u05d5 \u05de\u05d9\u05dc\u05d9\u05dd \u05d1\u05ea\u05d9\u05d1\u05d4, \u05d5\u05d0\u05d6 \u05dc\u05d7\u05e6\u05d5 \u05e2\u05dc \u05e0\u05d9\u05e7\u05d5\u05d3');
+    const p = H.pack();
+    p.topic = H.cleanText(H.$('topicIn').value.trim(), 80) || p.topic || '\u05d4\u05db\u05ea\u05d1\u05d4';
+    p.prize = H.cleanText(H.$('prizeIn').value.trim(), 80);
+    p.list = list;
+    H.syncStats(); H.save();
+  }
   H.nk = {word:0, letter:-1};
   H.renderPhoto();
   H.renderNikud();
@@ -37,7 +48,7 @@ H.openNikud = function(){
 H.renderNikud = function(){
   const words = H.words();
   const dr = H.$('nk-draft'); if(dr) dr.style.display = (H.pack() && H.pack().draft) ? '' : 'none';
-  if(!words.length) return;
+  if(!words.length){ H.$('nk-words').innerHTML = ''; H.$('nk-letters').innerHTML = ''; H.$('nk-pad').innerHTML = '<p class="note">\u05d0\u05d9\u05df \u05de\u05d9\u05dc\u05d9\u05dd \u05d1\u05d7\u05d1\u05d9\u05dc\u05d4</p>'; H.$('nk-preview').textContent = ''; return; }
   if(H.nk.word >= words.length) H.nk.word = 0;
 
   /* בחירת המילה */

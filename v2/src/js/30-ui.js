@@ -16,8 +16,10 @@ H.show = function(id){
   const s = H.$('s-' + id);
   if(s) s.classList.add('on');
   H.screen = id;
-  H.$('backbtn').classList.toggle('on', id !== 'home');
-  document.body.classList.toggle('nav', id !== 'home');
+  const bare = (id === 'home' || id === 'onboard' || id === 'tour');   /* אין לאן לחזור משם */
+  H.$('backbtn').classList.toggle('on', !bare);
+  document.body.classList.toggle('nav', !bare);
+  if(id === 'tips') H.renderTips();
   window.scrollTo(0, 0);
   H.paint();
 };

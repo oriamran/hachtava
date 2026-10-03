@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-9lK7fejV4ZJMQP5+hrlQa2jm3dmYdh8r52UaqW60i2k=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-oxRL3UbBGe8GcSjAPxvqawJQ00QCwkroEAIqbFoAXC0=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qbtbtsNfBzw1Vn6YN4sIj4MlV25jT+HRkqsdX1TE3E4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-1w4+6jGd7k+6ljw5RO1pkFS2SSk8LPddaLwISsf9u/s=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -385,7 +385,7 @@ body.nav .wrap{padding-top:36px}
 .packchip.add{background:#eef3fb;color:var(--ink2)}
 
 /* ---------- דוח הורים ---------- */
-.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.statrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;margin-top:8px}
 .statbox{
   background:#fff;border-radius:16px;padding:11px 4px;text-align:center;
   box-shadow:0 4px 0 var(--cardEdge);
@@ -590,6 +590,57 @@ body.nav .wrap{padding-top:36px}
 .draftbox{background:linear-gradient(135deg,#fff3cd,#ffe0a3);border-radius:18px;padding:12px;margin-bottom:12px;text-align:center}
 .draftbox p{margin:6px 0 10px;font-size:14px;color:var(--ink2);font-weight:700}
 
+/* ---------- חשבון במסך הראשי ---------- */
+.homeacc{display:flex;flex-direction:column;align-items:center;gap:8px;margin:0 0 12px}
+.homeacc .gbtn{min-height:0}
+.homeacc-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px}
+.homeemail{font-size:13px;color:var(--ink2);background:#fff;border-radius:999px;padding:8px 14px;box-shadow:var(--drop);direction:ltr}
+.homeacc .mini:disabled{opacity:.45}
+
+/* ---------- התאמה לכיתה ---------- */
+.levelcard{background:var(--card);border-radius:var(--r);padding:12px 14px;margin:0 0 14px;box-shadow:var(--drop);text-align:center}
+.lv-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.lv-chips{display:flex;gap:8px;justify-content:center}
+.lvchip{flex:1;background:#eef3fb;color:var(--ink);padding:10px 6px;font-size:16px;min-height:52px;border-radius:16px}
+.lvchip small{display:block;font-size:11px;color:var(--ink2);margin-top:2px}
+.lvchip.on{background:linear-gradient(135deg,var(--sun),var(--sunDeep));color:#fff;box-shadow:0 4px 0 #c97a00}
+.lvchip.on small{color:rgba(255,255,255,.9)}
+.lv-hint{font-size:13px;color:var(--ink2);margin:8px 0}
+.lv-toggles{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* ---------- מדריך וטיפים ---------- */
+.tour-card{background:var(--card);border-radius:var(--r);padding:26px 20px;margin:18px 0 12px;box-shadow:var(--drop);text-align:center;min-height:260px}
+.tour-e{font-size:64px;line-height:1.1}
+.tour-card h2{margin:12px 0 8px}
+.tour-card p{font-size:17px;line-height:1.6;color:var(--ink2);margin:0}
+.tour-dots{display:flex;gap:8px;justify-content:center;margin:6px 0 16px}
+.tour-dots i{width:10px;height:10px;border-radius:50%;background:#fff;opacity:.6}
+.tour-dots i.on{background:var(--sunDeep);opacity:1;transform:scale(1.25)}
+.tipcard{display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:var(--r);padding:14px;margin:0 0 10px;box-shadow:var(--drop)}
+.tipcard .tip-e{font-size:30px}
+.tipcard b{font-size:16px}
+.tipcard p{font-size:14px;line-height:1.55;color:var(--ink2);margin:4px 0 0}
+.libsoon{background:#fff;border-radius:var(--r);padding:16px;text-align:center;color:var(--ink2);opacity:.8;box-shadow:var(--drop)}
+
+/* ---------- לוח ניהול ---------- */
+.admchart{width:100%;height:auto;background:#f6f3ff;border-radius:14px;direction:ltr}
+.admlegend{display:flex;justify-content:space-between;font-size:12px;margin-top:4px}
+.admbars{display:flex;align-items:flex-end;gap:2px;height:70px;background:#fff;border-radius:14px;padding:8px;box-shadow:0 4px 0 var(--cardEdge)}
+.admbars i{flex:1;background:var(--plum);border-radius:3px 3px 0 0;min-height:3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;box-shadow:0 3px 0 var(--cardEdge)}
+.chip.bad{background:#ffe8ee;color:#a8153c}
+.chip small{font-size:11px;opacity:.8}
+.admhead,.admuser summary{display:grid;grid-template-columns:2fr .8fr .8fr .7fr .9fr;gap:6px;font-size:12px;align-items:center}
+.admhead{padding:4px 12px;color:var(--ink2);font-weight:800}
+.admuser{background:#fff;border-radius:14px;margin:0 0 8px;box-shadow:0 4px 0 var(--cardEdge)}
+.admuser summary{padding:12px;cursor:pointer;list-style:none;min-height:46px}
+.admuser summary::-webkit-details-marker{display:none}
+.admuser .em{direction:ltr;text-align:start;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.admdet{padding:0 12px 12px}
+.admdet h4{margin:14px 0 6px;font-size:14px}
+.admtbl.small{font-size:12px}
+
 </style>
 </head>
 <body>
@@ -630,6 +681,27 @@ body.nav .wrap{padding-top:36px}
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
 
+    <!-- חשבון: תמיד גלוי במסך הראשי -->
+    <div class="homeacc" id="homeacc">
+      <div id="homeg" class="gbtn"></div>
+      <div class="homeacc-row">
+        <span id="homeemail" class="homeemail" style="display:none"></span>
+        <button class="mini" id="homesignin" onclick="H.login()">🔐 התחבר עם גוגל</button>
+        <button class="mini" id="homesignout" onclick="H.signOut()" disabled>🚪 התנתק</button>
+      </div>
+    </div>
+
+    <!-- התאמה לכיתה: גלויה מההתחלה, כדי שהמשחק יתאים לילד לפני שמתחילים -->
+    <div class="levelcard" id="levelcard">
+      <div class="lv-title">🎚️ מי משחק?</div>
+      <div class="lv-chips" id="lvchips"></div>
+      <p class="lv-hint" id="lvhint"></p>
+      <div class="lv-toggles">
+        <button class="mini" id="tgNikud" onclick="H.cycleNikud()"></button>
+        <button class="mini" id="ktbtn">כתב ✏️</button>
+      </div>
+    </div>
+
     <div class="tiles">
       <button class="menu wide chal" id="chalbtn" onclick="H.startChallenge()"></button>
       <button class="menu big-map" data-go="map">
@@ -652,7 +724,8 @@ body.nav .wrap{padding-top:36px}
 
     <div class="row small">
       <button class="mini" onclick="H.openSettings()">⚙️ הורים</button>
-      <button class="mini" id="ktbtn">כתב ✏️</button>
+      <button class="mini" onclick="H.startTour()">❓ מדריך</button>
+      <button class="mini" onclick="H.show('tips')">💡 טיפים להורים</button>
     </div>
   </section>
 
@@ -806,6 +879,28 @@ body.nav .wrap{padding-top:36px}
     <div id="rep-fresh"></div>
   </section>
 
+  <!-- ============ מדריך ============ -->
+  <section class="screen" id="s-tour">
+    <div class="tour-card">
+      <div id="tour-e" class="tour-e"></div>
+      <h2 id="tour-t"></h2>
+      <p id="tour-p"></p>
+    </div>
+    <div id="tour-dots" class="tour-dots"></div>
+    <div class="row">
+      <button class="mini" id="tour-skip" onclick="H.endTour()">דלג</button>
+      <button class="mini" id="tour-prev" onclick="H.prevTour()">הקודם</button>
+      <button class="go" id="tour-next" onclick="H.nextTour()">הבא</button>
+    </div>
+  </section>
+
+  <!-- ============ טיפים להורים ============ -->
+  <section class="screen" id="s-tips">
+    <h2>טיפים להורים 💡</h2>
+    <p class="sub">מבוסס על מחקרים על למידה. הם לא תחליף למורה של ילדכם.</p>
+    <div id="tipsbody"></div>
+  </section>
+
   <!-- ============ ספריית מילים ============ -->
   <section class="screen" id="s-lib">
     <h2>ספריית מילים 📚</h2>
@@ -860,7 +955,7 @@ body.nav .wrap{padding-top:36px}
       <img alt="דף ההכתבה">
       <span class="phototip">הקש להגדלה</span>
     </div>
-    <button class="go" id="ocrbtn" style="display:none" onclick="H.readPhoto()">🔍 קרא את המילים מהצילום</button>
+    <button class="go soonbtn" id="ocrbtn" disabled onclick="H.readPhoto()">🔍 קרא את המילים מהצילום <span class="soon">בקרוב</span></button>
     <p class="note" id="ocrmsg"></p>
     <p class="note" id="quotamsg" style="display:none"></p>
     <div class="upgrade" id="upgradebox" style="display:none">
@@ -875,9 +970,6 @@ body.nav .wrap{padding-top:36px}
     <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button>
       <button class="mini" onclick="H.openLibrary()">📚 ספריית מילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
-    <label class="lbl">כתובת שרת הקריאה<input id="ocrUrlIn" placeholder="ריק = בלי קריאה מצילום" onchange="H.setOcrUrl(this.value)"></label>
-    <label class="lbl">קוד גישה לסריקה<input id="scanTokIn" placeholder="ריק = בלי קוד" onchange="H.setScanToken(this.value)"></label>
-    <p class="note" style="text-align:start">רק עם כתובת שרת אפשר לקרוא מילים מצילום. בלעדיה המשחק עובד אופליין במלואו.</p>
 
     <h3>חשבון וסנכרון</h3>
     <div id="accbox">
@@ -982,7 +1074,8 @@ H.RINGS = [
 
 H.blank = () => ({
   name: '', onboarded: false, peekAlways: false,
-  usage: {first: 0, last: 0, visits: 0, activeSec: 0},
+  level: 'a2', nikud: 'auto', tour: false,
+  usage: {first: 0, last: 0, visits: 0, activeSec: 0, games: {}, hist: {}},
   avatar: 'fox', hat: 'none', ring: 'sun',
   owned: ['fox','panda','frog','cat','none','sun','mint'],
   xp: 0, coins: 0,
@@ -1033,10 +1126,14 @@ H.save = function(fromServer){
   try { localStorage.setItem(H.KEY, JSON.stringify(H.state)); } catch(e){}
   if(H.pushSoon) H.pushSoon();
 };
+/* התקדמות שמורה לפי המילה בלי ניקוד, כך שמעבר בין מצב עם ניקוד לבלי
+   לא מאפס כלום. (מורה ומורה היו שתי מילים; במצב בלי ניקוד הן אחת.) */
+H.sk = w => H.strip(w);
 H.syncStats = function(){
   const st = H.state.stats;
-  H.words().forEach(w => { if(!st[w]) st[w] = {ok:0, bad:0, run:0}; });
-  Object.keys(st).forEach(w => { if(!H.words().includes(w)) delete st[w]; });
+  H.words().forEach(w => { const k = H.sk(w); if(!st[k]) st[k] = {ok:0, bad:0, run:0}; });
+  /* בלי מחיקה. הגרסה הקודמת מחקה התקדמות של כל מילה שלא בחבילה הפעילה, כלומר
+     החלפת חבילה איפסה את החזרה המרווחת של הקודמת. */
 };
 H.pack  = () => H.state.packs.find(p => p.id === H.state.pack);
 H.words = () => (H.pack() || H.state.packs[0]).list;
@@ -1106,40 +1203,57 @@ H.isDue = function(s){
   return !s.last || Date.now() - s.last >= H.dueMs(s);
 };
 H.hit = function(word){
-  const s = H.state.stats[word]; if(!s) return;
+  const k = H.sk(word);
+  const s = H.state.stats[k] || (H.state.stats[k] = {ok:0, bad:0, run:0});
   const wasMastered = s.run >= H.MASTER_AT, wasDue = H.isDue(s);
   s.ok++; s.run++;
   /* הרווח גדל רק כשענו נכון על מילה שהגיע זמנה — לא על כל פגיעה באותו יום */
   if(wasMastered){ if(wasDue){ s.lv = (s.lv || 0) + 1; s.last = Date.now(); } }
   else { s.lv = 0; s.last = Date.now(); }
-  if(s.run >= H.MASTER_AT && !H.state.album.includes(word)) H.state.album.push(word);
+  if(s.run >= H.MASTER_AT && !H.state.album.includes(k)) H.state.album.push(k);
   H.save();
 };
 H.miss = function(word){
-  const s = H.state.stats[word]; if(!s) return;
+  const k = H.sk(word);
+  const s = H.state.stats[k] || (H.state.stats[k] = {ok:0, bad:0, run:0});
   s.bad++; s.run = 0; s.lv = 0; s.last = Date.now(); H.save();
 };
 /* יומן תרגול לדוח ההורים */
 H.today = () => new Date().toISOString().slice(0,10);
 H.logStart = function(){ H._t0 = Date.now(); };
-H.logEnd = function(right, wrong){
+/* בסוף כל סבב: יומן יומי לדוח ההורים, פירוט לפי משחק (כמה זמן, כמה סבבים,
+   כמה נכון וכמה לא), וצילום יומי של ההתקדמות לגרף. מינימלי: זה מה שנשלח לשרת. */
+H.logEnd = function(right, wrong, gameId){
   const d = H.today();
   const e = H.state.log[d] || (H.state.log[d] = {sec:0, right:0, wrong:0, rounds:0});
-  if(H._t0){ e.sec += Math.min(900, Math.round((Date.now() - H._t0)/1000)); H._t0 = 0; }
+  let dt = 0;
+  if(H._t0){ dt = Math.min(900, Math.round((Date.now() - H._t0)/1000)); e.sec += dt; H._t0 = 0; }
   e.right += right; e.wrong += wrong; e.rounds++;
+
+  const u = H.usage();
+  u.games = u.games || {}; u.hist = u.hist || {};
+  if(gameId){
+    const g = u.games[gameId] || (u.games[gameId] = {sec:0, rounds:0, right:0, wrong:0});
+    g.sec += dt; g.rounds++; g.right += right; g.wrong += wrong;
+  }
+  u.hist[d] = {xp: H.state.xp, e: H.mastered()};
+  const ks = Object.keys(u.hist).sort();
+  if(ks.length > 120) ks.slice(0, ks.length - 120).forEach(k => delete u.hist[k]);
   H.save();
 };
 
 /* נכבשה = נענתה נכון פעם אחת לפחות MASTER_AT ברצף. טעות בחזרה מאפסת את הרצף
    הנוכחי, אבל לא לוקחת מהילד מדבקה שרכש. */
-H.isEarned = w => H.state.album.includes(w) || ((H.state.stats[w]||{}).run >= H.MASTER_AT);
+H.isEarned = w => { const k = H.sk(w); return H.state.album.includes(k) || ((H.state.stats[k]||{}).run >= H.MASTER_AT); };
 H.mastered = () => H.words().filter(H.isEarned).length;
 
 /* בחירה משוקללת — מילים חלשות חוזרות יותר */
 H.pickWords = function(n){
-  const pool = H.words().slice(), out = [];
+  let pool = H.words().slice(), out = [];
+  /* בלי ניקוד שתי מילים שנבדלות רק בניקוד הן אחת, ואסור שתיהן באותו סיבוב */
+  if(!H.nikudOn()){ const seen = new Set(); pool = pool.filter(w => { const k = H.sk(w); if(seen.has(k)) return false; seen.add(k); return true; }); }
   const weight = w => {
-    const s = H.state.stats[w] || {bad:0, run:0};
+    const s = H.state.stats[H.sk(w)] || {bad:0, run:0};
     return 1 + s.bad*3 + Math.max(0, H.MASTER_AT - s.run)*2
              + (H.isDue(s) ? 6 : 0);          /* הגיע הזמן לחזור עליה */
   };
@@ -1151,7 +1265,7 @@ H.pickWords = function(n){
       if(r <= 0){ out.push(pool.splice(i,1)[0]); break; }
     }
   }
-  return out;
+  return H.nikudOn() ? out : out.map(H.strip);
 };
 
 /* ===== 01-safe.js ===== */
@@ -1189,6 +1303,11 @@ H.cleanState = function(raw){
   s.xp = num(raw.xp, 0, 1e7); s.coins = num(raw.coins, 0, 1e7); s.wins = num(raw.wins, 0, 1e6);
   s.updatedAt = num(raw.updatedAt, 0, 8.64e15);
   s.pack = T(raw.pack, 40); s.album = L(raw.album, 2000, 60);
+  s.level = ['a2','d4','f6'].includes(raw.level) ? raw.level : 'a2';
+  s.nikud = ['auto','on','off'].includes(raw.nikud) ? raw.nikud : 'auto';
+  s.tour  = raw.tour === true;
+  /* התקדמות שמורה לפי המילה בלי ניקוד. שמירות ישנות נשמרו עם ניקוד — ממיירים. */
+  s.album = [...new Set(s.album.map(w => H.strip(w)))];
 
   const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20).filter(isO) : [];
   s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60),
@@ -1199,8 +1318,13 @@ H.cleanState = function(raw){
   s.stats = {};
   keys(raw.stats, 2000).forEach(k => {
     const v = raw.stats[k]; if(!isO(v)) return;
-    s.stats[H.cleanText(k, 60)] = {ok: num(v.ok,0,1e6), bad: num(v.bad,0,1e6), run: num(v.run,0,1e6),
-                                   lv: num(v.lv,0,20), last: num(v.last,0,8.64e15)};
+    const key = H.cleanText(H.strip(k), 60);
+    const cur = {ok: num(v.ok,0,1e6), bad: num(v.bad,0,1e6), run: num(v.run,0,1e6),
+                 lv: num(v.lv,0,20), last: num(v.last,0,8.64e15)};
+    const prev = s.stats[key];
+    /* שתי גרסאות של אותה מילה (עם ובלי ניקוד) נמזגות: סוכמים ניסיונות, לוקחים את הרצף הגבוה */
+    s.stats[key] = prev ? {ok: prev.ok+cur.ok, bad: prev.bad+cur.bad, run: Math.max(prev.run,cur.run),
+                           lv: Math.max(prev.lv,cur.lv), last: Math.max(prev.last,cur.last)} : cur;
   });
   s.stars = {};
   keys(raw.stars, 100).forEach(k => { s.stars[H.cleanText(k, 6)] = num(raw.stars[k], 0, 3); });
@@ -1212,7 +1336,16 @@ H.cleanState = function(raw){
   const d = isO(raw.daily) ? raw.daily : {};
   s.daily = {last: T(d.last, 40), streak: num(d.streak, 0, 1e5), chal: T(d.chal, 12)};
   const u = isO(raw.usage) ? raw.usage : {};
-  s.usage = {first: num(u.first,0,8.64e15), last: num(u.last,0,8.64e15), visits: num(u.visits,0,1e7), activeSec: num(u.activeSec,0,1e9)};
+  s.usage = {first: num(u.first,0,8.64e15), last: num(u.last,0,8.64e15), visits: num(u.visits,0,1e7), activeSec: num(u.activeSec,0,1e9),
+             games: {}, hist: {}};
+  keys(u.games, 20).forEach(g => {
+    const v = u.games[g]; if(!isO(v) || !/^[a-z]{3,12}$/.test(g)) return;
+    s.usage.games[g] = {sec: num(v.sec,0,1e8), rounds: num(v.rounds,0,1e6), right: num(v.right,0,1e7), wrong: num(v.wrong,0,1e7)};
+  });
+  keys(u.hist, 400).sort().slice(-120).forEach(d => {
+    const v = u.hist[d]; if(!isO(v) || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+    s.usage.hist[d] = {xp: num(v.xp,0,1e7), e: num(v.e,0,1000)};
+  });
 
   s.hand = {};
   keys(raw.hand, 40).forEach(k => {
@@ -1420,8 +1553,10 @@ H.show = function(id){
   const s = H.$('s-' + id);
   if(s) s.classList.add('on');
   H.screen = id;
-  H.$('backbtn').classList.toggle('on', id !== 'home');
-  document.body.classList.toggle('nav', id !== 'home');
+  const bare = (id === 'home' || id === 'onboard' || id === 'tour');   /* אין לאן לחזור משם */
+  H.$('backbtn').classList.toggle('on', !bare);
+  document.body.classList.toggle('nav', !bare);
+  if(id === 'tips') H.renderTips();
   window.scrollTo(0, 0);
   H.paint();
 };
@@ -1537,7 +1672,7 @@ H.finishOnboard = function(){
   H.state.onboarded = true;
   H.save();
   H.sfx.great(); H.confetti(28);
-  H.refresh(); H.show('home');
+  H.refresh(); H.startTour();                /* אחרי בחירת הדמות — מדריך */
 };
 
 /* ===== 40-games.js ===== */
@@ -1555,7 +1690,7 @@ H.startRound = function(gameId, station){
   const g = H.byId(gameId);
   H.run = {
     game: g, station,
-    queue: H.pickWords(H.ROUND),
+    queue: H.pickWords(H.roundSize()),
     total: 0, right: 0, wrong: 0,
     word: null
   };
@@ -1587,7 +1722,7 @@ H.stars = function(){
 };
 H.endRound = function(){
   const r = H.run, stars = H.stars();
-  H.logEnd(r.right, r.wrong);
+  H.logEnd(r.right, r.wrong, r.game && r.game.id);
   if(r.challenge) return H.finishChallenge();
   const xp = 20 + r.right * 8 + (stars === 3 ? 25 : 0);
   const perfect = r.wrong === 0;
@@ -1640,7 +1775,7 @@ H.variants = function(word, n){
     const c = cl.slice();
     let mode = Math.floor(Math.random()*4);
     /* כשיש במילה אות עם חבר הומופוני, זו הטעות המועדפת */
-    if(homo.length && Math.random() < 0.55) mode = 4;
+    if(homo.length && Math.random() < H.grade().homo) mode = 4;
     const i = (mode === 4) ? homo[Math.floor(Math.random()*homo.length)] : Math.floor(Math.random()*c.length);
     if(c[i] === ' ') continue;
     if(mode === 4){                                   /* אות דומה בצליל */
@@ -2021,7 +2156,7 @@ H.game({
     const r = H.run;
     r.guide = false;
     /* המילה כבר נכבשה באריחים — אז כאן זה כבר מבחן, לא תרגול */
-    r.testMode = (H.state.stats[w] || {run:0}).run >= H.MASTER_AT;
+    r.testMode = (H.state.stats[H.sk(w)] || {run:0}).run >= H.MASTER_AT;
     H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters(); H.hideCompare();
     H.$('writeprompt').textContent = r.testMode
       ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
@@ -2259,7 +2394,7 @@ H.padReveal = function(){
 H.game({
   id:'anagram', e:'🔀', name:'ערבוביה',
   desc:'סדר את האותיות לפני שייגמר הזמן',
-  SEC: 25,
+  get SEC(){ return H.grade().ana; },      /* קבוע לפי הכיתה */
   start(){ H.show('anagram'); this.next(); },
   next(){
     const w = H.nextWord();
@@ -2740,7 +2875,7 @@ H.STICKERS = ['🍎','🍌','🍇','🍓','🍉','🥝','🍑','🍍',
 H.renderAlbum = function(){
   const box = H.$('albumlist'); box.innerHTML = '';
   H.words().forEach((w, i) => {
-    const s = H.state.stats[w] || {run:0};
+    const s = H.state.stats[H.sk(w)] || {run:0};
     const got = H.isEarned(w);
     const el = H.el('div', 'sticker' + (got ? ' got' : ''));
     el.innerHTML = '<span class="stk-e">' + (got ? H.STICKERS[i % H.STICKERS.length] : '❓') + '</span>' +
@@ -2813,10 +2948,12 @@ H.openSettings = function(){
   H.renderAccount();
   H.show('settings');
 };
+/* המילים שבתיבה, נקיות ובלי מספור */
+H.readWordsIn = () => H.$('wordsIn').value.split('\n')
+  .map(x => H.cleanText(x.replace(/^\s*\d+[.)\.\s]\s*/, '').trim(), 60))
+  .filter(x => x.length);
 H.applySettings = function(){
-  const list = H.$('wordsIn').value.split('\n')
-    .map(x => H.cleanText(x.replace(/^\s*\d+[.)\.\s]\s*/, '').trim(), 60))
-    .filter(x => x.length);
+  const list = H.readWordsIn();
   if(list.length < 2) return alert('צריך לפחות שתי מילים');
   H.state.name = H.cleanText(H.$('nameIn').value.trim(), 30);
   H.state.peekAlways = H.$('peekIn').checked;
@@ -2849,7 +2986,7 @@ H.renderReport = function(){
 
   /* --- מילים לפי מצב --- */
   const rank = words.map(w => {
-    const s = st[w] || {ok:0, bad:0, run:0};
+    const s = st[H.sk(w)] || {ok:0, bad:0, run:0};
     const tries = s.ok + s.bad;
     return {w, s, tries, rate: tries ? s.ok / tries : 0, done: s.run >= H.MASTER_AT};
   });
@@ -3035,6 +3172,17 @@ H.buildCluster = o =>
 H.nk = {word:0, letter:-1};
 
 H.openNikud = function(){
+  /* מה שהוקלד בתיבה נשמר לפני שפותחים את העורך, אחרת הוא רואה חבילה ריקה */
+  const ta = H.$('wordsIn');
+  if(ta && H.$('s-settings').classList.contains('on')){
+    const list = H.readWordsIn();
+    if(list.length < 1) return alert('\u05e7\u05d5\u05d3\u05dd \u05d4\u05e7\u05dc\u05d9\u05d3\u05d5 \u05de\u05d9\u05dc\u05d9\u05dd \u05d1\u05ea\u05d9\u05d1\u05d4, \u05d5\u05d0\u05d6 \u05dc\u05d7\u05e6\u05d5 \u05e2\u05dc \u05e0\u05d9\u05e7\u05d5\u05d3');
+    const p = H.pack();
+    p.topic = H.cleanText(H.$('topicIn').value.trim(), 80) || p.topic || '\u05d4\u05db\u05ea\u05d1\u05d4';
+    p.prize = H.cleanText(H.$('prizeIn').value.trim(), 80);
+    p.list = list;
+    H.syncStats(); H.save();
+  }
   H.nk = {word:0, letter:-1};
   H.renderPhoto();
   H.renderNikud();
@@ -3043,7 +3191,7 @@ H.openNikud = function(){
 H.renderNikud = function(){
   const words = H.words();
   const dr = H.$('nk-draft'); if(dr) dr.style.display = (H.pack() && H.pack().draft) ? '' : 'none';
-  if(!words.length) return;
+  if(!words.length){ H.$('nk-words').innerHTML = ''; H.$('nk-letters').innerHTML = ''; H.$('nk-pad').innerHTML = '<p class="note">\u05d0\u05d9\u05df \u05de\u05d9\u05dc\u05d9\u05dd \u05d1\u05d7\u05d1\u05d9\u05dc\u05d4</p>'; H.$('nk-preview').textContent = ''; return; }
   if(H.nk.word >= words.length) H.nk.word = 0;
 
   /* בחירת המילה */
@@ -3216,22 +3364,21 @@ H.deviceId = function(){
   }catch(e){ return '00000000-0000-0000-0000-000000000000'; }
 };
 H.quota = null;
-H.ocrUrl  = function(){
-  try{ return localStorage.getItem(H.OCR_KEY) || ''; }catch(e){ return ''; }
-};
-H.setOcrUrl = function(u){
-  u = (u || '').trim().replace(/\/+$/, '');
-  try{ u ? localStorage.setItem(H.OCR_KEY, u) : localStorage.removeItem(H.OCR_KEY); }catch(e){}
-  H.renderOcr();
-};
+/* כתובת השרת. מוגדרת כאן פעם אחת, והסנכרון, לוח הניהול והסריקה כולם נשענים עליה.
+   היא גם הכתובת היחידה שמדיניות האבטחה של הדף מאפשרת לפנות אליהד. */
+H.API_DEFAULT = 'https://hachtava-ocr.milim1.workers.dev';
+/* סריקת דף מצולם. נעולה בדיוק בשני מקומות שצריך להדליק יחד:
+   כאן (true) ובשרת (SCANS_ENABLED="true" ואז wrangler deploy). */
+H.SCANS_OPEN = false;
+H.ocrUrl  = () => H.API_DEFAULT;
+H.setOcrUrl = function(){ H.renderOcr(); };
 H.renderOcr = function(){
-  const btn = H.$('ocrbtn'), inp = H.$('ocrUrlIn');
-  if(inp && document.activeElement !== inp) inp.value = H.ocrUrl();
-  const t = H.$('scanTokIn');
-  if(t && document.activeElement !== t) t.value = H.scanToken();
-  if(btn) btn.style.display = (H.ocrUrl() && H.loadPhoto()) ? '' : 'none';
+  const btn = H.$('ocrbtn'); if(!btn) return;
+  /* הכפתור תמיד גלוי, כדי שההורה ידע שהאפשרות קיימת. כשנעול הוא מושבת. */
+  btn.disabled = !(H.SCANS_OPEN && H.loadPhoto());
 };
 H.readPhoto = async function(){
+  if(!H.SCANS_OPEN) return;
   const url = H.ocrUrl(), photo = H.loadPhoto();
   if(!url || !photo) return;
   const btn = H.$('ocrbtn'), msg = H.$('ocrmsg');
@@ -3312,7 +3459,7 @@ H.refresh = function(){
   H.$('hello').textContent = H.state.name
     ? 'היי ' + H.state.name + '!' : 'היי!';
   H.renderMap(); H.renderPlay(); H.renderAlbum(); H.renderShop(); H.renderReport();
-  H.renderChallenge(); H.paint();
+  H.renderChallenge(); H.renderLevels(); H.renderAccount(); H.paint();
 };
 
 H.boot = function(){
@@ -3324,7 +3471,9 @@ H.boot = function(){
   } }catch(e){}
   H.initVoice();
   H.refresh();
-  if(H.needsOnboard()) H.startOnboard(); else H.show('home');
+  if(H.needsOnboard()) H.startOnboard();
+  else if(!H.state.tour) H.startTour();      /* גם מי שכבר שיחק רואה את המדריך פעם אחת */
+  else H.show('home');
 
   /* כפתורים קבועים */
   H.$('backbtn').onclick   = () => { H.sfx.tap(); H.home(); };
@@ -3431,25 +3580,30 @@ H.loadGsi = function(){
 /* שני הכפתורים תמיד מוצגים. מה שמשתנה הוא אם אפשר ללחוץ עליהם,
    והטקסט שמסביר למה. כפתור שנעלם בלי הסבר נראה כמו משהו שלא קיים. */
 H.renderAccount = async function(){
-  const box = H.$('accbox'); if(!box) return;
   const cidIn = H.$('cidIn');
   if(cidIn && document.activeElement !== cidIn) cidIn.value = H.clientId();
-  const login = H.$('loginbtn'), out = H.$('signoutbtn'), sync = H.$('syncnow');
-  const g = H.$('gbtn'), msg = H.$('accmsg');
+  const $ = id => H.$(id) || {style:{}, classList:{toggle(){}}};     /* מסך שלא קיים לא מפיל */
+  const login = $('loginbtn'), out = $('signoutbtn'), sync = $('syncnow');
+  const g = $('gbtn'), hg = $('homeg'), msg = $('accmsg');
+  const hin = $('homesignin'), hout = $('homesignout'), hmail = $('homeemail');
 
   if(H.signedIn()){
     login.disabled = true;  login.textContent = '✅ מחובר';
     out.disabled = false;   sync.style.display = '';
-    H.$('adminbtn').style.display = ''; H.$('delbtn').style.display = '';
-    g.innerHTML = '';
+    hin.style.display = 'none'; hout.disabled = false; hout.style.display = '';
+    hmail.style.display = ''; hmail.textContent = '✅ ' + H.acc.email;
+    $('adminbtn').style.display = ''; $('delbtn').style.display = '';
+    g.innerHTML = ''; hg.innerHTML = '';
     msg.className = 'note ok';
-    msg.textContent = 'מחובר כע' + H.acc.email + ' · ההתקדמות מסתנכרנת';
+    msg.textContent = 'מחובר: ' + H.acc.email + ' · ההתקדמות מסתנכרנת';
     return;
   }
   login.disabled = false; login.textContent = '🔐 התחבר עם גוגל';
   out.disabled = true;    sync.style.display = 'none';
-  H.$('adminbtn').style.display = 'none'; H.$('delbtn').style.display = 'none';
-  g.innerHTML = '';
+  hin.style.display = ''; hout.disabled = true; hout.style.display = '';
+  hmail.style.display = 'none';
+  $('adminbtn').style.display = 'none'; $('delbtn').style.display = 'none';
+  g.innerHTML = ''; hg.innerHTML = '';
   if(!H.clientId()){
     msg.className = 'note';
     msg.textContent = 'אי אפשר להתחבר עדיין: חסר Client ID מגוגל. כשיהיה, הדבק אותו בשדה למעלה.';
@@ -3462,7 +3616,9 @@ H.renderAccount = async function(){
       client_id: H.clientId(), callback: H.onCredential,
       auto_select: false, use_fedcm_for_prompt: true
     });
-    google.accounts.id.renderButton(g, {theme:'outline', size:'large', text:'signin_with', locale:'iw', shape:'pill'});
+    const o = {theme:'outline', size:'large', text:'signin_with', locale:'iw', shape:'pill'};
+    if(g.nodeType)  google.accounts.id.renderButton(g, o);
+    if(hg.nodeType) google.accounts.id.renderButton(hg, o);
   }catch(e){
     msg.className = 'note bad';
     msg.textContent = 'אין חיבור לגוגל. התחברות דורשת אינטרנט.';
@@ -3644,35 +3800,121 @@ H.openAdmin = async function(){
   }catch(e){ msg('אין חיבור לשרת', true); }
 };
 
+/* גרף קווי קטן. points = [[x, y], ...] ו-x הוא האינדקס. מחזיר מחרוזת SVG. */
+H.admLine = function(vals, color, W, Hh){
+  if(vals.length < 2) return '';
+  const max = Math.max.apply(null, vals) || 1, min = Math.min.apply(null, vals);
+  const span = (max - min) || 1, pad = 6;
+  const pts = vals.map((v, i) =>
+    (pad + i * (W - 2 * pad) / (vals.length - 1)).toFixed(1) + ',' +
+    (Hh - pad - (v - min) / span * (Hh - 2 * pad)).toFixed(1));
+  return '<polyline fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="' +
+    pts.join(' ') + '"/><circle r="4" fill="' + color + '" cx="' + pts[pts.length - 1].split(',')[0] + '" cy="' + pts[pts.length - 1].split(',')[1] + '"/>';
+};
+H.admChart = function(hist){
+  if(!hist || hist.length < 2) return '<p class="note">עוד אין מספיק ימים לגרף.</p>';
+  const W = 300, Hh = 90;
+  return '<svg class="admchart" viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="התקדמות לאורך זמן">' +
+    H.admLine(hist.map(h => h[2]), '#22b07d', W, Hh) +
+    H.admLine(hist.map(h => h[1]), '#7c5cd6', W, Hh) + '</svg>' +
+    '<div class="admlegend"><span style="color:#22b07d">● מילים שנכבשו (' + hist[hist.length - 1][2] + ')</span>' +
+    '<span style="color:#7c5cd6">● ניסיון (' + hist[hist.length - 1][1] + ')</span></div>' +
+    '<div class="admlegend"><small>' + H.esc(hist[0][0]) + '</small><small>' + H.esc(hist[hist.length - 1][0]) + '</small></div>';
+};
+H.gameName = id => { const g = H.byId && H.byId(id); return g ? g.e + ' ' + g.name : id; };
+H.GRADE_NAME = {a2:'א׳–ב׳', d4:'ג׳–ד׳', f6:'ה׳–ו׳'};
+
+H.admUser = function(u){
+  const games = Object.keys(u.games || {}).sort((x, y) => u.games[y].sec - u.games[x].sec);
+  const gt = games.length ? '<table class="admtbl small"><thead><tr><th>משחק</th><th>זמן</th><th>סבבים</th><th>דיוק</th></tr></thead><tbody>' +
+    games.map(id => { const g = u.games[id], n = g.right + g.wrong;
+      return '<tr><td>' + H.esc(H.gameName(id)) + '</td><td>' + H.esc(H.fmtDur(g.sec)) + '</td><td>' + g.rounds +
+             '</td><td>' + (n ? Math.round(g.right / n * 100) + '%' : '–') + '</td></tr>'; }).join('') + '</tbody></table>'
+    : '<p class="note">עוד לא שוחקו סבבים.</p>';
+  const stuck = (u.stuck || []).length
+    ? '<div class="chips">' + u.stuck.map(x => '<span class="chip bad">' + H.esc(x.w) + ' <small>' + x.bad + ' טעויות</small></span>').join('') + '</div>'
+    : '<p class="note">אין מילים תקועות כרגע.</p>';
+  const letters = (u.weakLetters || []).length
+    ? '<div class="chips">' + u.weakLetters.map(x => '<span class="chip">' + H.esc(x.l) + ' <small>' + Math.round(x.bad / (x.ok + x.bad) * 100) + '% טעויות</small></span>').join('') + '</div>'
+    : '<p class="note">אין עדיין מספיק נתוני כתיבה לאותיות.</p>';
+  const d = document.createElement('details'); d.className = 'admuser';
+  d.innerHTML = '<summary><span class="em">' + H.esc(u.email) + '</span>' +
+    '<span>' + H.esc(H.GRADE_NAME[u.grade] || '') + '</span>' +
+    '<span>' + H.esc(H.fmtDur(u.sec)) + '</span>' +
+    '<span>' + (u.earned || 0) + '/' + (u.words || 0) + '</span>' +
+    '<span>' + H.esc(H.fmtAgo(u.last)) + '</span></summary>' +
+    '<div class="admdet"><h4>גרף התקדמות</h4>' + H.admChart(u.hist) +
+    '<h4>במה שיחק</h4>' + gt +
+    '<h4>איפה נתקע (מילים)</h4>' + stuck +
+    '<h4>אותיות קשות</h4>' + letters +
+    '<p class="note">נרשם: ' + H.esc(new Date(u.created || 0).toLocaleDateString('he-IL')) + ' · כניסות: ' + (u.visits || 0) + ' · רצף: ' + (u.streak || 0) + '</p></div>';
+  return d;
+};
+
 H.renderAdmin = function(d){
   const users = Array.isArray(d.users) ? d.users : [];
-  const now = Date.now(), week = 7 * 864e5;
-  const active = users.filter(u => now - u.last < week).length;
+  const now = Date.now(), DAY = 864e5;
+  const active = users.filter(u => now - u.last < 7 * DAY).length;
+  const fresh = users.filter(u => now - u.created < 7 * DAY).length;
   const sec = users.reduce((a, u) => a + (u.sec || 0), 0);
-  const visits = users.reduce((a, u) => a + (u.visits || 0), 0);
   const n = users.length || 1;
   H.$('admsum').innerHTML =
     '<div class="statbox"><b>' + (d.total || 0) + '</b><small>נרשמו</small></div>' +
+    '<div class="statbox"><b>' + fresh + '</b><small>חדשים בשבוע</small></div>' +
     '<div class="statbox"><b>' + active + '</b><small>פעילים בשבוע</small></div>' +
-    '<div class="statbox"><b>' + H.esc(H.fmtDur(sec / n)) + '</b><small>זמן ממוצע</small></div>' +
-    '<div class="statbox"><b>' + (visits / n).toFixed(1) + '</b><small>כניסות ממוצע</small></div>';
-  if(!users.length){
-    H.$('admbody').innerHTML = '<p class="note">עדיין אין משתמשים רשומים.</p>';
-    return;
+    '<div class="statbox"><b>' + H.esc(H.fmtDur(sec)) + '</b><small>זמן משחק כולל</small></div>' +
+    '<div class="statbox"><b>' + H.esc(H.fmtDur(sec / n)) + '</b><small>ממוצע למשתמש</small></div>';
+  const body = H.$('admbody'); body.innerHTML = '';
+  if(!users.length){ body.innerHTML = '<p class="note">עדיין אין משתמשים רשומים.</p>'; return; }
+
+  /* נרשמים לפי יום, 30 ימים אחרונים */
+  const days = [];
+  for(let i = 29; i >= 0; i--){
+    const t = new Date(now - i * DAY), k = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+    days.push([k, 0]);
   }
-  H.$('admbody').innerHTML = '<div class="admwrap"><table class="admtbl"><thead><tr>' +
-    '<th>הורה</th><th>נראה</th><th>כניסות</th><th>זמן</th>' +
-    '<th>רמה</th><th>מילים</th><th>רצף</th></tr></thead><tbody>' +
-    users.map(u =>
-      '<tr><td class="em">' + H.esc(u.email) + '</td>' +
-      '<td>' + H.esc(H.fmtAgo(u.last)) + '</td>' +
-      '<td>' + (u.visits || 0) + '</td>' +
-      '<td>' + H.esc(H.fmtDur(u.sec)) + '</td>' +
-      '<td>' + (u.level || 1) + '</td>' +
-      '<td>' + (u.earned || 0) + '/' + (u.words || 0) + '</td>' +
-      '<td>' + (u.streak || 0) + '</td></tr>').join('') +
-    '</tbody></table></div>' +
-    (d.truncated ? '<p class="note bad">הרשימה קוצרה — יש יותר מהשהוצג.</p>' : '');
+  users.forEach(u => {
+    const t = new Date(u.created || 0), k = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+    const slot = days.find(x => x[0] === k); if(slot) slot[1]++;
+  });
+  const mx = Math.max.apply(null, days.map(x => x[1])) || 1;
+  const reg = document.createElement('div');
+  reg.innerHTML = '<h3>נרשמים ב־30 הימים האחרונים</h3><div class="admbars">' +
+    days.map(x => '<i title="' + H.esc(x[0]) + ': ' + x[1] + '" style="height:' + (x[1] ? Math.max(8, x[1] / mx * 100) : 3) + '%"></i>').join('') + '</div>';
+  body.appendChild(reg);
+
+  /* סך הכול לפי משחק, על כל המשתמשים */
+  const tot = {};
+  users.forEach(u => Object.keys(u.games || {}).forEach(id => {
+    const g = u.games[id], t = tot[id] || (tot[id] = {sec:0, rounds:0, right:0, wrong:0, users:0});
+    t.sec += g.sec; t.rounds += g.rounds; t.right += g.right; t.wrong += g.wrong; t.users++;
+  }));
+  const ids = Object.keys(tot).sort((x, y) => tot[y].sec - tot[x].sec);
+  const gm = document.createElement('div');
+  gm.innerHTML = '<h3>איזה משחק משחקים</h3>' + (ids.length
+    ? '<div class="admwrap"><table class="admtbl"><thead><tr><th>משחק</th><th>שחקנים</th><th>זמן</th><th>סבבים</th><th>דיוק</th></tr></thead><tbody>' +
+      ids.map(id => { const t = tot[id], c = t.right + t.wrong;
+        return '<tr><td>' + H.esc(H.gameName(id)) + '</td><td>' + t.users + '</td><td>' + H.esc(H.fmtDur(t.sec)) + '</td><td>' + t.rounds +
+               '</td><td>' + (c ? Math.round(t.right / c * 100) + '%' : '–') + '</td></tr>'; }).join('') + '</tbody></table></div>'
+    : '<p class="note">עוד אין נתונים לפי משחק. הם מתחילים להיאסף מהסבב הבא.</p>');
+  body.appendChild(gm);
+
+  /* מילים שהכי הרבה נתקעים בהן, בכל המשתמשים */
+  const sw = {};
+  users.forEach(u => (u.stuck || []).forEach(x => { sw[x.w] = (sw[x.w] || 0) + x.bad; }));
+  const top = Object.keys(sw).sort((x, y) => sw[y] - sw[x]).slice(0, 10);
+  if(top.length){
+    const w = document.createElement('div');
+    w.innerHTML = '<h3>איפה נתקעים הכי הרבה</h3><div class="chips">' +
+      top.map(x => '<span class="chip bad">' + H.esc(x) + ' <small>' + sw[x] + '</small></span>').join('') + '</div>';
+    body.appendChild(w);
+  }
+
+  body.appendChild(H.el('h3', '', 'כל משתמש (לחיצה פותחת)'));
+  const head = H.el('div', 'admhead', '<span>הורה</span><span>כיתה</span><span>זמן</span><span>נכבשו</span><span>נראה</span>');
+  body.appendChild(head);
+  users.forEach(u => body.appendChild(H.admUser(u)));
+  if(d.truncated) body.appendChild(H.el('p', 'note bad', 'הרשימה קוצרה — יש יותר מהשהוצג.'));
 };
 
 /* מחיקת החשבון והנתונים מהשרת, לבקשת ההורה */
@@ -3713,7 +3955,10 @@ H.LIB = [
     {id:'holidays', e:'🕎', name:'חגים', words:[
       'שׁוֹפָר','תַּפּוּחַ','דְּבַשׁ','סֻכָּה','לוּלָב','אֶתְרוֹג','חֲנֻכִּיָּה','סְבִיבוֹן',
       'סוּפְגָּנִיָּה','מְגִלָּה','פּוּרִים','מַצָּה','הַגָּדָה','שַׁבָּת','נֵר']}
-  ]}
+  ]},
+  /* שכבות שעוד לא נכתבו: מוצגות כדי שההורה יידע שהן בדרך */
+  {id:'d4', name:'כיתות ג׳–ד׳', note:'בלי ניקוד', soon:true, topics:[]},
+  {id:'f6', name:'כיתות ה׳–ו׳', note:'בלי ניקוד', soon:true, topics:[]}
 ];
 
 H.openLibrary = function(){ H.renderLibrary(); H.show('lib'); };
@@ -3723,6 +3968,7 @@ H.renderLibrary = function(){
   const have = new Set(H.state.packs.map(p => p.libId).filter(Boolean));
   H.LIB.forEach(tier => {
     box.appendChild(H.el('h3', '', tier.name + ' · ' + tier.note));
+    if(tier.soon){ box.appendChild(H.el('div', 'libsoon', '\u05d1\u05e7\u05e8\u05d5\u05d1 \u00b7 \u05d4\u05de\u05d9\u05dc\u05d9\u05dd \u05e2\u05d5\u05d3 \u05d1\u05db\u05ea\u05d9\u05d1\u05d4')); return; }
     const grid = H.el('div', 'libgrid');
     tier.topics.forEach(t => {
       const id = tier.id + '/' + t.id, added = have.has(id);
@@ -3755,6 +4001,127 @@ H.approvePack = function(){
   const p = H.pack(); if(!p) return;
   p.draft = false; H.save(); H.refresh(); H.renderNikud();
   H.toast('אושר ✔️', 'good');
+};
+
+/* ===== 95-levels.js ===== */
+/* ==========================================================
+   התאמה לכיתה. נבחרת במסך הראשי, ומשנה בפועל:
+   - ניקוד: כיתות א׳–ב׳ עם ניקוד, מכיתה ג׳ בלי (בטקסט מהחיים אין ניקוד)
+   - כמה מילים בסבב
+   - כמה זמן יש בערבוביה
+   - כמה מהטעויות האפשריות הן אותיות שנשמעות דומה
+
+   הערכים הם נקודת פתיחה סבירה ולא נבדקו מול ילדים. אפשר לשנות
+   כל אחד מהם כאן. הניקוד אפשר גם לעקוף ידנית, למי שצריך.
+   ========================================================== */
+H.LEVELS = [
+  {id:'a2', name:'א׳–ב׳', ages:'גילאי 6 עד 8',  nikud:true,  round:4, ana:40, homo:0.40,
+   hint:'עם ניקוד, סבבים קצרים והרבה זמן'},
+  {id:'d4', name:'ג׳–ד׳', ages:'גילאי 8 עד 10', nikud:false, round:5, ana:30, homo:0.55,
+   hint:'בלי ניקוד, ודגש על אותיות שנשמעות דומה'},
+  {id:'f6', name:'ה׳–ו׳', ages:'גילאי 10 עד 12', nikud:false, round:6, ana:22, homo:0.75,
+   hint:'בלי ניקוד, סבבים ארוכים ופחות זמן'}
+];
+H.grade     = () => H.LEVELS.find(l => l.id === H.state.level) || H.LEVELS[0];
+H.nikudOn   = () => H.state.nikud === 'on' ? true : (H.state.nikud === 'off' ? false : H.grade().nikud);
+H.roundSize = () => H.grade().round;
+
+H.setLevel = function(id){
+  if(!H.LEVELS.some(l => l.id === id)) return;
+  H.state.level = id; H.save(); H.sfx.tap();
+  H.refresh();
+  H.toast('הותאם לכיתה ' + H.grade().name, 'good');
+};
+H.cycleNikud = function(){
+  const next = {auto:'on', on:'off', off:'auto'};
+  H.state.nikud = next[H.state.nikud] || 'auto';
+  H.save(); H.sfx.tap(); H.renderLevels();
+};
+
+H.renderLevels = function(){
+  const box = H.$('lvchips'); if(!box) return;
+  box.innerHTML = '';
+  H.LEVELS.forEach(l => {
+    const b = H.el('button', 'lvchip' + (l.id === H.state.level ? ' on' : ''), l.name + '<small>' + l.ages.replace('גילאי ', '') + '</small>');
+    b.onclick = () => H.setLevel(l.id);
+    box.appendChild(b);
+  });
+  const l = H.grade();
+  H.$('lvhint').textContent = l.ages + ' · ' + l.hint + ' · ' + l.round + ' מילים בסבב';
+  const m = H.state.nikud;
+  H.$('tgNikud').textContent = m === 'on' ? 'ניקוד: עם' : m === 'off' ? 'ניקוד: בלי'
+                             : 'ניקוד: לפי הכיתה (' + (l.nikud ? 'עם' : 'בלי') + ')';
+};
+
+/* ===== 96-tour.js ===== */
+/* ==========================================================
+   מדריך לפעם הראשונה, וטיפים להורים.
+   המדריך נפתח אחרי בחירת הדמות, ומופיע פעם אחת גם למי שכבר שיחק.
+   אפשר לפתוח אותו שוב בכל רגע מכפתור "מדריך" במסך הראשי.
+
+   הטיפים מבוססים על מחקרים על למידה. הם כתובים בזהירות: חלקם
+   מראים תוצאות מעורבות, וזה נאמר בהם במפורש.
+   ========================================================== */
+H.TOUR = [
+  {e:'👋', t:'ברוכים הבאים לארץ המילים',
+   p:'כאן מתרגלים את מילות ההכתבה: שומעים, בונים וכותבים. בכתב ועם ניקוד, ובדרך מרוויחים כוכבים, מטבעות ופרס.'},
+  {e:'🎚️', t:'קודם כול: בוחרים כיתה',
+   p:'במסך הראשי יש "מי משחק?". הכיתה קובעת אם יש ניקוד, כמה מילים בסבב, כמה זמן יש לכל שאלה וכמה קשה. אפשר להחליף בכל רגע.'},
+  {e:'🗺️', t:'המסע והמשחקים',
+   p:'במסע התחנות נפתחות אחת אחרי השנייה, ובכל סבב מרוויחים עד שלושה כוכבים. ב"משחקים" בוחרים חופשי מתוך שמונה.'},
+  {e:'✍️', t:'הלב של המשחק: כתיבה באצבע',
+   p:'במשחק הכתיבה כותבים את המילה ששומעים, בלי להעתיק. רק אם הייתה טעות מופיע קו עזר. תרגול של כתיבה מהזיכרון עם תיקון מיד אחרי הטעות נמצא יעיל יותר מהעתקה.'},
+  {e:'🎯', t:'אתגר יומי, אלבום ופרס',
+   p:'כל יום יש אתגר של שלוש מילים. כל מילה שנלמדת הופכת למדבקה באלבום, וכשהאלבום מלא מחכה פרס שההורה בחר.'},
+  {e:'👨‍👩‍👧', t:'להורים',
+   p:'במסך ⚙️ הורים מוסיפים את מילות ההכתבה: מקלידים, מנקדים בלחיצות, או בוחרים מהספרייה. מתחברים עם גוגל כדי לשמור את ההתקדמות ולראות דוח. סריקת דף מצולם תגיע בקרוב.'}
+];
+H.tour = {i: 0};
+
+H.startTour = function(){ H.tour.i = 0; H.renderTour(); H.show('tour'); };
+H.renderTour = function(){
+  const n = H.TOUR.length, s = H.TOUR[H.tour.i];
+  H.$('tour-e').textContent = s.e;
+  H.$('tour-t').textContent = s.t;
+  H.$('tour-p').textContent = s.p;
+  H.$('tour-dots').innerHTML = H.TOUR.map((_, i) => '<i class="' + (i === H.tour.i ? 'on' : '') + '"></i>').join('');
+  H.$('tour-prev').style.visibility = H.tour.i ? 'visible' : 'hidden';
+  H.$('tour-next').textContent = H.tour.i === n - 1 ? 'יאללה, מתחילים! 🚀' : 'הבא';
+  H.$('tour-skip').style.visibility = H.tour.i === n - 1 ? 'hidden' : 'visible';
+};
+H.nextTour = function(){
+  H.sfx.tap();
+  if(H.tour.i >= H.TOUR.length - 1) return H.endTour();
+  H.tour.i++; H.renderTour();
+};
+H.prevTour = function(){ H.sfx.tap(); if(H.tour.i) { H.tour.i--; H.renderTour(); } };
+H.endTour = function(){
+  H.state.tour = true; H.save();
+  H.refresh(); H.show('home');
+};
+
+/* ---------- טיפים להורים ---------- */
+H.TIPS = [
+  {e:'⏱️', t:'קצר ותכוף מנצח',
+   p:'עשר עד חמש עשרה דקות ביום עדיפות על שעה פעם בשבוע. מחקרים על חזרה מרווחת, גם אצל ילדי בית ספר, מראים שימור טוב בערך פי שניים. לכן המשחק מחזיר מילים שנלמדו אחרי יום, שלושה, שבוע, שבועיים וחודש.'},
+  {e:'🧠', t:'לכתוב מהזיכרון ולא להעתיק',
+   p:'ילדים שמנסים להיזכר ואז מקבלים תיקון מיד זוכרים איות טוב יותר מילדים שמעתיקים. זה בדיוק מה שהכתיבה במשחק עושה, ולכן כדאי לא לתת לילד להציץ.'},
+  {e:'📓', t:'אחרי המשחק, גם מחברת',
+   p:'מחקרים מצאו שכתיבה ביד תורמת ללמידת אותיות ואיות יותר מהקלדה. חמש מילים במחברת אחרי הסבב הן תוספת טובה. (מעקב אחרי אות בלי לכתוב, כלומר "חיזוק" אותיות, נמצא בספרות כבעל תועלת לא ברורה.)'},
+  {e:'🧩', t:'אם יש קושי בכתיבה או דיסלקציה',
+   p:'יש מחקרים שבהם ילדים עם דיסלקציה למדו מילים חדשות טוב יותר בהקלדה מבכתיבה ביד. אפשר להתחיל מהמשחקים של הרכבת אותיות (הרכבה, ערבוביה, תפוס), ולהוסיף כתיבה בהדרגה. התייעצו עם איש מקצוע.'},
+  {e:'🎁', t:'פרס: חגיגה ולא שוחד',
+   p:'במחקר קלאסי, ילדים שהובטח להם פרס מראש על פעילות שאהבו התעניינו בה פחות אחר כך. במשחקי לימוד תוצאות המחקר מעורבות. כדאי להציג את הפרס כחגיגה על הצלחה, ולפעמים להפתיע בלי הבטחה מראש.'},
+  {e:'📵', t:'להחליט מראש מתי נגמר',
+   p:'ארגון רופאי הילדים האמריקאי עבר מהגבלה קבועה של שעות מסך להתמקדות באיכות ובהקשר: מה הילד עושה, ומה זה דוחק (שינה, תנועה, משחק חופשי). כדאי לקבוע ביחד "שלושה סבבים וזהו", ולהיזהר מאפליקציות שמושכות להמשיך ללא סוף. גם בארץ המילים יש רצף ימים ואתגר יומי, ולכן חשוב שהסיום יהיה ברור.'}
+];
+H.renderTips = function(){
+  const box = H.$('tipsbody'); box.innerHTML = '';
+  H.TIPS.forEach(t => {
+    const c = H.el('div', 'tipcard');
+    c.innerHTML = '<span class="tip-e">' + t.e + '</span><div><b>' + t.t + '</b><p>' + t.p + '</p></div>';
+    box.appendChild(c);
+  });
 };
 
 </script>

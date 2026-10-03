@@ -32,6 +32,11 @@ H.cleanState = function(raw){
   s.xp = num(raw.xp, 0, 1e7); s.coins = num(raw.coins, 0, 1e7); s.wins = num(raw.wins, 0, 1e6);
   s.updatedAt = num(raw.updatedAt, 0, 8.64e15);
   s.pack = T(raw.pack, 40); s.album = L(raw.album, 2000, 60);
+  s.level = ['a2','d4','f6'].includes(raw.level) ? raw.level : 'a2';
+  s.nikud = ['auto','on','off'].includes(raw.nikud) ? raw.nikud : 'auto';
+  s.tour  = raw.tour === true;
+  /* התקדמות שמורה לפי המילה בלי ניקוד. שמירות ישנות נשמרו עם ניקוד — ממיירים. */
+  s.album = [...new Set(s.album.map(w => H.strip(w)))];
 
   const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20).filter(isO) : [];
   s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60),
@@ -42,8 +47,13 @@ H.cleanState = function(raw){
   s.stats = {};
   keys(raw.stats, 2000).forEach(k => {
     const v = raw.stats[k]; if(!isO(v)) return;
-    s.stats[H.cleanText(k, 60)] = {ok: num(v.ok,0,1e6), bad: num(v.bad,0,1e6), run: num(v.run,0,1e6),
-                                   lv: num(v.lv,0,20), last: num(v.last,0,8.64e15)};
+    const key = H.cleanText(H.strip(k), 60);
+    const cur = {ok: num(v.ok,0,1e6), bad: num(v.bad,0,1e6), run: num(v.run,0,1e6),
+                 lv: num(v.lv,0,20), last: num(v.last,0,8.64e15)};
+    const prev = s.stats[key];
+    /* שתי גרסאות של אותה מילה (עם ובלי ניקוד) נמזגות: סוכמים ניסיונות, לוקחים את הרצף הגבוה */
+    s.stats[key] = prev ? {ok: prev.ok+cur.ok, bad: prev.bad+cur.bad, run: Math.max(prev.run,cur.run),
+                           lv: Math.max(prev.lv,cur.lv), last: Math.max(prev.last,cur.last)} : cur;
   });
   s.stars = {};
   keys(raw.stars, 100).forEach(k => { s.stars[H.cleanText(k, 6)] = num(raw.stars[k], 0, 3); });
@@ -55,7 +65,16 @@ H.cleanState = function(raw){
   const d = isO(raw.daily) ? raw.daily : {};
   s.daily = {last: T(d.last, 40), streak: num(d.streak, 0, 1e5), chal: T(d.chal, 12)};
   const u = isO(raw.usage) ? raw.usage : {};
-  s.usage = {first: num(u.first,0,8.64e15), last: num(u.last,0,8.64e15), visits: num(u.visits,0,1e7), activeSec: num(u.activeSec,0,1e9)};
+  s.usage = {first: num(u.first,0,8.64e15), last: num(u.last,0,8.64e15), visits: num(u.visits,0,1e7), activeSec: num(u.activeSec,0,1e9),
+             games: {}, hist: {}};
+  keys(u.games, 20).forEach(g => {
+    const v = u.games[g]; if(!isO(v) || !/^[a-z]{3,12}$/.test(g)) return;
+    s.usage.games[g] = {sec: num(v.sec,0,1e8), rounds: num(v.rounds,0,1e6), right: num(v.right,0,1e7), wrong: num(v.wrong,0,1e7)};
+  });
+  keys(u.hist, 400).sort().slice(-120).forEach(d => {
+    const v = u.hist[d]; if(!isO(v) || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+    s.usage.hist[d] = {xp: num(v.xp,0,1e7), e: num(v.e,0,1000)};
+  });
 
   s.hand = {};
   keys(raw.hand, 40).forEach(k => {

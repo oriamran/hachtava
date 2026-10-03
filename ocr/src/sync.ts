@@ -41,6 +41,9 @@ export function sanitizeState(raw: unknown): Obj | null {
   s.wins        = num(raw.wins, 0, 1_000_000);
   s.updatedAt   = num(raw.updatedAt, 0, 8.64e15);
   s.pack        = str(raw.pack, 40);
+  s.level       = ["a2", "d4", "f6"].includes(raw.level as string) ? raw.level : "a2";
+  s.nikud       = ["auto", "on", "off"].includes(raw.nikud as string) ? raw.nikud : "auto";
+  s.tour        = raw.tour === true;
   s.album       = strList(raw.album, 2000, 60);
 
   const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20) : [];
@@ -73,8 +76,18 @@ export function sanitizeState(raw: unknown): Obj | null {
   s.daily = { last: str(d.last, 40), streak: num(d.streak, 0, 100000), chal: str(d.chal, 12) };
 
   const u = isObj(raw.usage) ? raw.usage : {};
+  const games: Obj = {};
+  if (isObj(u.games)) for (const g of Object.keys(u.games).slice(0, 20)) {
+    const v = u.games[g]; if (!isObj(v) || !/^[a-z]{3,12}$/.test(g)) continue;
+    games[g] = { sec: num(v.sec, 0, 1e8), rounds: num(v.rounds, 0, 1e6), right: num(v.right, 0, 1e7), wrong: num(v.wrong, 0, 1e7) };
+  }
+  const hist: Obj = {};
+  if (isObj(u.hist)) for (const d of Object.keys(u.hist).sort().slice(-120)) {
+    const v = u.hist[d]; if (!isObj(v) || !/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    hist[d] = { xp: num(v.xp, 0, 1e7), e: num(v.e, 0, 1000) };
+  }
   s.usage = { first: num(u.first, 0, 8.64e15), last: num(u.last, 0, 8.64e15),
-              visits: num(u.visits, 0, 1e7), activeSec: num(u.activeSec, 0, 1e9) };
+              visits: num(u.visits, 0, 1e7), activeSec: num(u.activeSec, 0, 1e9), games, hist };
 
   /* פרופיל כתב יד: אות -> {n, s:[192 מספרים]} */
   const hand: Obj = {};
@@ -93,22 +106,42 @@ export function sanitizeState(raw: unknown): Obj | null {
   return s;
 }
 
-/* סיכום למנהל. בלי שם הילד: מזהים לפי אימייל ההורה בלבד. */
+const plain = (w: string) => w.replace(/[\u0591-\u05C7]/g, "");
+
+/* סיכום למנהל. בלי שם הילד: מזהים לפי אימייל ההורה בלבד.
+   כולל גם איפה הילד נתקע: המילים והאותיות עם שיעור הטעויות הגבוה. */
 export function summarize(user: User, st: Obj) {
-  const u = st.usage as { first: number; last: number; visits: number; activeSec: number };
+  const u = st.usage as { first: number; last: number; visits: number; activeSec: number;
+                          games: Record<string, unknown>; hist: Record<string, { xp: number; e: number }> };
   const packs = st.packs as { id: string; list: string[] }[];
   const pack = packs.find(p => p.id === st.pack) || packs[0] || { list: [] };
-  const stats = st.stats as Record<string, { run: number }>;
-  const album = st.album as string[];
-  const earned = pack.list.filter(w => album.includes(w) || (stats[w] && stats[w].run >= 3)).length;
+  const stats = st.stats as Record<string, { ok: number; bad: number; run: number }>;
+  const album = new Set((st.album as string[]).map(plain));
+  const words = [...new Set(pack.list.map(plain))];
+  const earned = words.filter(w => album.has(w) || (stats[w] && stats[w].run >= 3)).length;
   const xp = st.xp as number;
+
+  /* נתקע = טעה לפחות פעמיים ועדיין לא נכבשה. הכי הרבה טעויות קודם. */
+  const stuck = Object.entries(stats)
+    .filter(([w, v]) => v.bad >= 2 && v.run < 3 && !album.has(w))
+    .sort((a, b) => b[1].bad - a[1].bad).slice(0, 8)
+    .map(([w, v]) => ({ w, bad: v.bad, ok: v.ok }));
+  const weakLetters = Object.entries(st.letters as Record<string, { ok: number; bad: number }>)
+    .filter(([, v]) => v.ok + v.bad >= 5 && v.bad > 0)
+    .sort((a, b) => b[1].bad / (b[1].ok + b[1].bad) - a[1].bad / (a[1].ok + a[1].bad)).slice(0, 5)
+    .map(([l, v]) => ({ l, bad: v.bad, ok: v.ok }));
+
+  const hist = Object.entries(u.hist).sort().slice(-60).map(([d, v]) => [d, v.xp, v.e]);
+  const log = st.log as Record<string, { sec: number }>;
+  const days = Object.keys(log).sort().slice(-30).map(d => [d, log[d].sec]);
   return {
     email: user.email,
     first: u.first, last: u.last, visits: u.visits, sec: u.activeSec,
-    xp, level: Math.floor(xp / 120) + 1,
-    earned, words: pack.list.length,
+    xp, level: Math.floor(xp / 120) + 1, grade: st.level,
+    earned, words: words.length,
     streak: (st.daily as { streak: number }).streak,
-    stars: Object.values(st.stars as Record<string, number>).reduce((a, b) => a + b, 0)
+    stars: Object.values(st.stars as Record<string, number>).reduce((a, b) => a + b, 0),
+    games: u.games, hist, days, stuck, weakLetters
   };
 }
 
@@ -126,16 +159,18 @@ export async function saveState(
   if (!state) return { ok: false, at: 0, invalid: true };
 
   const prevRaw = await env.DATA.get(key(user));
+  let created = Date.now();
   if (prevRaw) {
     try {
-      const old = JSON.parse(prevRaw) as { at?: number; serverAt?: number };
+      const old = JSON.parse(prevRaw) as { at?: number; serverAt?: number; created?: number };
+      if (old.created) created = old.created;
       /* המכשיר הזה מחזיק עותק ישן יותר — לא דורסים */
       if ((old.at || 0) > at) return { ok: false, at: old.at || 0, stale: true };
       /* כתיבה אחרונה הייתה לפני רגע — מדלגים. הלקוח ידחוף שוב בעוד רגע. */
       if (Date.now() - (old.serverAt || 0) < MIN_WRITE_GAP_MS) return { ok: true, at, skipped: true };
     } catch { /* פגום — נכתוב מחדש */ }
   }
-  const body = JSON.stringify({ state, at, serverAt: Date.now(), summary: summarize(user, state) });
+  const body = JSON.stringify({ state, at, serverAt: Date.now(), created, summary: summarize(user, state) });
   if (body.length > MAX_STATE) return { ok: false, at: 0 };
   await env.DATA.put(key(user), body);
   return { ok: true, at };
@@ -161,8 +196,8 @@ export async function adminList(env: SyncEnv) {
     const chunk = await Promise.all(keys.slice(i, i + 40).map(k => env.DATA.get(k)));
     for (const raw of chunk) {
       if (!raw) continue;
-      try { const j = JSON.parse(raw) as { summary?: unknown; serverAt?: number };
-            if (j.summary) users.push({ ...(j.summary as object), saved: j.serverAt || 0 }); } catch { /* מדלגים */ }
+      try { const j = JSON.parse(raw) as { summary?: unknown; serverAt?: number; created?: number };
+            if (j.summary) users.push({ ...(j.summary as object), saved: j.serverAt || 0, created: j.created || j.serverAt || 0 }); } catch { /* מדלגים */ }
     }
   }
   (users as { last: number }[]).sort((a, b) => b.last - a.last);
