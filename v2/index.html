@@ -250,6 +250,13 @@ body.nav .wrap{padding-top:36px}
 .padwrap canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
 .padwrap #inkCanvas{position:relative;touch-action:none;cursor:crosshair}
 .speaker{font-size:30px;padding:8px 18px}
+/* קו העזר נחשף אות אחר אות, מימין לשמאל — כמו שכותבים */
+#tmplCanvas.reveal{transition:clip-path var(--reveal,1.2s) linear}
+.compare{display:flex;gap:12px;justify-content:center;margin:6px auto;max-width:520px}
+.compare figure{margin:0;flex:1;background:#fff;border-radius:16px;padding:8px;
+  box-shadow:0 4px 0 var(--cardEdge);text-align:center}
+.compare img{display:block;margin:0 auto;max-width:100%;height:56px;object-fit:contain}
+.compare figcaption{font-size:13px;font-weight:800;opacity:.7;margin-top:4px}
 
 /* ---------- משוב ---------- */
 .fb{min-height:34px;text-align:center;font-size:20px;font-weight:800;margin-top:8px}
@@ -710,6 +717,10 @@ body.nav .wrap{padding-top:36px}
       <canvas id="tmplCanvas"></canvas>
       <canvas id="inkCanvas"></canvas>
     </div>
+    <div id="compare" class="compare" style="display:none">
+      <figure><img id="cmpMine" alt=""><figcaption>מה שכתבת</figcaption></figure>
+      <figure><img id="cmpWord" alt=""><figcaption>המילה</figcaption></figure>
+    </div>
     <div id="letterstrip" class="letterstrip" style="display:none"></div>
     <div id="writefb" class="fb"></div>
     <div class="row">
@@ -990,6 +1001,9 @@ H.delPack = function(id){
 };
 
 /* ---------- רצף ימים ---------- */
+/* מטבעות בונוס בקפיצות של רצף. מקבלים פעם אחת בכל רצף, ביום שמגיעים אליו */
+H.STREAK_BONUS = {3: 30, 7: 70, 14: 150};
+H.streakBonus = 0;                       /* נקבע ביום חדש, וההודעה מוצגת בכניסה */
 H.checkDaily = function(){
   const today = new Date().toDateString();
   const d = H.state.daily;
@@ -997,6 +1011,8 @@ H.checkDaily = function(){
   const yday = new Date(Date.now() - 864e5).toDateString();
   d.streak = (d.last === yday) ? d.streak + 1 : 1;
   d.last = today;
+  H.streakBonus = H.STREAK_BONUS[d.streak] || 0;
+  if(H.streakBonus) H.state.coins += H.streakBonus;
   H.save();
   return true;                 /* יום חדש */
 };
@@ -1025,15 +1041,28 @@ H.buy = function(id, cost){
 };
 
 /* ---------- התקדמות במילים ---------- */
+/* חזרה מרווחת: מילה שנלמדה חוזרת אחרי כמה ימים, ובכל פעם שעונים נכון
+   כשהיא "בשלה" הרווח גדל. מדבקה שכבר באלבום לא נלקחת בחזרה. */
+H.IVL_DAYS = [1, 3, 7, 14, 30];
+H.dueMs = s => H.IVL_DAYS[Math.min(s.lv || 0, H.IVL_DAYS.length - 1)] * 864e5;
+H.isDue = function(s){
+  if(!s || s.run < H.MASTER_AT) return false;
+  /* שמירה ישנה בלי תאריך: מתייחסים אליה כבשלה */
+  return !s.last || Date.now() - s.last >= H.dueMs(s);
+};
 H.hit = function(word){
   const s = H.state.stats[word]; if(!s) return;
+  const wasMastered = s.run >= H.MASTER_AT, wasDue = H.isDue(s);
   s.ok++; s.run++;
+  /* הרווח גדל רק כשענו נכון על מילה שהגיע זמנה — לא על כל פגיעה באותו יום */
+  if(wasMastered){ if(wasDue){ s.lv = (s.lv || 0) + 1; s.last = Date.now(); } }
+  else { s.lv = 0; s.last = Date.now(); }
   if(s.run >= H.MASTER_AT && !H.state.album.includes(word)) H.state.album.push(word);
   H.save();
 };
 H.miss = function(word){
   const s = H.state.stats[word]; if(!s) return;
-  s.bad++; s.run = 0; H.save();
+  s.bad++; s.run = 0; s.lv = 0; s.last = Date.now(); H.save();
 };
 /* יומן תרגול לדוח ההורים */
 H.today = () => new Date().toISOString().slice(0,10);
@@ -1046,14 +1075,18 @@ H.logEnd = function(right, wrong){
   H.save();
 };
 
-H.mastered = () => H.words().filter(w => (H.state.stats[w]||{}).run >= H.MASTER_AT).length;
+/* נכבשה = נענתה נכון פעם אחת לפחות MASTER_AT ברצף. טעות בחזרה מאפסת את הרצף
+   הנוכחי, אבל לא לוקחת מהילד מדבקה שרכש. */
+H.isEarned = w => H.state.album.includes(w) || ((H.state.stats[w]||{}).run >= H.MASTER_AT);
+H.mastered = () => H.words().filter(H.isEarned).length;
 
 /* בחירה משוקללת — מילים חלשות חוזרות יותר */
 H.pickWords = function(n){
   const pool = H.words().slice(), out = [];
   const weight = w => {
     const s = H.state.stats[w] || {bad:0, run:0};
-    return 1 + s.bad*3 + Math.max(0, H.MASTER_AT - s.run)*2;
+    return 1 + s.bad*3 + Math.max(0, H.MASTER_AT - s.run)*2
+             + (H.isDue(s) ? 6 : 0);          /* הגיע הזמן לחזור עליה */
   };
   n = Math.min(n, pool.length);
   while(out.length < n && pool.length){
@@ -1805,6 +1838,12 @@ H.STRAY_MAX = 0.62;   /* כמה דיו מותר מחוץ למילה */
 H.RATIO_MIN = 0.55;   /* כמות דיו ביחס למילה — זה מה שפוסל שרבוט */
 H.RATIO_MAX = 1.70;
 H.MIN_INK   = 10;
+/* קו האצבע בעובי קבוע, אז ככל שהילד כותב קטן יותר הוא ממלא יחסית יותר.
+   בלי התאמה, כתיבה קטנה נפסלת כ"שרבוט" למרות שהיא תקינה.
+   לכל כתיבה קטנה מוסיפים לתקרה חלק קבוע מהפער (נמדד בדגימות). */
+H.SMALL_ALLOW = 0.375;
+H.SIZE_MIN    = 0.25;   /* מתחת לזה לא מקלים עוד */
+H.ratioMax = size => H.RATIO_MAX + H.SMALL_ALLOW * (1 / Math.max(H.SIZE_MIN, Math.min(1, size || 1)) - 1);
 /* מצב מבחן: נפתח למילה רק אחרי שהיא כבר נכבשה במשחקי האריחים,
    כלומר כשידוע שהילד יודע לאיית אותה. אז אפשר לדרוש גם צורה. */
 H.TEST_FRAC = 0.70;   /* איזה חלק מהאותיות חייב להיות מזוהה */
@@ -1823,7 +1862,7 @@ H.game({
     r.guide = false;
     /* המילה כבר נכבשה באריחים — אז כאן זה כבר מבחן, לא תרגול */
     r.testMode = (H.state.stats[w] || {run:0}).run >= H.MASTER_AT;
-    H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters();
+    H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters(); H.hideCompare();
     H.$('writeprompt').textContent = r.testMode
       ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
       : 'שמע את המילה וכתוב אותה בכתב';
@@ -1838,7 +1877,7 @@ H.game({
       fb.className = 'fb no'; fb.textContent = 'עדיין לא כתבת כלום ✍️';
       return;
     }
-    if(res.ratio > H.RATIO_MAX){
+    if(res.ratio > H.ratioMax(res.size)){
       fb.className = 'fb no';
       fb.textContent = 'זה לא מילה — נקה וכתוב שוב';
       H.sfx.bad();
@@ -1885,14 +1924,15 @@ H.game({
     } else if(!r.guide){
       H.wrong();
       r.guide = true;
-      H.padClear(); H.padTemplate(true);
+      H.showCompare();                      /* לפני הניקוי — מה שנכתב מול המילה */
+      H.padClear(); H.padTemplate(true); H.padReveal();
       H.$('writeprompt').textContent = 'ככה כותבים אותה — עבור על הקו';
       H.$('writebtn').textContent = '✅ עברתי';
       fb.className = 'fb no'; fb.textContent = 'לא בדיוק — נסתכל יחד';
     } else {
       fb.className = 'fb no'; fb.textContent = 'עוד קצת — עבור על כל האותיות';
       H.sfx.bad();
-      H.padClear(); H.padTemplate(true);
+      H.padClear(); H.padTemplate(true); H.padReveal();
     }
   }
 });
@@ -1999,7 +2039,59 @@ H.padScore = function(){
   }
   /* כמה תאים מהרשת מלאים — שרבוט ממלא הרבה יותר ממילה */
   const ratio = I.cells / T.cells;
-  return {cover: inter / T.cells, stray: I.cells ? only / I.cells : 1, ratio, empty:false};
+  /* רוחב הכתיבה ביחס לרוחב המילה המוצגת. 1 = בגודל המילה או גדול ממנה */
+  const cols = H.inkCols(im, p.W, p.H);
+  let ix0 = -1, ix1 = -1;
+  for(let x = 0; x < p.W; x++) if(cols[x]){ if(ix0 < 0) ix0 = x; ix1 = x; }
+  const size = (p.tx1 > p.tx0 && ix0 >= 0) ? (ix1 - ix0) / (p.tx1 - p.tx0) : 1;
+  return {cover: inter / T.cells, stray: I.cells ? only / I.cells : 1, ratio, size, empty:false};
+};
+
+/* ---------- משוב חזותי: מה שנכתב מול המילה ---------- */
+/* חותך את התוכן של קנבס לתיבת הדיו שלו, על רקע לבן, ומחזיר כתובת תמונה */
+H.cropToImage = function(src, color){
+  const W = src.width, Hh = src.height;
+  const m = H.inkMap(src.getContext('2d', {willReadFrequently:true}), W, Hh);
+  let x0 = W, x1 = -1, y0 = Hh, y1 = -1;
+  for(let y = 0; y < Hh; y++) for(let x = 0; x < W; x++)
+    if(m[y * W + x]){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
+  if(x1 < 0) return '';
+  const pad = 6, w = x1 - x0 + 1 + pad * 2, h = y1 - y0 + 1 + pad * 2;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+  /* מציירים את הדיו בצבע אחיד, כדי שהמילה הנכונה לא תהיה בהירה מדי */
+  const t = document.createElement('canvas'); t.width = w; t.height = h;
+  const tx = t.getContext('2d');
+  tx.drawImage(src, pad - x0, pad - y0);
+  tx.globalCompositeOperation = 'source-in';
+  tx.fillStyle = color; tx.fillRect(0, 0, w, h);
+  x.drawImage(t, 0, 0);
+  return c.toDataURL();
+};
+H.showCompare = function(){
+  const p = H.pad;
+  /* התבנית צריכה להיות מצוירת כדי שיהיה מה להשוות */
+  if(!p.boxes || !p.boxes.length) H.padTemplate(false);
+  const mine = H.cropToImage(H.$('inkCanvas'), '#2b2250');
+  const word = H.cropToImage(H.$('tmplCanvas'), '#2b2250');
+  if(!mine || !word) return H.hideCompare();
+  H.$('cmpMine').src = mine; H.$('cmpWord').src = word;
+  H.$('compare').style.display = '';
+};
+H.hideCompare = function(){
+  const c = H.$('compare'); if(c) c.style.display = 'none';
+};
+/* חושף את קו העזר אות אחר אות, מימין לשמאל */
+H.padReveal = function(){
+  const t = H.$('tmplCanvas');
+  const n = (H.pad.boxes || []).length || 1;
+  t.classList.remove('reveal');
+  t.style.clipPath = 'inset(0 0 0 100%)';
+  void t.offsetWidth;                        /* מאלץ חישוב מחדש כדי שהמעבר יתחיל מההתחלה */
+  t.style.setProperty('--reveal', Math.min(3, 0.35 * n + 0.4) + 's');
+  t.classList.add('reveal');
+  t.style.clipPath = 'inset(0 0 0 0)';
 };
 
 /* ===== 56-game-anagram.js ===== */
@@ -2489,7 +2581,7 @@ H.renderAlbum = function(){
   const box = H.$('albumlist'); box.innerHTML = '';
   H.words().forEach((w, i) => {
     const s = H.state.stats[w] || {run:0};
-    const got = s.run >= H.MASTER_AT;
+    const got = H.isEarned(w);
     const el = H.el('div', 'sticker' + (got ? ' got' : ''));
     el.innerHTML = '<span class="stk-e">' + (got ? H.STICKERS[i % H.STICKERS.length] : '❓') + '</span>' +
                    '<span class="stk-w">' + w + '</span>' +
@@ -3109,6 +3201,10 @@ H.boot = function(){
   if(!H.storageOK) H.toast('\u05d4\u05d4\u05ea\u05e7\u05d3\u05de\u05d5\u05ea \u05dc\u05d0 \u05ea\u05d9\u05e9\u05de\u05e8 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u05d4\u05d6\u05d4 \u2014 \u05e4\u05ea\u05d7 \u05d3\u05e8\u05da \u05d4\u05e7\u05d9\u05e9\u05d5\u05e8', 'no');
   if(!H.useAudio) H.toast('\u05d0\u05d9\u05df \u05e7\u05d5\u05dc \u05e2\u05d1\u05e8\u05d9 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u2014 \u05d4\u05de\u05d9\u05dc\u05d4 \u05ea\u05d5\u05e6\u05d2 \u05dc\u05e8\u05d2\u05e2 \u05d1\u05de\u05e7\u05d5\u05dd');
   if(H.state.daily.streak > 1) H.toast('🔥 רצף ' + H.state.daily.streak + ' ימים!', 'level');
+  if(H.streakBonus) setTimeout(() => {
+    H.toast('🎁 בונוס רצף: +' + H.streakBonus + ' מטבעות!', 'level');
+    H.confetti(40); H.paint();
+  }, 1800);
 };
 document.addEventListener('DOMContentLoaded', H.boot);
 

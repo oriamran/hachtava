@@ -7,6 +7,12 @@ H.STRAY_MAX = 0.62;   /* כמה דיו מותר מחוץ למילה */
 H.RATIO_MIN = 0.55;   /* כמות דיו ביחס למילה — זה מה שפוסל שרבוט */
 H.RATIO_MAX = 1.70;
 H.MIN_INK   = 10;
+/* קו האצבע בעובי קבוע, אז ככל שהילד כותב קטן יותר הוא ממלא יחסית יותר.
+   בלי התאמה, כתיבה קטנה נפסלת כ"שרבוט" למרות שהיא תקינה.
+   לכל כתיבה קטנה מוסיפים לתקרה חלק קבוע מהפער (נמדד בדגימות). */
+H.SMALL_ALLOW = 0.375;
+H.SIZE_MIN    = 0.25;   /* מתחת לזה לא מקלים עוד */
+H.ratioMax = size => H.RATIO_MAX + H.SMALL_ALLOW * (1 / Math.max(H.SIZE_MIN, Math.min(1, size || 1)) - 1);
 /* מצב מבחן: נפתח למילה רק אחרי שהיא כבר נכבשה במשחקי האריחים,
    כלומר כשידוע שהילד יודע לאיית אותה. אז אפשר לדרוש גם צורה. */
 H.TEST_FRAC = 0.70;   /* איזה חלק מהאותיות חייב להיות מזוהה */
@@ -25,7 +31,7 @@ H.game({
     r.guide = false;
     /* המילה כבר נכבשה באריחים — אז כאן זה כבר מבחן, לא תרגול */
     r.testMode = (H.state.stats[w] || {run:0}).run >= H.MASTER_AT;
-    H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters();
+    H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters(); H.hideCompare();
     H.$('writeprompt').textContent = r.testMode
       ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
       : 'שמע את המילה וכתוב אותה בכתב';
@@ -40,7 +46,7 @@ H.game({
       fb.className = 'fb no'; fb.textContent = 'עדיין לא כתבת כלום ✍️';
       return;
     }
-    if(res.ratio > H.RATIO_MAX){
+    if(res.ratio > H.ratioMax(res.size)){
       fb.className = 'fb no';
       fb.textContent = 'זה לא מילה — נקה וכתוב שוב';
       H.sfx.bad();
@@ -87,14 +93,15 @@ H.game({
     } else if(!r.guide){
       H.wrong();
       r.guide = true;
-      H.padClear(); H.padTemplate(true);
+      H.showCompare();                      /* לפני הניקוי — מה שנכתב מול המילה */
+      H.padClear(); H.padTemplate(true); H.padReveal();
       H.$('writeprompt').textContent = 'ככה כותבים אותה — עבור על הקו';
       H.$('writebtn').textContent = '✅ עברתי';
       fb.className = 'fb no'; fb.textContent = 'לא בדיוק — נסתכל יחד';
     } else {
       fb.className = 'fb no'; fb.textContent = 'עוד קצת — עבור על כל האותיות';
       H.sfx.bad();
-      H.padClear(); H.padTemplate(true);
+      H.padClear(); H.padTemplate(true); H.padReveal();
     }
   }
 });
@@ -201,5 +208,57 @@ H.padScore = function(){
   }
   /* כמה תאים מהרשת מלאים — שרבוט ממלא הרבה יותר ממילה */
   const ratio = I.cells / T.cells;
-  return {cover: inter / T.cells, stray: I.cells ? only / I.cells : 1, ratio, empty:false};
+  /* רוחב הכתיבה ביחס לרוחב המילה המוצגת. 1 = בגודל המילה או גדול ממנה */
+  const cols = H.inkCols(im, p.W, p.H);
+  let ix0 = -1, ix1 = -1;
+  for(let x = 0; x < p.W; x++) if(cols[x]){ if(ix0 < 0) ix0 = x; ix1 = x; }
+  const size = (p.tx1 > p.tx0 && ix0 >= 0) ? (ix1 - ix0) / (p.tx1 - p.tx0) : 1;
+  return {cover: inter / T.cells, stray: I.cells ? only / I.cells : 1, ratio, size, empty:false};
+};
+
+/* ---------- משוב חזותי: מה שנכתב מול המילה ---------- */
+/* חותך את התוכן של קנבס לתיבת הדיו שלו, על רקע לבן, ומחזיר כתובת תמונה */
+H.cropToImage = function(src, color){
+  const W = src.width, Hh = src.height;
+  const m = H.inkMap(src.getContext('2d', {willReadFrequently:true}), W, Hh);
+  let x0 = W, x1 = -1, y0 = Hh, y1 = -1;
+  for(let y = 0; y < Hh; y++) for(let x = 0; x < W; x++)
+    if(m[y * W + x]){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
+  if(x1 < 0) return '';
+  const pad = 6, w = x1 - x0 + 1 + pad * 2, h = y1 - y0 + 1 + pad * 2;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+  /* מציירים את הדיו בצבע אחיד, כדי שהמילה הנכונה לא תהיה בהירה מדי */
+  const t = document.createElement('canvas'); t.width = w; t.height = h;
+  const tx = t.getContext('2d');
+  tx.drawImage(src, pad - x0, pad - y0);
+  tx.globalCompositeOperation = 'source-in';
+  tx.fillStyle = color; tx.fillRect(0, 0, w, h);
+  x.drawImage(t, 0, 0);
+  return c.toDataURL();
+};
+H.showCompare = function(){
+  const p = H.pad;
+  /* התבנית צריכה להיות מצוירת כדי שיהיה מה להשוות */
+  if(!p.boxes || !p.boxes.length) H.padTemplate(false);
+  const mine = H.cropToImage(H.$('inkCanvas'), '#2b2250');
+  const word = H.cropToImage(H.$('tmplCanvas'), '#2b2250');
+  if(!mine || !word) return H.hideCompare();
+  H.$('cmpMine').src = mine; H.$('cmpWord').src = word;
+  H.$('compare').style.display = '';
+};
+H.hideCompare = function(){
+  const c = H.$('compare'); if(c) c.style.display = 'none';
+};
+/* חושף את קו העזר אות אחר אות, מימין לשמאל */
+H.padReveal = function(){
+  const t = H.$('tmplCanvas');
+  const n = (H.pad.boxes || []).length || 1;
+  t.classList.remove('reveal');
+  t.style.clipPath = 'inset(0 0 0 100%)';
+  void t.offsetWidth;                        /* מאלץ חישוב מחדש כדי שהמעבר יתחיל מההתחלה */
+  t.style.setProperty('--reveal', Math.min(3, 0.35 * n + 0.4) + 's');
+  t.classList.add('reveal');
+  t.style.clipPath = 'inset(0 0 0 0)';
 };

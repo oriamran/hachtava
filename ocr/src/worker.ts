@@ -14,6 +14,7 @@ export interface Env {
   GOOGLE_CLIENT_ID: string;     /* להתחברות */
   ALLOWED_ORIGINS: string;
   MODEL?: string;
+  SCANS_ENABLED?: string;       /* מתג ראשי. רק "true" מפעיל סריקה, לכולם */
   SCAN_TOKEN?: string;          /* אם מוגדר — סריקה דורשת אותו */
   ALLOWED_EMAILS?: string;      /* ואם מוגדר — רק החשבונות האלה */
   RATE: KVNamespace;            /* מכסות ומגבלות קצב */
@@ -122,6 +123,12 @@ export default {
     if (allowed.length && (!origin || !allowed.includes(origin)))
       return json({ error: "origin not allowed" }, 403, head);
 
+    /* ---- מתג ראשי ----
+       כבוי כברירת מחדל. כל עוד הוא לא "true" אף אחד לא סורק, לא משנה
+       מי הוא, ושום תמונה לא נשלחת הלאה. מבוצע לפני כל דבר שעולה כסף. */
+    if (env.SCANS_ENABLED !== "true")
+      return json({ error: "\u05d4\u05e1\u05e8\u05d9\u05e7\u05d4 \u05de\u05d5\u05e9\u05d1\u05ea\u05ea \u05db\u05e8\u05d2\u05e2", locked: true }, 403, head);
+
     /* ---- נעילת הסריקה ----
        כל עוד זה בבנייה, רק מי שמחזיק את הקוד סורק. כשיהיה
        חיבור גוגל, ALLOWED_EMAILS יחליף את זה בזהות אמיתית. */
@@ -213,7 +220,7 @@ export default {
         return json({ error: "\u05db\u05dc \u05d4\u05de\u05d5\u05d3\u05dc\u05d9\u05dd \u05e2\u05de\u05d5\u05e1\u05d9\u05dd \u05db\u05e8\u05d2\u05e2. \u05e0\u05e1\u05d4 \u05e9\u05d5\u05d1 \u05d1\u05e2\u05d5\u05d3 \u05d3\u05e7\u05d4." }, 503, head);
       if (lastStatus === 400 && /API_KEY|api key/i.test(lastDetail))
         return json({ error: "\u05de\u05e4\u05ea\u05d7 \u05d4-API \u05dc\u05d0 \u05ea\u05e7\u05d9\u05df" }, 500, head);
-      return json({ error: `\u05e9\u05d2\u05d9\u05d0\u05d4 \u05de\u05d4\u05de\u05d5\u05d3\u05dc (${lastStatus})`, detail: lastDetail.slice(0, 400) }, 502, head);
+      return json({ error: `\u05e9\u05d2\u05d9\u05d0\u05d4 \u05de\u05d4\u05de\u05d5\u05d3\u05dc (${lastStatus})` }, 502, head);
     }
 
     let data: any;
