@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-khlgve/XiRqTWU9VAfkSY8GlLVa2k0W/eQUUnXBssZQ=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-ZOwb/xQN+SrrYZ5QXIFiRLEquQdI1qHITyEclRdRYf4=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-1EXKjajR7LF/0QpW/XPdAO09xEgx95YYz6V98//SRHg=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-ZOwb/xQN+SrrYZ5QXIFiRLEquQdI1qHITyEclRdRYf4=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -856,7 +856,7 @@ body.nav .wrap{padding-top:36px}
 
     <h3>חשבון וסנכרון</h3>
     <div id="accbox">
-      <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ריק = בלי התחברות" onchange="H.setClientId(this.value)"></label>
+      <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ברירת מחדל מוגדרת" onchange="H.setClientId(this.value)"></label>
       <div class="row accrow">
         <button class="go" id="loginbtn" onclick="H.login()">🔐 התחבר עם גוגל</button>
         <button class="mini" id="signoutbtn" onclick="H.signOut()" disabled>🚪 התנתק</button>
@@ -3357,7 +3357,9 @@ H.CID_KEY = 'hachtava_v2_client_id';
 H.ACC_KEY = 'hachtava_v2_account';
 H.acc = {token:'', email:'', exp:0};
 
-H.clientId = function(){ try{ return localStorage.getItem(H.CID_KEY) || ''; }catch(e){ return ''; } };
+/* Client ID של האפליקציה. הוא לא סוד: הוא גלוי בכל דף שמציג כפתור התחברות. */
+H.DEFAULT_CLIENT_ID = '112684717494-sf1ajin7d13vpmkgd8nvtp9me5co1d7g.apps.googleusercontent.com';
+H.clientId = function(){ try{ return localStorage.getItem(H.CID_KEY) || H.DEFAULT_CLIENT_ID; }catch(e){ return H.DEFAULT_CLIENT_ID; } };
 H.setClientId = function(v){
   v = (v || '').trim();
   try{ v ? localStorage.setItem(H.CID_KEY, v) : localStorage.removeItem(H.CID_KEY); }catch(e){}

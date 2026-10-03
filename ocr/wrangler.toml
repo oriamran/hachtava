@@ -24,4 +24,4 @@ ALLOWED_ORIGINS = "https://oriamran.github.io,http://localhost:8788"
 # ללא gemini-flash-lite — הוא ממציא מילים במקום לקרוא אותן
 MODEL = "gemini-3.8-flash,gemini-flash-latest"
 # מזהה הלקוח מ-Google Cloud Console. זה לא סוד.
-GOOGLE_CLIENT_ID = "PASTE_CLIENT_ID.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = "112684717494-sf1ajin7d13vpmkgd8nvtp9me5co1d7g.apps.googleusercontent.com"

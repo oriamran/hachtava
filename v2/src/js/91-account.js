@@ -11,7 +11,9 @@ H.CID_KEY = 'hachtava_v2_client_id';
 H.ACC_KEY = 'hachtava_v2_account';
 H.acc = {token:'', email:'', exp:0};
 
-H.clientId = function(){ try{ return localStorage.getItem(H.CID_KEY) || ''; }catch(e){ return ''; } };
+/* Client ID של האפליקציה. הוא לא סוד: הוא גלוי בכל דף שמציג כפתור התחברות. */
+H.DEFAULT_CLIENT_ID = '112684717494-sf1ajin7d13vpmkgd8nvtp9me5co1d7g.apps.googleusercontent.com';
+H.clientId = function(){ try{ return localStorage.getItem(H.CID_KEY) || H.DEFAULT_CLIENT_ID; }catch(e){ return H.DEFAULT_CLIENT_ID; } };
 H.setClientId = function(v){
   v = (v || '').trim();
   try{ v ? localStorage.setItem(H.CID_KEY, v) : localStorage.removeItem(H.CID_KEY); }catch(e){}
