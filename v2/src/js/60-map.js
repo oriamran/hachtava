@@ -44,7 +44,14 @@ H.renderPlay = function(){
   H.GAMES.forEach(g => {
     const el = H.el('button', 'gamecard');
     el.innerHTML = '<span class="gc-e">' + g.e + '</span><b>' + g.name + '</b><small>' + g.desc + '</small>';
-    el.onclick = () => { H.sfx.tap(); H.startRound(g.id, undefined); };
+    const ws = H.words().map(H.disp);
+    if(g.canPlay && !g.canPlay(ws)){
+      el.classList.add('locked'); el.disabled = false;
+      el.querySelector('small').textContent = 'לא מתאים לרשימה הזאת';
+      el.onclick = () => H.toast('המשחק הזה לא מתאים למילים ברשימה');
+    } else {
+      el.onclick = () => { H.sfx.tap(); H.startRound(g.id, undefined); };
+    }
     box.appendChild(el);
   });
 };

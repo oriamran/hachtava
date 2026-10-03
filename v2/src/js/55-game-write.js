@@ -32,15 +32,41 @@ H.game({
     /* המילה כבר נכבשה באריחים — אז כאן זה כבר מבחן, לא תרגול */
     r.testMode = (H.state.stats[H.sk(w)] || {run:0}).run >= H.MASTER_AT;
     H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters(); H.hideCompare();
-    H.$('writeprompt').textContent = r.testMode
-      ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
-      : 'שמע את המילה וכתוב אותה בכתב';
+    r.selfRevealed = false;
+    H.$('writebtn').style.display = ''; H.$('selfmark').style.display = 'none';
+    H.$('writeprompt').textContent = r.game.id === 'selfcheck'
+      ? 'שמע, כתוב בכתב, ואז בדוק את עצמך מול המילה'
+      : (r.testMode
+        ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
+        : 'שמע את המילה וכתוב אותה בכתב');
     H.$('testbadge').style.display = r.testMode ? '' : 'none';
     H.$('writebtn').textContent = '✅ בדוק';
     H.$('writefb').textContent = '';
     setTimeout(() => H.say(w), 320);
   },
+  /* כתיבה ובדיקה עצמית: האפליקציה לא שופטת את הכתב. הילד (או ההורה) משווה
+     את מה שכתב למילה ומחליט. זה מדלג על חוסר הדיוק של זיהוי כתב היד, והוא
+     "בוחן ותיקון עצמי" כמו שמתואר אצל Graham. */
+  selfFlow(){
+    const r = H.run, res = H.padScore(), fb = H.$('writefb');
+    if(r.selfRevealed) return;
+    if(res.empty){ fb.className = 'fb no'; fb.textContent = 'עדיין לא כתבת כלום ✍️'; return; }
+    r.selfRevealed = true;
+    H.showCompare();
+    fb.className = 'fb'; fb.textContent = 'השווה את מה שכתבת למילה. כתבת נכון?';
+    H.$('writebtn').style.display = 'none'; H.$('selfmark').style.display = '';
+  },
+  selfMark(ok){
+    const r = H.run, fb = H.$('writefb');
+    if(!r.selfRevealed) return;
+    r.selfRevealed = false;
+    H.$('selfmark').style.display = 'none';
+    if(ok){ H.right(); fb.className = 'fb ok'; fb.textContent = '🎉 יפה!'; H.speak(r.word); }
+    else { H.wrong(); fb.className = 'fb no'; fb.innerHTML = H.trickyHint(r.word) || 'בפעם הבאה נצליח'; }
+    setTimeout(() => this.next(), ok ? 800 : 1800);
+  },
   check(){
+    if(H.run.game.id === 'selfcheck') return this.selfFlow();
     const r = H.run, res = H.padScore(), fb = H.$('writefb');
     if(res.empty){
       fb.className = 'fb no'; fb.textContent = 'עדיין לא כתבת כלום ✍️';
@@ -263,3 +289,8 @@ H.padReveal = function(){
   t.classList.add('reveal');
   t.style.clipPath = 'inset(0 0 0 0)';
 };
+
+/* אותו משטח כתיבה, בלי שיפוט של האפליקציה. מועתק מהכתיבה אחרי שהיא הוגדרה. */
+H.game(Object.assign({}, H.byId('write'), {
+  id:'selfcheck', e:'📝', name:'כתיבה ובדיקה', desc:'כותבים, ואז בודקים מול המילה'
+}));

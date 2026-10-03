@@ -11,7 +11,7 @@
    סולם השלבים (H.stage): 0 חדשה, 1 הוכרה, 2 זוהתה, 3 הורכבה, 4 נכתבה.
    ========================================================== */
 H.PLAN_STEPS = 3;
-H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky','search'], assemble:['build','missing','anagram','proof','flash'], write:['write','parent']};
+H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky','search'], assemble:['build','missing','anagram','proof','flash'], write:['write','selfcheck']};
 H.GROUP_TITLE = {recog:'מכירים את המילים', assemble:'מרכיבים את המילים', write:'כותבים מהזיכרון', review:'חוזרים על מה שלמדנו'};
 H.PLAN_PREFS = [
   ['recog', 'assemble', 'write', 'review'],
@@ -87,8 +87,14 @@ H.renderPlan = function(){
     box.innerHTML = '<div class="plancard"><div class="plan-e">🌙</div><h2>סיימת להיום</h2><p>זה מספיק לעכשיו. נתראה מחר!</p></div>';
     return;
   }
-  const need = H.planNeed();
   const card = H.el('div', 'plancard');
+  if(!H.hasWords()){
+    card.innerHTML = '<div class="plan-e">📝</div><h2>אין מילים ברשימה</h2><p>הוסף מילים ב"הורים", או בחר חבילה מהספרייה, ואז נתחיל.</p>';
+    const b0 = H.el('button', 'go', '⚙️ להוסיף מילים'); b0.onclick = () => H.openSettings();
+    card.appendChild(b0); box.appendChild(card);
+    return;
+  }
+  const need = H.planNeed();
   if(need.kind === 'empty'){
     card.innerHTML = '<div class="plan-e">🏆</div><h2>אין מה לתרגל כרגע</h2><p>כל המילים נכבשו. אפשר להוסיף רשימה חדשה, או לשחק חופשי.</p>';
     const b1 = H.el('button', 'go', '➕ רשימה חדשה'); b1.onclick = () => H.openSettings();

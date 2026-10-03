@@ -161,19 +161,6 @@
     <div class="row"><button class="mini" onclick="H.byId('search').hint()">💡 רמז</button></div>
   </section>
 
-  <!-- ============ הכתבה עם הורה ============ -->
-  <section class="screen" id="s-parent">
-    <p class="sub">הקשב וכתוב את המילה <b>במחברת</b>. אחר כך המבוגר בודק.</p>
-    <p class="sub"><b id="parentn"></b></p>
-    <div class="row"><button class="mini" data-say>🔊 שמע שוב</button></div>
-    <div id="parentword" class="parentword" style="display:none"></div>
-    <div class="row"><button class="go" id="parentreveal" onclick="H.byId('parent').reveal()">👀 בדיקה (למבוגר)</button></div>
-    <div class="row" id="parentmark" style="display:none">
-      <button class="go" onclick="H.byId('parent').mark(true)">✅ כתב נכון</button>
-      <button class="mini" onclick="H.byId('parent').mark(false)">❌ טעה</button>
-    </div>
-  </section>
-
   <!-- ============ תפוס את הטעות ============ -->
   <section class="screen" id="s-proof">
     <p class="sub">אחת המילים כתובה לא נכון. תפוס אותה!</p>
@@ -249,6 +236,10 @@
     <div class="row">
       <button class="go" id="writebtn">✅ בדוק</button>
       <button class="mini" id="writeclear">🧹 נקה</button>
+    </div>
+    <div class="row" id="selfmark" style="display:none">
+      <button class="go" onclick="H.byId('selfcheck').selfMark(true)">✅ כתבתי נכון</button>
+      <button class="mini" onclick="H.byId('selfcheck').selfMark(false)">❌ טעיתי</button>
     </div>
     <p class="note">כתוב גם במחברת — האצבע על המסך זו רק הבדיקה.</p>
   </section>

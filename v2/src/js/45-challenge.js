@@ -16,6 +16,7 @@ H.challengeGame = function(){
 };
 H.startChallenge = function(){
   if(H.challengeDone()) return H.toast('אתגר היום כבר הושלם — חזור מחר 🌞');
+  if(H.needWords()) return;
   const g = H.challengeGame();
   H.run = {game:g, station:undefined, challenge:true,
            queue:H.pickWords(H.CHALLENGE_WORDS), total:0, right:0, wrong:0, word:null};

@@ -8,7 +8,16 @@ H.byId = id => H.GAMES.find(g => g.id === id);
 H.ROUND = 5;              /* מילים בסיבוב */
 H.run = null;             /* הסיבוב הנוכחי */
 
+/* סבב בלי מילים נגמר מיד עם "0 מתוך 0" ושלושה כוכבים. לכן לא מתחילים אותו. */
+H.hasWords = () => H.words().some(w => String(w).trim());
+H.needWords = function(){
+  if(H.hasWords()) return false;
+  H.toast('אין מילים ברשימה. הוסף מילים כדי לשחק');
+  H.openSettings();
+  return true;
+};
 H.startRound = function(gameId, station, words, extra){
+  if(!(words && words.length) && H.needWords()) return;
   const g = H.byId(gameId);
   H.run = Object.assign({
     game: g, station,
@@ -48,7 +57,10 @@ H.stars = function(){
   return 1;
 };
 H.endRound = function(){
-  const r = H.run, stars = H.stars();
+  const r = H.run;
+  /* משחק שדילג על כל המילים (למשל "האות הקשה" ברשימה בלי אותיות כאלה) לא נותן כוכבים */
+  if(r.right + r.wrong === 0){ H.toast('לא היה מה לתרגל כאן עם המילים האלה'); return H.home(); }
+  const stars = H.stars();
   H.logEnd(r.right, r.wrong, r.game && r.game.id);
   if(r.plan) return H.planRoundDone();
   if(r.challenge) return H.finishChallenge();

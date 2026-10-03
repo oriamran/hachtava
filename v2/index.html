@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-eNaoMpbJEyYF1vusdSWGK5SaDsJ1MGhIcDKok40pC7I=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-rUAYeVgRSXcMXwHm8QKrs0e14Y339uMbRZD4hzsokNo=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-uyvGBSP8c1VY56oRWEItUfyKw6dW0NyTjr7jDCg1R0I=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-rUAYeVgRSXcMXwHm8QKrs0e14Y339uMbRZD4hzsokNo=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -834,19 +834,6 @@ body.nav .wrap{padding-top:36px}
     <div class="row"><button class="mini" onclick="H.byId('search').hint()">💡 רמז</button></div>
   </section>
 
-  <!-- ============ הכתבה עם הורה ============ -->
-  <section class="screen" id="s-parent">
-    <p class="sub">הקשב וכתוב את המילה <b>במחברת</b>. אחר כך המבוגר בודק.</p>
-    <p class="sub"><b id="parentn"></b></p>
-    <div class="row"><button class="mini" data-say>🔊 שמע שוב</button></div>
-    <div id="parentword" class="parentword" style="display:none"></div>
-    <div class="row"><button class="go" id="parentreveal" onclick="H.byId('parent').reveal()">👀 בדיקה (למבוגר)</button></div>
-    <div class="row" id="parentmark" style="display:none">
-      <button class="go" onclick="H.byId('parent').mark(true)">✅ כתב נכון</button>
-      <button class="mini" onclick="H.byId('parent').mark(false)">❌ טעה</button>
-    </div>
-  </section>
-
   <!-- ============ תפוס את הטעות ============ -->
   <section class="screen" id="s-proof">
     <p class="sub">אחת המילים כתובה לא נכון. תפוס אותה!</p>
@@ -922,6 +909,10 @@ body.nav .wrap{padding-top:36px}
     <div class="row">
       <button class="go" id="writebtn">✅ בדוק</button>
       <button class="mini" id="writeclear">🧹 נקה</button>
+    </div>
+    <div class="row" id="selfmark" style="display:none">
+      <button class="go" onclick="H.byId('selfcheck').selfMark(true)">✅ כתבתי נכון</button>
+      <button class="mini" onclick="H.byId('selfcheck').selfMark(false)">❌ טעיתי</button>
     </div>
     <p class="note">כתוב גם במחברת — האצבע על המסך זו רק הבדיקה.</p>
   </section>
@@ -1324,7 +1315,7 @@ H.isDue = function(s){
    מילה בלי שלב שמור (התקדמות ישנה) מוסקת מהנתונים שיש. */
 H.STAGE_GROUPS = {pick:'recog', memory:'recog', bubbles:'recog',
                   build:'assemble', anagram:'assemble', missing:'assemble', 'catch':'assemble',
-                  proof:'assemble', flash:'assemble', tricky:'recog', search:'recog', write:'write', parent:'write'};
+                  proof:'assemble', flash:'assemble', tricky:'recog', search:'recog', write:'write', selfcheck:'write'};
 H.STAGE_TARGET = {recog: 2, assemble: 3, write: 4};
 H.stage = function(word){
   const s = H.state.stats[H.sk(word)];
@@ -1834,7 +1825,16 @@ H.byId = id => H.GAMES.find(g => g.id === id);
 H.ROUND = 5;              /* מילים בסיבוב */
 H.run = null;             /* הסיבוב הנוכחי */
 
+/* סבב בלי מילים נגמר מיד עם "0 מתוך 0" ושלושה כוכבים. לכן לא מתחילים אותו. */
+H.hasWords = () => H.words().some(w => String(w).trim());
+H.needWords = function(){
+  if(H.hasWords()) return false;
+  H.toast('אין מילים ברשימה. הוסף מילים כדי לשחק');
+  H.openSettings();
+  return true;
+};
 H.startRound = function(gameId, station, words, extra){
+  if(!(words && words.length) && H.needWords()) return;
   const g = H.byId(gameId);
   H.run = Object.assign({
     game: g, station,
@@ -1874,7 +1874,10 @@ H.stars = function(){
   return 1;
 };
 H.endRound = function(){
-  const r = H.run, stars = H.stars();
+  const r = H.run;
+  /* משחק שדילג על כל המילים (למשל "האות הקשה" ברשימה בלי אותיות כאלה) לא נותן כוכבים */
+  if(r.right + r.wrong === 0){ H.toast('לא היה מה לתרגל כאן עם המילים האלה'); return H.home(); }
+  const stars = H.stars();
   H.logEnd(r.right, r.wrong, r.game && r.game.id);
   if(r.plan) return H.planRoundDone();
   if(r.challenge) return H.finishChallenge();
@@ -1973,6 +1976,7 @@ H.challengeGame = function(){
 };
 H.startChallenge = function(){
   if(H.challengeDone()) return H.toast('אתגר היום כבר הושלם — חזור מחר 🌞');
+  if(H.needWords()) return;
   const g = H.challengeGame();
   H.run = {game:g, station:undefined, challenge:true,
            queue:H.pickWords(H.CHALLENGE_WORDS), total:0, right:0, wrong:0, word:null};
@@ -2316,15 +2320,41 @@ H.game({
     /* המילה כבר נכבשה באריחים — אז כאן זה כבר מבחן, לא תרגול */
     r.testMode = (H.state.stats[H.sk(w)] || {run:0}).run >= H.MASTER_AT;
     H.padInit(); H.padClear(); H.padTemplate(false); H.clearLetters(); H.hideCompare();
-    H.$('writeprompt').textContent = r.testMode
-      ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
-      : 'שמע את המילה וכתוב אותה בכתב';
+    r.selfRevealed = false;
+    H.$('writebtn').style.display = ''; H.$('selfmark').style.display = 'none';
+    H.$('writeprompt').textContent = r.game.id === 'selfcheck'
+      ? 'שמע, כתוב בכתב, ואז בדוק את עצמך מול המילה'
+      : (r.testMode
+        ? 'המילה הזו כבר שלך — עכשיו בכתב יפה'
+        : 'שמע את המילה וכתוב אותה בכתב');
     H.$('testbadge').style.display = r.testMode ? '' : 'none';
     H.$('writebtn').textContent = '✅ בדוק';
     H.$('writefb').textContent = '';
     setTimeout(() => H.say(w), 320);
   },
+  /* כתיבה ובדיקה עצמית: האפליקציה לא שופטת את הכתב. הילד (או ההורה) משווה
+     את מה שכתב למילה ומחליט. זה מדלג על חוסר הדיוק של זיהוי כתב היד, והוא
+     "בוחן ותיקון עצמי" כמו שמתואר אצל Graham. */
+  selfFlow(){
+    const r = H.run, res = H.padScore(), fb = H.$('writefb');
+    if(r.selfRevealed) return;
+    if(res.empty){ fb.className = 'fb no'; fb.textContent = 'עדיין לא כתבת כלום ✍️'; return; }
+    r.selfRevealed = true;
+    H.showCompare();
+    fb.className = 'fb'; fb.textContent = 'השווה את מה שכתבת למילה. כתבת נכון?';
+    H.$('writebtn').style.display = 'none'; H.$('selfmark').style.display = '';
+  },
+  selfMark(ok){
+    const r = H.run, fb = H.$('writefb');
+    if(!r.selfRevealed) return;
+    r.selfRevealed = false;
+    H.$('selfmark').style.display = 'none';
+    if(ok){ H.right(); fb.className = 'fb ok'; fb.textContent = '🎉 יפה!'; H.speak(r.word); }
+    else { H.wrong(); fb.className = 'fb no'; fb.innerHTML = H.trickyHint(r.word) || 'בפעם הבאה נצליח'; }
+    setTimeout(() => this.next(), ok ? 800 : 1800);
+  },
   check(){
+    if(H.run.game.id === 'selfcheck') return this.selfFlow();
     const r = H.run, res = H.padScore(), fb = H.$('writefb');
     if(res.empty){
       fb.className = 'fb no'; fb.textContent = 'עדיין לא כתבת כלום ✍️';
@@ -2547,6 +2577,11 @@ H.padReveal = function(){
   t.classList.add('reveal');
   t.style.clipPath = 'inset(0 0 0 0)';
 };
+
+/* אותו משטח כתיבה, בלי שיפוט של האפליקציה. מועתק מהכתיבה אחרי שהיא הוגדרה. */
+H.game(Object.assign({}, H.byId('write'), {
+  id:'selfcheck', e:'📝', name:'כתיבה ובדיקה', desc:'כותבים, ואז בודקים מול המילה'
+}));
 
 /* ===== 56-game-anagram.js ===== */
 /* ========== 7. סדר את האותיות — נגד השעון ========== */
@@ -3016,48 +3051,17 @@ H.renderPlay = function(){
   H.GAMES.forEach(g => {
     const el = H.el('button', 'gamecard');
     el.innerHTML = '<span class="gc-e">' + g.e + '</span><b>' + g.name + '</b><small>' + g.desc + '</small>';
-    el.onclick = () => { H.sfx.tap(); H.startRound(g.id, undefined); };
+    const ws = H.words().map(H.disp);
+    if(g.canPlay && !g.canPlay(ws)){
+      el.classList.add('locked'); el.disabled = false;
+      el.querySelector('small').textContent = 'לא מתאים לרשימה הזאת';
+      el.onclick = () => H.toast('המשחק הזה לא מתאים למילים ברשימה');
+    } else {
+      el.onclick = () => { H.sfx.tap(); H.startRound(g.id, undefined); };
+    }
     box.appendChild(el);
   });
 };
-
-/* ===== 62-game-parent.js ===== */
-/* ========== 9. הכתבה עם הורה: כותבים במחברת, ההורה בודק ==========
-   הילד כותב על נייר, וההורה מסתכל ולוחץ נכון או טעות. זה קרוב להכתבה בכיתה,
-   מתאים לכתיבה ביד (שנתמכת במחקר), ולא תלוי בזיהוי כתב של האפליקציה. */
-H.game({
-  id:'parent', e:'👨‍👩‍👧', name:'הכתבה עם הורה',
-  desc:'כותבים במחברת, ההורה בודק',
-  adult:true,                                    /* צריך מבוגר, לא נכנס לאתגר היומי */
-  start(){ H.show('parent'); this.next(); },
-  next(){
-    const w = H.nextWord();
-    if(!w) return H.endRound();
-    H.run.revealed = false;
-    H.$('parentword').textContent = '';
-    H.$('parentword').style.display = 'none';
-    H.$('parentmark').style.display = 'none';
-    H.$('parentreveal').style.display = '';
-    H.$('parentn').textContent = (H.run.total - H.run.queue.length) + ' / ' + H.run.total;
-    setTimeout(() => H.say(w), 300);
-  },
-  reveal(){
-    const r = H.run;
-    if(!r.word || r.revealed) return;
-    r.revealed = true; H.sfx.tap();
-    H.$('parentword').textContent = r.word;
-    H.$('parentword').style.display = '';
-    H.$('parentreveal').style.display = 'none';
-    H.$('parentmark').style.display = '';
-  },
-  mark(ok){
-    const r = H.run;
-    if(!r.word || !r.revealed) return;
-    r.revealed = false;                           /* מונע לחיצה כפולה */
-    if(ok) H.right(); else H.wrong();
-    setTimeout(() => this.next(), 350);
-  }
-});
 
 /* ===== 63-game-proof.js ===== */
 /* ========== 10. תפוס את הטעות ==========
@@ -4692,7 +4696,7 @@ H.renderTips = function(){
    סולם השלבים (H.stage): 0 חדשה, 1 הוכרה, 2 זוהתה, 3 הורכבה, 4 נכתבה.
    ========================================================== */
 H.PLAN_STEPS = 3;
-H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky','search'], assemble:['build','missing','anagram','proof','flash'], write:['write','parent']};
+H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky','search'], assemble:['build','missing','anagram','proof','flash'], write:['write','selfcheck']};
 H.GROUP_TITLE = {recog:'מכירים את המילים', assemble:'מרכיבים את המילים', write:'כותבים מהזיכרון', review:'חוזרים על מה שלמדנו'};
 H.PLAN_PREFS = [
   ['recog', 'assemble', 'write', 'review'],
@@ -4768,8 +4772,14 @@ H.renderPlan = function(){
     box.innerHTML = '<div class="plancard"><div class="plan-e">🌙</div><h2>סיימת להיום</h2><p>זה מספיק לעכשיו. נתראה מחר!</p></div>';
     return;
   }
-  const need = H.planNeed();
   const card = H.el('div', 'plancard');
+  if(!H.hasWords()){
+    card.innerHTML = '<div class="plan-e">📝</div><h2>אין מילים ברשימה</h2><p>הוסף מילים ב"הורים", או בחר חבילה מהספרייה, ואז נתחיל.</p>';
+    const b0 = H.el('button', 'go', '⚙️ להוסיף מילים'); b0.onclick = () => H.openSettings();
+    card.appendChild(b0); box.appendChild(card);
+    return;
+  }
+  const need = H.planNeed();
   if(need.kind === 'empty'){
     card.innerHTML = '<div class="plan-e">🏆</div><h2>אין מה לתרגל כרגע</h2><p>כל המילים נכבשו. אפשר להוסיף רשימה חדשה, או לשחק חופשי.</p>';
     const b1 = H.el('button', 'go', '➕ רשימה חדשה'); b1.onclick = () => H.openSettings();
