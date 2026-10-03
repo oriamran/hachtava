@@ -133,6 +133,8 @@ export default {
       if (!user.emailVerified || !admins.includes(user.email.toLowerCase()))
         return json({ error: HE.noAccess }, 403, head);
       if (!memLimit("admin:" + user.sub, 60, 3_600_000)) return json({ error: HE.tooMany }, 429, head);
+      /* בדיקה זולה לכפתור במסך הראשי: בלי לקרוא את כל המשתמשים */
+      if (new URL(req.url).searchParams.get("ping") === "1") return json({ admin: true }, 200, head);
       return json(await adminList(env), 200, head);
     }
 

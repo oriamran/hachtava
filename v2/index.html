@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qbtbtsNfBzw1Vn6YN4sIj4MlV25jT+HRkqsdX1TE3E4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-1w4+6jGd7k+6ljw5RO1pkFS2SSk8LPddaLwISsf9u/s=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-bZ+w13u9xVj6wSfwPqft6MT/29gSUuvtozhKY1JizYo=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-1w4+6jGd7k+6ljw5RO1pkFS2SSk8LPddaLwISsf9u/s=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -688,6 +688,7 @@ body.nav .wrap{padding-top:36px}
         <span id="homeemail" class="homeemail" style="display:none"></span>
         <button class="mini" id="homesignin" onclick="H.login()">🔐 התחבר עם גוגל</button>
         <button class="mini" id="homesignout" onclick="H.signOut()" disabled>🚪 התנתק</button>
+        <button class="mini" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
       </div>
     </div>
 
@@ -3585,13 +3586,14 @@ H.renderAccount = async function(){
   const $ = id => H.$(id) || {style:{}, classList:{toggle(){}}};     /* מסך שלא קיים לא מפיל */
   const login = $('loginbtn'), out = $('signoutbtn'), sync = $('syncnow');
   const g = $('gbtn'), hg = $('homeg'), msg = $('accmsg');
-  const hin = $('homesignin'), hout = $('homesignout'), hmail = $('homeemail');
+  const hin = $('homesignin'), hout = $('homesignout'), hmail = $('homeemail'), hadm = $('homeadmin');
 
   if(H.signedIn()){
     login.disabled = true;  login.textContent = '✅ מחובר';
     out.disabled = false;   sync.style.display = '';
     hin.style.display = 'none'; hout.disabled = false; hout.style.display = '';
     hmail.style.display = ''; hmail.textContent = '✅ ' + H.acc.email;
+    H.checkAdmin();
     $('adminbtn').style.display = ''; $('delbtn').style.display = '';
     g.innerHTML = ''; hg.innerHTML = '';
     msg.className = 'note ok';
@@ -3601,7 +3603,7 @@ H.renderAccount = async function(){
   login.disabled = false; login.textContent = '🔐 התחבר עם גוגל';
   out.disabled = true;    sync.style.display = 'none';
   hin.style.display = ''; hout.disabled = true; hout.style.display = '';
-  hmail.style.display = 'none';
+  hmail.style.display = 'none'; hadm.style.display = 'none';
   $('adminbtn').style.display = 'none'; $('delbtn').style.display = 'none';
   g.innerHTML = ''; hg.innerHTML = '';
   if(!H.clientId()){
@@ -3623,6 +3625,18 @@ H.renderAccount = async function(){
     msg.className = 'note bad';
     msg.textContent = 'אין חיבור לגוגל. התחברות דורשת אינטרנט.';
   }
+};
+
+/* האם המשתמש המחובר מנהל. השרת מחליט; כאן רק מציגים כפתור. */
+H.adminOk = null;
+H.checkAdmin = async function(){
+  const b = H.$('homeadmin'); if(!b) return;
+  if(H.adminOk === H.acc.email){ b.style.display = ''; return; }
+  if(!H.apiUrl()) return;
+  try{
+    const r = await fetch(H.apiUrl() + '/admin?ping=1', {headers: H.authHeader()});
+    if(r.ok){ H.adminOk = H.acc.email; b.style.display = ''; }
+  }catch(e){}
 };
 
 /* לחיצה על "התחבר" עם או בלי Client ID */

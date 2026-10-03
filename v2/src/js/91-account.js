@@ -63,13 +63,14 @@ H.renderAccount = async function(){
   const $ = id => H.$(id) || {style:{}, classList:{toggle(){}}};     /* מסך שלא קיים לא מפיל */
   const login = $('loginbtn'), out = $('signoutbtn'), sync = $('syncnow');
   const g = $('gbtn'), hg = $('homeg'), msg = $('accmsg');
-  const hin = $('homesignin'), hout = $('homesignout'), hmail = $('homeemail');
+  const hin = $('homesignin'), hout = $('homesignout'), hmail = $('homeemail'), hadm = $('homeadmin');
 
   if(H.signedIn()){
     login.disabled = true;  login.textContent = '✅ מחובר';
     out.disabled = false;   sync.style.display = '';
     hin.style.display = 'none'; hout.disabled = false; hout.style.display = '';
     hmail.style.display = ''; hmail.textContent = '✅ ' + H.acc.email;
+    H.checkAdmin();
     $('adminbtn').style.display = ''; $('delbtn').style.display = '';
     g.innerHTML = ''; hg.innerHTML = '';
     msg.className = 'note ok';
@@ -79,7 +80,7 @@ H.renderAccount = async function(){
   login.disabled = false; login.textContent = '🔐 התחבר עם גוגל';
   out.disabled = true;    sync.style.display = 'none';
   hin.style.display = ''; hout.disabled = true; hout.style.display = '';
-  hmail.style.display = 'none';
+  hmail.style.display = 'none'; hadm.style.display = 'none';
   $('adminbtn').style.display = 'none'; $('delbtn').style.display = 'none';
   g.innerHTML = ''; hg.innerHTML = '';
   if(!H.clientId()){
@@ -101,6 +102,18 @@ H.renderAccount = async function(){
     msg.className = 'note bad';
     msg.textContent = 'אין חיבור לגוגל. התחברות דורשת אינטרנט.';
   }
+};
+
+/* האם המשתמש המחובר מנהל. השרת מחליט; כאן רק מציגים כפתור. */
+H.adminOk = null;
+H.checkAdmin = async function(){
+  const b = H.$('homeadmin'); if(!b) return;
+  if(H.adminOk === H.acc.email){ b.style.display = ''; return; }
+  if(!H.apiUrl()) return;
+  try{
+    const r = await fetch(H.apiUrl() + '/admin?ping=1', {headers: H.authHeader()});
+    if(r.ok){ H.adminOk = H.acc.email; b.style.display = ''; }
+  }catch(e){}
 };
 
 /* לחיצה על "התחבר" עם או בלי Client ID */
