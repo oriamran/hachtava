@@ -609,3 +609,5 @@ body.nav .wrap{padding-top:36px}
 /* תפריט עליון בצד ימין (ב-RTL: תחילת השורה) */
 .homenav{display:flex;flex-wrap:nowrap;gap:4px;justify-content:flex-start;margin:0 0 4px}
 .mini.tb{min-height:40px;padding:8px 7px;font-size:12px;white-space:nowrap;flex:0 1 auto}
+
+.tip-src{display:inline-block;margin-top:6px;font-size:12px;color:var(--plum);text-decoration:underline}

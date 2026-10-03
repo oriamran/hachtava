@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-bZ+w13u9xVj6wSfwPqft6MT/29gSUuvtozhKY1JizYo=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-LIu3I0mplOUf0NuM+eSZaZdTMdRCRhNQfRRHCaxZNlU=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMOV1fOmPXWe6a6gySxkMkBrh01Wb2sOOkpzkI2WpY8=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-zaYDAnxou9MnwskCHkZdmLD/3lh9LJoNX2oeJXXMNig=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -644,6 +644,8 @@ body.nav .wrap{padding-top:36px}
 /* תפריט עליון בצד ימין (ב-RTL: תחילת השורה) */
 .homenav{display:flex;flex-wrap:nowrap;gap:4px;justify-content:flex-start;margin:0 0 4px}
 .mini.tb{min-height:40px;padding:8px 7px;font-size:12px;white-space:nowrap;flex:0 1 auto}
+
+.tip-src{display:inline-block;margin-top:6px;font-size:12px;color:var(--plum);text-decoration:underline}
 
 </style>
 </head>
@@ -4120,23 +4122,36 @@ H.endTour = function(){
 /* ---------- טיפים להורים ---------- */
 H.TIPS = [
   {e:'⏱️', t:'קצר ותכוף מנצח',
-   p:'עשר עד חמש עשרה דקות ביום עדיפות על שעה פעם בשבוע. מחקרים על חזרה מרווחת, גם אצל ילדי בית ספר, מראים שימור טוב בערך פי שניים. לכן המשחק מחזיר מילים שנלמדו אחרי יום, שלושה, שבוע, שבועיים וחודש.'},
-  {e:'🧠', t:'לכתוב מהזיכרון ולא להעתיק',
-   p:'ילדים שמנסים להיזכר ואז מקבלים תיקון מיד זוכרים איות טוב יותר מילדים שמעתיקים. זה בדיוק מה שהכתיבה במשחק עושה, ולכן כדאי לא לתת לילד להציץ.'},
+   p:'מחקרים על חזרה מרווחת מראים שזכירה טובה יותר כשמפזרים את התרגול על פני ימים, ולא דוחסים אותו. גם אצל ילדים. לכן המשחק מחזיר מילה שנלמדה אחרי יום, שלושה, שבוע, שבועיים וחודש. כמה דקות ביום עדיפות על שעה פעם בשבוע.',
+   src:['מדריך חינוכי: חזרה מרווחת ושליפה', 'https://www.edresearch.edu.au/guides-resources/practice-guides/spacing-and-retrieval-practice-guide-full-publication']},
+  {e:'🧠', t:'לנסות להיזכר לפני שמסתכלים',
+   p:'ניסיון לשלוף מילה מהזיכרון, גם כשטועים, מחזק למידה יותר מקריאה חוזרת. במחקרים על למידת מילים אצל ילדים, שליפה חוזרת שיפרה זכירה. במשחק הכתיבה הילד כותב בלי לראות, ורק אחרי טעות מופיע קו עזר. כדאי לא להציץ בשבילו.',
+   src:['מחקר: שליפה ולמידת מילים בילדים', 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8084525/']},
   {e:'📓', t:'אחרי המשחק, גם מחברת',
-   p:'מחקרים מצאו שכתיבה ביד תורמת ללמידת אותיות ואיות יותר מהקלדה. חמש מילים במחברת אחרי הסבב הן תוספת טובה. (מעקב אחרי אות בלי לכתוב, כלומר "חיזוק" אותיות, נמצא בספרות כבעל תועלת לא ברורה.)'},
+   p:'במחקר על ילדים בני חמש, מי שתרגל כתיבה ביד למד אותיות, איות וקריאה טוב יותר ממי שהקליד. לכן כדאי להוסיף כמה מילים במחברת אחרי הסבב. זה מחקר אחד על גיל צעיר, ולא הכרעה סופית.',
+   src:['מחקר: כתיבה ביד מול הקלדה', 'https://www.sciencedirect.com/science/article/pii/S0022096525000013']},
   {e:'🧩', t:'אם יש קושי בכתיבה או דיסלקציה',
-   p:'יש מחקרים שבהם ילדים עם דיסלקציה למדו מילים חדשות טוב יותר בהקלדה מבכתיבה ביד. אפשר להתחיל מהמשחקים של הרכבת אותיות (הרכבה, ערבוביה, תפוס), ולהוסיף כתיבה בהדרגה. התייעצו עם איש מקצוע.'},
-  {e:'🎁', t:'פרס: חגיגה ולא שוחד',
-   p:'במחקר קלאסי, ילדים שהובטח להם פרס מראש על פעילות שאהבו התעניינו בה פחות אחר כך. במשחקי לימוד תוצאות המחקר מעורבות. כדאי להציג את הפרס כחגיגה על הצלחה, ולפעמים להפתיע בלי הבטחה מראש.'},
-  {e:'📵', t:'להחליט מראש מתי נגמר',
-   p:'ארגון רופאי הילדים האמריקאי עבר מהגבלה קבועה של שעות מסך להתמקדות באיכות ובהקשר: מה הילד עושה, ומה זה דוחק (שינה, תנועה, משחק חופשי). כדאי לקבוע ביחד "שלושה סבבים וזהו", ולהיזהר מאפליקציות שמושכות להמשיך ללא סוף. גם בארץ המילים יש רצף ימים ואתגר יומי, ולכן חשוב שהסיום יהיה ברור.'}
+   p:'במחקר על ילדים עם דיסלקציה, איות מילים חדשות היה טוב יותר אחרי למידה בהקלדה מאשר בכתיבה ביד. אם הכתיבה קשה לילד, אפשר להתחיל במשחקים של הרכבת אותיות (הרכבה, ערבוביה, תפוס) ולהוסיף כתיבה בהדרגה. התייעצו עם איש מקצוע.',
+   src:['מחקר: קורא רגיל וקורא עם דיסלקציה', 'https://www.sciencedirect.com/science/article/pii/S095947522500043X']},
+  {e:'✅', t:'לתת משוב ספציפי, ולא רק לבדוק',
+   p:'ההמלצה של קרן החינוך הבריטית (EEF) לגילאי 5 עד 7: ללמד איות במפורש ולא רק לבחון, לתרגל הרבה, ולתת משוב ברור על מה בדיוק צריך לתקן. למשל "שים לב לאות האחרונה", ולא רק "טעות". שיטת "הסתכל, אמור, כסה, כתוב, בדוק" נמצאת שם כגישה מבטיחה. הראיות על דרכי לימוד איות מוגבלות.',
+   src:['EEF: שיפור האוריינות בכיתות הנמוכות', 'https://dera.ioe.ac.uk/id/eprint/29344/1/KS1_Literacy_Guidance_2017.pdf']},
+  {e:'🎁', t:'פרס: הפתעה ולא הבטחה',
+   p:'בסקירה גדולה של 128 מחקרים, פרס מוחשי שהובטח מראש הפחית עניין פנימי בפעילות, ויותר אצל ילדים. פרס שלא הובטח לא הזיק. מילות עידוד ענייניות על מה שהצליח הועילו, כל עוד לא נאמרו בטון שולט. המשחק נותן פרס בסוף האלבום, ולכן כדאי להציג אותו כחגיגה.',
+   src:['סקירה: פרסים ומוטיבציה פנימית (Deci ואחרים)', 'https://depts.washington.edu/techdocs/papers/deciExtrinsicRewardsAndIntrinsicMotivation99.pdf']},
+  {e:'📵', t:'להחליט ביחד מתי נגמר',
+   p:'בעדכון של פברואר 2026, ארגון רופאי הילדים האמריקאי הפסיק להמליץ על מספר שעות קבוע, והעביר את הדגש לאיכות התוכן, ולשאלה מה המסך דוחק (שינה, תנועה, שיחה). הוא ממליץ על תוכנית משפחתית משותפת. כדאי לקבוע ביחד "שלושה סבבים וזהו". ההערה שלנו: אתגר יומי ורצף ימים משמשים בגרסה הזו כדי לעודד חזרה, ולכן חשוב שהסיום יהיה ברור.',
+   src:['EdSurge: ההמלצות החדשות של AAP', 'https://www.edsurge.com/news/2026-02-05-new-aap-screen-time-recommendations-focus-less-on-screens-more-on-family-time']},
+  {e:'🔡', t:'למה בכיתה ג׳ מורידים את הניקוד',
+   p:'בעברית לומדים לקרוא תחילה בכתב מנוקד, שבו התנועות כתובות. בסביבות כיתה ד׳ עוברים לכתב לא מנוקד, שבו רוב התנועות לא מופיעות. מחקר על התפתחות הקריאה בעברית מתאר את המעבר הזה. לכן בכיתות ג׳ עד ו׳ ההגדרה ברירת מחדל בלי ניקוד, ואפשר להפעיל אותו ידנית.',
+   src:['Share & Bar-On: התפתחות הקריאה בעברית', 'https://doi.org/10.1177/0022219417718198']}
 ];
 H.renderTips = function(){
   const box = H.$('tipsbody'); box.innerHTML = '';
   H.TIPS.forEach(t => {
     const c = H.el('div', 'tipcard');
-    c.innerHTML = '<span class="tip-e">' + t.e + '</span><div><b>' + t.t + '</b><p>' + t.p + '</p></div>';
+    c.innerHTML = '<span class="tip-e">' + t.e + '</span><div><b>' + t.t + '</b><p>' + t.p + '</p>' +
+      (t.src ? '<a class="tip-src" target="_blank" rel="noopener noreferrer" href="' + t.src[1] + '">מקור: ' + t.src[0] + '</a>' : '') + '</div>';
     box.appendChild(c);
   });
 };
