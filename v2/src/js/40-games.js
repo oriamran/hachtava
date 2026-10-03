@@ -59,21 +59,53 @@ H.endRound = function(){
 };
 
 /* ---------- וריאציות שגויות של מילה, לבחירה מרובה ---------- */
+/* אותיות שנשמעות אותו דבר. מחקרי איות בעברית מראים שרוב הטעויות מרוכזות
+   בזוגות כאלה (ת/ט, כ/ק, א/ע, ו/ב, ס/שׂ), ולכן הן הכתיב השגוי הכי
+   שימושי לתרגל מולו — הרבה יותר מאות חסרה או אותיות הפוכות. */
+H.HOMO = {'ת':'ט','ט':'ת','כ':'ק','ק':'כ','א':'ע','ע':'א',
+          'ו':'ב','ב':'ו','ס':'שׂ','שׂ':'ס'};
+/* מחליף אשכול אחד בחבר ההומופוני שלו, ושומר על התנועה. null אם אין לו חבר. */
+H.homophone = function(cl){
+  const o = H.parseCluster(cl);
+  let key = o.base;
+  if(o.base === 'ש' && o.sin) key = 'שׂ';          /* שׂ */
+  /* ההחלפה נכונה רק כשהאות באמת נשמעת כמו חברה:
+     ו עם חולם או דגש היא אות תנועה ולא עיצור; ב עם דגש היא b ולא v;
+     כ בלי דגש נשמעת כמו ח, לא כמו ק. */
+  if(o.base === 'ו' && (o.vowel === '\u05b9' || o.dagesh)) return null;
+  if(o.base === 'ב' && o.dagesh) return null;
+  if(o.base === 'כ' && !o.dagesh) return null;
+  const to = H.HOMO[key];
+  if(!to) return null;
+  if(to === 'ס'){ o.base = 'ס'; o.sin = false; o.shin = false; }
+  else if(to === 'שׂ'){ o.base = 'ש'; o.sin = true; o.shin = false; }
+  else o.base = to;
+  /* דגש קל שייך רק לבג"ד כפ"ת. אחרי ההחלפה הוא לא יושב על אות אחרת. */
+  if(o.dagesh && 'בגדכפת'.indexOf(o.base) < 0) o.dagesh = false;
+  if(to === 'כ') o.dagesh = true;           /* ק נשמעת כמו כּ, לא כמו כ */
+  return H.buildCluster(o);
+};
+
 H.variants = function(word, n){
   const out = new Set();
   const cl = H.clusters(word);
+  /* אילו מקומות במילה אפשר להחליף בהומופון */
+  const homo = [];
+  cl.forEach((c, i) => { if(c !== ' ' && H.homophone(c)) homo.push(i); });
   let guard = 0;
   while(out.size < n && guard++ < 200){
     const c = cl.slice();
-    const mode = Math.floor(Math.random()*4);
-    const i = Math.floor(Math.random()*c.length);
+    let mode = Math.floor(Math.random()*4);
+    /* כשיש במילה אות עם חבר הומופוני, זו הטעות המועדפת */
+    if(homo.length && Math.random() < 0.55) mode = 4;
+    const i = (mode === 4) ? homo[Math.floor(Math.random()*homo.length)] : Math.floor(Math.random()*c.length);
     if(c[i] === ' ') continue;
-    if(mode === 0){                                   /* תנועה אחרת */
-      const base = c[i][0];
-      const v = H.VOW[Math.floor(Math.random()*H.VOW.length)];
-      c[i] = base + (c[i].includes('ּ') ? 'ּ' : '') +
-             (c[i].includes('ׁ') ? 'ׁ' : '') +
-             (c[i].includes('ׂ') ? 'ׂ' : '') + v;
+    if(mode === 4){                                   /* אות דומה בצליל */
+      c[i] = H.homophone(c[i]);
+    } else if(mode === 0){                            /* תנועה אחרת */
+      const o = H.parseCluster(c[i]);
+      o.vowel = H.VOW[Math.floor(Math.random()*H.VOW.length)];
+      c[i] = H.buildCluster(o);
     } else if(mode === 1){                            /* אות חסרה */
       if(c.length < 4) continue;
       c.splice(i, 1);
