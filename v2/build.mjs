@@ -28,7 +28,9 @@ const csp = [
   "default-src 'none'",
   "script-src " + sha(scriptTxt) + " https://accounts.google.com/gsi/client",
   "script-src-attr 'unsafe-inline'",
-  "style-src " + sha(styleTxt) + " https://accounts.google.com/gsi/style",
+  /* הגיבוב השני הוא בלוק העיצוב שגוגל מזריקה לדף בעצמה כשהכפתור נטען.
+     אם גוגל תשנה אותו, הכפתור עדיין יופיע, רק בלי העיצוב הזה — בדוק בקונסול. */
+  "style-src " + sha(styleTxt) + " 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style",
   "style-src-attr 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src data:",
