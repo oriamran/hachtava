@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
+<!--CSP-->
+<meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -242,6 +244,14 @@
     <div class="row"><button class="go" onclick="H.finishNikud()">✔️ סיימתי</button></div>
   </section>
 
+  <!-- ============ לוח ניהול ============ -->
+  <section class="screen" id="s-admin">
+    <h2>לוח ניהול 📊</h2>
+    <p class="sub">רק מי שהתחבר ונרשם אצלי. משתמש בלי חשבון לא נספר.</p>
+    <div id="admsum" class="statrow"></div>
+    <div id="admbody"></div>
+  </section>
+
   <!-- ============ הורים ============ -->
   <section class="screen" id="s-settings">
     <h2>מסך הורים ⚙️</h2>
@@ -283,12 +293,18 @@
     <h3>חשבון וסנכרון</h3>
     <div id="accbox">
       <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ריק = בלי התחברות" onchange="H.setClientId(this.value)"></label>
+      <div class="row accrow">
+        <button class="go" id="loginbtn" onclick="H.login()">🔐 התחבר עם גוגל</button>
+        <button class="mini" id="signoutbtn" onclick="H.signOut()" disabled>🚪 התנתק</button>
+      </div>
       <div id="gbtn" class="gbtn"></div>
       <p class="note" id="accmsg" style="text-align:start"></p>
       <div class="row">
         <button class="mini" id="syncnow" style="display:none" onclick="H.syncNow()">🔄 סנכרן עכשיו</button>
-        <button class="mini" id="signoutbtn" style="display:none" onclick="H.signOut()">התנתק</button>
+        <button class="mini" id="adminbtn" style="display:none" onclick="H.openAdmin()">📊 לוח ניהול</button>
+        <button class="mini" id="delbtn" style="display:none" onclick="H.deleteAccount()">🗑️ מחק את הנתונים שלי</button>
       </div>
+      <p class="note" style="text-align:start">כשמתחברים נשמרים בשרת: האימייל שלך, והתקדמות המשחק (נקודות, מילים, כמה פעמים נכנסו וכמה זמן). לא נשמרים שם הילד, תמונות או כל פרט אחר. אפשר למחוק הכול בכל רגע בכפתור למעלה.</p>
       <p class="note" style="text-align:start">ההתחברות היא להורה בלבד. הילד לא מתחבר, והמשחק עובד גם בלי חשבון.</p>
     </div>
 

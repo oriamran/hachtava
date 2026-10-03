@@ -73,7 +73,7 @@ H.importBackup = async function(){
     return alert('הקוד לא מכיל נתוני משחק');
   if(!confirm('להחליף את כל הנתונים במכשיר הזה?')) return;
   const keepHand = H.state.hand;           /* קוד קצר לא מוחק פרופיל קיים */
-  H.state = Object.assign(H.blank(), data);
+  H.state = H.cleanState(data);
   if(!data.hand && keepHand) H.state.hand = keepHand;
   H.syncStats(); H.save();
   H.toast('שוחזר ✔️', 'good');

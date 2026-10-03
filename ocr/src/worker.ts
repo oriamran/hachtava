@@ -7,7 +7,8 @@
    חיצוניות — רק fetch — כדי שהפריסה תהיה פקודה אחת.
    ========================================================== */
 import { verifyGoogle, type User } from "./auth";
-import { loadState, saveState } from "./sync";
+import { loadState, saveState, deleteState, adminList } from "./sync";
+import { corsHeaders, json, empty, readJson, safeEq, memLimit } from "./http";
 
 export interface Env {
   GOOGLE_API_KEY: string;       /* למודל הראייה */
@@ -17,10 +18,13 @@ export interface Env {
   SCANS_ENABLED?: string;       /* מתג ראשי. רק "true" מפעיל סריקה, לכולם */
   SCAN_TOKEN?: string;          /* אם מוגדר — סריקה דורשת אותו */
   ALLOWED_EMAILS?: string;      /* ואם מוגדר — רק החשבונות האלה */
+  ADMIN_EMAILS?: string;        /* מי רשאי לראות את לוח הניהול. סוד, לא בגיט */
   RATE: KVNamespace;            /* מכסות ומגבלות קצב */
   DATA: KVNamespace;            /* התקדמות המשתמשים */
 }
 
+const MAX_BODY      = 9_000_000;   /* גוף בקשת סריקה, base64 מנופח ב-33% */
+const MAX_SYNC_BODY = 250_000;
 const MAX_BYTES     = 6_000_000;   /* תמונה אחרי הקטנה בצד הלקוח */
 const RATE_PER_HOUR = 20;          /* הגנה מפני ניצול, לפי כתובת IP */
 const FREE_PER_MONTH = 3;          /* מכסת הסריקות החופשית, לכל מכשיר */
@@ -61,17 +65,6 @@ const SCHEMA = {
   required: ["words", "note"]
 };
 
-const cors = (origin: string | null, allowed: string[]) => ({
-  "Access-Control-Allow-Origin": (origin && allowed.includes(origin)) ? origin : (allowed[0] || "*"),
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Max-Age": "86400"
-});
-const json = (body: unknown, status: number, headers: Record<string, string>) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { ...headers, "Content-Type": "application/json; charset=utf-8" }
-  });
 
 /* כשהמודל לא נמצא, עדיף להגיד אילו כן זמינים מאשר "404" */
 async function modelHint(key: string): Promise<string> {
@@ -88,40 +81,74 @@ async function modelHint(key: string): Promise<string> {
   } catch { return ""; }
 }
 
+
+const list = (v?: string) => (v || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+const ipOf = (req: Request) => req.headers.get("CF-Connecting-IP") || "unknown";
+const bearer = (req: Request) => (req.headers.get("Authorization") || "").replace(/^Bearer /, "");
+const HE = {
+  needLogin: "התחברות נדרשת",
+  tooMany:   "יותר מדי בקשות. נסה שוב בעוד רגע.",
+  noAccess:  "אין הרשאה"
+};
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
-    const allowed = (env.ALLOWED_ORIGINS || "").split(",").map(s => s.trim()).filter(Boolean);
+    const origins = (env.ALLOWED_ORIGINS || "").split(",").map(s => s.trim()).filter(Boolean);
     const origin  = req.headers.get("Origin");
-    const head    = cors(origin, allowed);
+    const head    = corsHeaders(origin, origins);
+    const path    = new URL(req.url).pathname.replace(/\/+$/, "") || "/";
 
-    if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: head });
+    /* ---- שער אחד לכל הנתיבים ----
+       בלי רשימת מקורות השרת סגור (נכשל סגור), ולא פתוח. הבדיקה הזו אינה
+       הגנה מלאה, כי מי שפונה בלי דפדפן יכול לזייף כותרת. ההגנות
+       האמיתיות הן המתג, הקוד, החשבון, המכסה והגבלת הקצב. הוא עוצר
+       שימוש מדפדפן של אתר זר. */
+    if (!origin || !origins.includes(origin))
+      return json({ error: "origin not allowed" }, 403, head);
+    if (req.method === "OPTIONS") return empty(204, head);
 
-    const path = new URL(req.url).pathname.replace(/\/+$/, "");
-
-    /* ---- סנכרון ההתקדמות. דורש התחברות, ולכן מזוהה ויציב. ---- */
+    /* ---- התקדמות: קריאה, שמירה ומחיקה. דורש התחברות. ---- */
     if (path === "/sync") {
-      const tok = (req.headers.get("Authorization") || "").replace(/^Bearer /, "");
-      const user = await verifyGoogle(tok, env.GOOGLE_CLIENT_ID);
-      if (!user) return json({ error: "\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05d3\u05e8\u05e9\u05ea" }, 401, head);
+      const user = await verifyGoogle(bearer(req), env.GOOGLE_CLIENT_ID);
+      if (!user) return json({ error: HE.needLogin }, 401, head);
+      if (!memLimit("sync:" + user.sub, 120, 3_600_000)) return json({ error: HE.tooMany }, 429, head);
 
-      if (req.method === "GET") {
-        const r = await loadState(env, user);
-        return new Response(await r.text(), { status: 200, headers: { ...head, "Content-Type": "application/json; charset=utf-8" } });
-      }
+      if (req.method === "GET") return json(await loadState(env, user), 200, head);
+      if (req.method === "DELETE") { await deleteState(env, user); return json({ ok: true }, 200, head); }
       if (req.method === "POST") {
-        let b: { state?: unknown; at?: number };
-        try { b = await req.json(); } catch { return json({ error: "bad json" }, 400, head); }
-        const out = await saveState(env, user, b.state, Number(b.at) || Date.now());
-        return json(out, out.ok ? 200 : (out.stale ? 409 : 413), head);
+        const r = await readJson(req, MAX_SYNC_BODY);
+        if (!r.ok) return json({ error: r.error }, r.status, head);
+        const out = await saveState(env, user, r.data?.state, Number(r.data?.at) || Date.now());
+        return json(out, out.ok ? 200 : (out.stale ? 409 : (out.invalid ? 400 : 413)), head);
       }
-      return json({ error: "use GET or POST" }, 405, head);
+      return json({ error: "method not allowed" }, 405, head);
     }
 
-    if (req.method !== "POST") return json({ error: "use POST" }, 405, head);
+    /* ---- לוח ניהול. רק אימייל מאומת שברשימת המנהלים. ---- */
+    if (path === "/admin") {
+      if (req.method !== "GET") return json({ error: "method not allowed" }, 405, head);
+      const user = await verifyGoogle(bearer(req), env.GOOGLE_CLIENT_ID);
+      if (!user) return json({ error: HE.needLogin }, 401, head);
+      const admins = list(env.ADMIN_EMAILS);
+      if (!user.emailVerified || !admins.includes(user.email.toLowerCase()))
+        return json({ error: HE.noAccess }, 403, head);
+      if (!memLimit("admin:" + user.sub, 60, 3_600_000)) return json({ error: HE.tooMany }, 429, head);
+      return json(await adminList(env), 200, head);
+    }
 
-    /* רק הדפים שלנו. לא הגנה מוחלטת, אבל עוצרת שימוש מדפדפן זר. */
-    if (allowed.length && (!origin || !allowed.includes(origin)))
-      return json({ error: "origin not allowed" }, 403, head);
+    /* ---- סריקה ---- */
+    if (path === "/") {
+      if (req.method !== "POST") return json({ error: "use POST" }, 405, head);
+      return scan(req, env, head);
+    }
+    return json({ error: "not found" }, 404, head);
+  }
+};
+
+async function scan(req: Request, env: Env, head: Record<string, string>): Promise<Response> {
+  const origin = req.headers.get("Origin");
+  const allowed = (env.ALLOWED_ORIGINS || "").split(",").map(s => s.trim()).filter(Boolean);
+
 
     /* ---- מתג ראשי ----
        כבוי כברירת מחדל. כל עוד הוא לא "true" אף אחד לא סורק, לא משנה
@@ -132,7 +159,7 @@ export default {
     /* ---- נעילת הסריקה ----
        כל עוד זה בבנייה, רק מי שמחזיק את הקוד סורק. כשיהיה
        חיבור גוגל, ALLOWED_EMAILS יחליף את זה בזהות אמיתית. */
-    if (env.SCAN_TOKEN && req.headers.get("X-Scan-Token") !== env.SCAN_TOKEN)
+    if (env.SCAN_TOKEN && !safeEq(req.headers.get("X-Scan-Token") || "", env.SCAN_TOKEN))
       return json({ error: "\u05d4\u05e1\u05e8\u05d9\u05e7\u05d4 \u05e1\u05d2\u05d5\u05e8\u05d4 \u05db\u05e8\u05d2\u05e2", locked: true }, 403, head);
 
     /* מגבלת קצב לפי IP — בלעדיה הכתובת פתוחה וכל אחד יכול לשרוף את המכסה */
@@ -143,8 +170,10 @@ export default {
       return json({ error: "הגעת למגבלה לשעה. נסה שוב בעוד כשעה." }, 429, head);
     await env.RATE.put(key, String(used + 1), { expirationTtl: 5400 });
 
-    let body: { image?: string; mediaType?: string; deviceId?: string };
-    try { body = await req.json(); } catch { return json({ error: "bad json" }, 400, head); }
+    const parsed = await readJson(req, MAX_BODY);
+    if (!parsed.ok) return json({ error: parsed.error }, parsed.status, head);
+    const body = parsed.data as { image?: string; mediaType?: string; deviceId?: string };
+    if (typeof body !== "object" || body === null) return json({ error: "bad json" }, 400, head);
 
     /* מכסה חודשית. חשבון מזוהה עדיף על מזהה מכשיר, שאפשר
        לאפס בניקוי אחסון — זו כל הנקודה של ההתחברות. */
@@ -251,5 +280,4 @@ export default {
       quota: { used: unlimited ? 0 : usedMonth + 1, limit: FREE_PER_MONTH, unlimited,
                signedIn: !!user }
     }, 200, head);
-  }
-};
+}

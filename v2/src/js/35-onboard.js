@@ -28,7 +28,7 @@ H.startOnboard = function(){
   H.$('backbtn').classList.remove('on');     /* אין לאן לחזור */
 };
 H.finishOnboard = function(){
-  H.state.name = H.$('ob-name').value.trim();
+  H.state.name = H.cleanText(H.$('ob-name').value.trim(), 30);
   H.state.onboarded = true;
   H.save();
   H.sfx.great(); H.confetti(28);

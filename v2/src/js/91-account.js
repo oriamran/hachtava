@@ -53,41 +53,59 @@ H.loadGsi = function(){
   });
 };
 
+/* שני הכפתורים תמיד מוצגים. מה שמשתנה הוא אם אפשר ללחוץ עליהם,
+   והטקסט שמסביר למה. כפתור שנעלם בלי הסבר נראה כמו משהו שלא קיים. */
 H.renderAccount = async function(){
   const box = H.$('accbox'); if(!box) return;
   const cidIn = H.$('cidIn');
   if(cidIn && document.activeElement !== cidIn) cidIn.value = H.clientId();
-  const btn = H.$('gbtn'), msg = H.$('accmsg'), out = H.$('signoutbtn'), sync = H.$('syncnow');
+  const login = H.$('loginbtn'), out = H.$('signoutbtn'), sync = H.$('syncnow');
+  const g = H.$('gbtn'), msg = H.$('accmsg');
 
   if(H.signedIn()){
-    btn.innerHTML = ''; out.style.display = ''; sync.style.display = '';
+    login.disabled = true;  login.textContent = '✅ מחובר';
+    out.disabled = false;   sync.style.display = '';
+    H.$('adminbtn').style.display = ''; H.$('delbtn').style.display = '';
+    g.innerHTML = '';
     msg.className = 'note ok';
     msg.textContent = 'מחובר כע' + H.acc.email + ' · ההתקדמות מסתנכרנת';
     return;
   }
-  out.style.display = 'none'; sync.style.display = 'none';
+  login.disabled = false; login.textContent = '🔐 התחבר עם גוגל';
+  out.disabled = true;    sync.style.display = 'none';
+  H.$('adminbtn').style.display = 'none'; H.$('delbtn').style.display = 'none';
+  g.innerHTML = '';
   if(!H.clientId()){
-    btn.innerHTML = '';
     msg.className = 'note';
-    msg.textContent = 'בלי Client ID אין התחברות, והמשחק שומר הכל רק במכשיר הזה.';
+    msg.textContent = 'אי אפשר להתחבר עדיין: חסר Client ID מגוגל. כשיהיה, הדבק אותו בשדה למעלה.';
+    return;
+  }
+  msg.className = 'note'; msg.textContent = '';
+  try{
+    await H.loadGsi();
+    google.accounts.id.initialize({
+      client_id: H.clientId(), callback: H.onCredential,
+      auto_select: false, use_fedcm_for_prompt: true
+    });
+    google.accounts.id.renderButton(g, {theme:'outline', size:'large', text:'signin_with', locale:'iw', shape:'pill'});
+  }catch(e){
+    msg.className = 'note bad';
+    msg.textContent = 'אין חיבור לגוגל. התחברות דורשת אינטרנט.';
+  }
+};
+
+/* לחיצה על "התחבר" עם או בלי Client ID */
+H.login = async function(){
+  if(!H.clientId()){
+    H.setSyncMsg('חסר Client ID מגוגל. הדבק אותו בשדה "Client ID" ואז לחץ שוב.', true);
+    const f = H.$('cidIn'); if(f) f.focus();
     return;
   }
   try{
     await H.loadGsi();
-    google.accounts.id.initialize({
-      client_id: H.clientId(),
-      callback: H.onCredential,
-      auto_select: false,
-      use_fedcm_for_prompt: true
-    });
-    btn.innerHTML = '';
-    google.accounts.id.renderButton(btn, {theme:'outline', size:'large', text:'signin_with', locale:'iw', shape:'pill'});
-    msg.className = 'note'; msg.textContent = '';
-  }catch(e){
-    btn.innerHTML = '';
-    msg.className = 'note bad';
-    msg.textContent = 'אין חיבור לגוגל. התחברות דורשת אינטרנט.';
-  }
+    google.accounts.id.initialize({client_id: H.clientId(), callback: H.onCredential, auto_select:false, use_fedcm_for_prompt:true});
+    google.accounts.id.prompt();
+  }catch(e){ H.setSyncMsg('אין חיבור לגוגל', true); }
 };
 
 H.onCredential = function(resp){
@@ -108,7 +126,8 @@ H.signOut = function(){
 };
 
 /* ---------- סנכרון ---------- */
-H.syncUrl = () => H.ocrUrl() ? H.ocrUrl().replace(/\/+$/, '') + '/sync' : '';
+H.apiUrl  = () => H.ocrUrl() ? H.ocrUrl().replace(/\/+$/, '') : '';
+H.syncUrl = () => H.apiUrl() ? H.apiUrl() + '/sync' : '';
 
 H.pull = async function(){
   const r = await fetch(H.syncUrl(), {headers: H.authHeader()});
@@ -116,12 +135,13 @@ H.pull = async function(){
   if(!r.ok) throw new Error('http ' + r.status);
   return r.json();                                  /* {state, at} */
 };
-H.push = async function(){
+H.push = async function(keep){
   if(!H.signedIn() || !H.syncUrl()) return false;
   const r = await fetch(H.syncUrl(), {
     method: 'POST',
     headers: Object.assign({'Content-Type': 'application/json'}, H.authHeader()),
-    body: JSON.stringify({state: H.state, at: H.state.updatedAt || Date.now()})
+    body: JSON.stringify({state: H.state, at: H.state.updatedAt || Date.now()}),
+    keepalive: !!keep          /* משתחרר גם כשסוגרים את הדף */
   });
   if(r.status === 409) return 'stale';              /* בשרת יש גרסה חדשה יותר */
   return r.ok;
@@ -137,7 +157,7 @@ H.syncOnSignIn = async function(){
       const stars = Object.keys(srv.state.stars || {}).length;
       if(confirm('נמצאה התקדמות שמורה בחשבון (' +
               (srv.state.xp || 0) + ' נקודות, ' + stars + ' תחנות). לשחזר אותה במכשיר הזה?')){
-        H.state = Object.assign(H.blank(), srv.state);
+        H.state = H.cleanState(srv.state);
         H.syncStats(); H.save(true); H.refresh();
         H.setSyncMsg('שוחרר מהחשבון ✔️');
         return;
@@ -164,5 +184,5 @@ H.setSyncMsg = function(t, bad){
 H.pushSoon = function(){
   if(!H.signedIn() || !H.syncUrl()) return;
   clearTimeout(H._pt);
-  H._pt = setTimeout(() => { H.push().catch(() => {}); }, 6000);
+  H._pt = setTimeout(() => { H.push().catch(() => {}); }, 45000);   /* השרת מגביל במילא במיקר הקצר */
 };

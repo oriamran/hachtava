@@ -53,14 +53,14 @@ H.openSettings = function(){
 };
 H.applySettings = function(){
   const list = H.$('wordsIn').value.split('\n')
-    .map(x => x.replace(/^\s*\d+[.)\.\s]\s*/, '').trim())
+    .map(x => H.cleanText(x.replace(/^\s*\d+[.)\.\s]\s*/, '').trim(), 60))
     .filter(x => x.length);
   if(list.length < 2) return alert('צריך לפחות שתי מילים');
-  H.state.name = H.$('nameIn').value.trim();
+  H.state.name = H.cleanText(H.$('nameIn').value.trim(), 30);
   H.state.peekAlways = H.$('peekIn').checked;
   const p = H.pack();
-  p.topic = H.$('topicIn').value.trim() || 'הכתבה';
-  p.prize = H.$('prizeIn').value.trim();
+  p.topic = H.cleanText(H.$('topicIn').value.trim(), 80) || 'הכתבה';
+  p.prize = H.cleanText(H.$('prizeIn').value.trim(), 80);
   p.list  = list;
   H.syncStats(); H.save();
   H.toast('נשמר ✔️', 'good');

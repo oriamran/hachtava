@@ -534,3 +534,11 @@ body.nav .wrap{padding-top:36px}
 
 /* ---------- התחברות ---------- */
 .gbtn{display:flex;justify-content:center;margin-top:10px;min-height:44px}
+.accrow button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+
+/* ---------- לוח ניהול ---------- */
+.admwrap{overflow-x:auto;border-radius:16px;background:#fff;box-shadow:0 4px 0 var(--cardEdge);margin-top:12px}
+.admtbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.admtbl th{background:#efeaff;color:var(--ink2);font-weight:800;padding:9px 8px;text-align:start;white-space:nowrap}
+.admtbl td{padding:9px 8px;border-top:1px solid #eee9fb;white-space:nowrap}
+.admtbl td.em{direction:ltr;text-align:start;max-width:170px;overflow:hidden;text-overflow:ellipsis}

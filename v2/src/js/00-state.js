@@ -54,6 +54,7 @@ H.RINGS = [
 
 H.blank = () => ({
   name: '', onboarded: false, peekAlways: false,
+  usage: {first: 0, last: 0, visits: 0, activeSec: 0},
   avatar: 'fox', hat: 'none', ring: 'sun',
   owned: ['fox','panda','frog','cat','none','sun','mint'],
   xp: 0, coins: 0,
@@ -90,10 +91,15 @@ H.load = function(){
   delete H.state.words;
   if(!Array.isArray(H.state.packs) || !H.state.packs.length) H.state.packs = base.packs;
   if(!H.pack()) H.state.pack = H.state.packs[0].id;
+  H.state = H.cleanState(H.state);          /* מה שנקרא מהאחסון אינו מובטח */
   H.syncStats();
   H.checkDaily();
 };
 /* fromServer: שחזור מהשרת שומר את החותמת המקורית, אחרת הוא היה "נכתב עכשיו" */
+/* שמירה מקומית בלבד, בלי חותמת זמן ובלי דחיפה לשרת. למעקב זמן שימוש, שנעשה כל    חמש שניות — אחרת המכסה של השרת הייתה נגמרת בשעה. */
+H.saveQuiet = function(){ try { localStorage.setItem(H.KEY, JSON.stringify(H.state)); } catch(e){} };
+H.usage = () => H.state.usage || (H.state.usage = {first:0, last:0, visits:0, activeSec:0});
+
 H.save = function(fromServer){
   if(fromServer !== true) H.state.updatedAt = Date.now();
   try { localStorage.setItem(H.KEY, JSON.stringify(H.state)); } catch(e){}

@@ -5,7 +5,7 @@
 
    נשמר רק מה שנחוץ: המזהה של גוגל, ותאריך. לא שם, לא תמונה.
    ========================================================== */
-export interface User { sub: string; email: string }
+export interface User { sub: string; email: string; emailVerified: boolean }
 
 const CERTS = "https://www.googleapis.com/oauth2/v3/certs";
 let keys: { k: Record<string, CryptoKey>; at: number } = { k: {}, at: 0 };
@@ -35,6 +35,7 @@ async function keyFor(kid: string): Promise<CryptoKey | null> {
 
 /* מאמת מקומית מול המפתחות הציבוריים — בלי קריאת רשת לכל בקשה */
 export async function verifyGoogle(token: string, clientId: string): Promise<User | null> {
+  if (!clientId || clientId.startsWith("PASTE_")) return null;   /* לא הוגדר Client ID — אין מה לאמת */
   const parts = (token || "").split(".");
   if (parts.length !== 3) return null;
   let head: { kid?: string; alg?: string };
@@ -61,5 +62,5 @@ export async function verifyGoogle(token: string, clientId: string): Promise<Use
   if (!body.exp || body.exp * 1000 < Date.now()) return null;
   if (!body.sub) return null;
 
-  return { sub: body.sub, email: body.email || "" };
+  return { sub: body.sub, email: body.email || "", emailVerified: body.email_verified === true };
 }

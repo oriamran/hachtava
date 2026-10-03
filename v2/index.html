@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nWD6GtoHVtHsAOzz4Rj7r28y7UFf2HuqNoGSJNA4kbk=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-ZOwb/xQN+SrrYZ5QXIFiRLEquQdI1qHITyEclRdRYf4=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -567,6 +569,14 @@ body.nav .wrap{padding-top:36px}
 
 /* ---------- התחברות ---------- */
 .gbtn{display:flex;justify-content:center;margin-top:10px;min-height:44px}
+.accrow button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+
+/* ---------- לוח ניהול ---------- */
+.admwrap{overflow-x:auto;border-radius:16px;background:#fff;box-shadow:0 4px 0 var(--cardEdge);margin-top:12px}
+.admtbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.admtbl th{background:#efeaff;color:var(--ink2);font-weight:800;padding:9px 8px;text-align:start;white-space:nowrap}
+.admtbl td{padding:9px 8px;border-top:1px solid #eee9fb;white-space:nowrap}
+.admtbl td.em{direction:ltr;text-align:start;max-width:170px;overflow:hidden;text-overflow:ellipsis}
 
 </style>
 </head>
@@ -798,6 +808,14 @@ body.nav .wrap{padding-top:36px}
     <div class="row"><button class="go" onclick="H.finishNikud()">✔️ סיימתי</button></div>
   </section>
 
+  <!-- ============ לוח ניהול ============ -->
+  <section class="screen" id="s-admin">
+    <h2>לוח ניהול 📊</h2>
+    <p class="sub">רק מי שהתחבר ונרשם אצלי. משתמש בלי חשבון לא נספר.</p>
+    <div id="admsum" class="statrow"></div>
+    <div id="admbody"></div>
+  </section>
+
   <!-- ============ הורים ============ -->
   <section class="screen" id="s-settings">
     <h2>מסך הורים ⚙️</h2>
@@ -839,12 +857,18 @@ body.nav .wrap{padding-top:36px}
     <h3>חשבון וסנכרון</h3>
     <div id="accbox">
       <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ריק = בלי התחברות" onchange="H.setClientId(this.value)"></label>
+      <div class="row accrow">
+        <button class="go" id="loginbtn" onclick="H.login()">🔐 התחבר עם גוגל</button>
+        <button class="mini" id="signoutbtn" onclick="H.signOut()" disabled>🚪 התנתק</button>
+      </div>
       <div id="gbtn" class="gbtn"></div>
       <p class="note" id="accmsg" style="text-align:start"></p>
       <div class="row">
         <button class="mini" id="syncnow" style="display:none" onclick="H.syncNow()">🔄 סנכרן עכשיו</button>
-        <button class="mini" id="signoutbtn" style="display:none" onclick="H.signOut()">התנתק</button>
+        <button class="mini" id="adminbtn" style="display:none" onclick="H.openAdmin()">📊 לוח ניהול</button>
+        <button class="mini" id="delbtn" style="display:none" onclick="H.deleteAccount()">🗑️ מחק את הנתונים שלי</button>
       </div>
+      <p class="note" style="text-align:start">כשמתחברים נשמרים בשרת: האימייל שלך, והתקדמות המשחק (נקודות, מילים, כמה פעמים נכנסו וכמה זמן). לא נשמרים שם הילד, תמונות או כל פרט אחר. אפשר למחוק הכול בכל רגע בכפתור למעלה.</p>
       <p class="note" style="text-align:start">ההתחברות היא להורה בלבד. הילד לא מתחבר, והמשחק עובד גם בלי חשבון.</p>
     </div>
 
@@ -933,6 +957,7 @@ H.RINGS = [
 
 H.blank = () => ({
   name: '', onboarded: false, peekAlways: false,
+  usage: {first: 0, last: 0, visits: 0, activeSec: 0},
   avatar: 'fox', hat: 'none', ring: 'sun',
   owned: ['fox','panda','frog','cat','none','sun','mint'],
   xp: 0, coins: 0,
@@ -969,10 +994,15 @@ H.load = function(){
   delete H.state.words;
   if(!Array.isArray(H.state.packs) || !H.state.packs.length) H.state.packs = base.packs;
   if(!H.pack()) H.state.pack = H.state.packs[0].id;
+  H.state = H.cleanState(H.state);          /* מה שנקרא מהאחסון אינו מובטח */
   H.syncStats();
   H.checkDaily();
 };
 /* fromServer: שחזור מהשרת שומר את החותמת המקורית, אחרת הוא היה "נכתב עכשיו" */
+/* שמירה מקומית בלבד, בלי חותמת זמן ובלי דחיפה לשרת. למעקב זמן שימוש, שנעשה כל    חמש שניות — אחרת המכסה של השרת הייתה נגמרת בשעה. */
+H.saveQuiet = function(){ try { localStorage.setItem(H.KEY, JSON.stringify(H.state)); } catch(e){} };
+H.usage = () => H.state.usage || (H.state.usage = {first:0, last:0, visits:0, activeSec:0});
+
 H.save = function(fromServer){
   if(fromServer !== true) H.state.updatedAt = Date.now();
   try { localStorage.setItem(H.KEY, JSON.stringify(H.state)); } catch(e){}
@@ -1097,6 +1127,78 @@ H.pickWords = function(n){
     }
   }
   return out;
+};
+
+/* ===== 01-safe.js ===== */
+/* ==========================================================
+   ניקוי קלט. כל מה שנכנס למצב המשחק ממקור שאינו הקוד עצמו עובר
+   כאן: מה שהוקלד, קוד גיבוי, התקדמות מהשרת, אחסון מקומי פגום.
+
+   הסיבה: עשרות מקומות בונים HTML מטקסט של מילים ושמות. במקום
+   להקפיד על כל אחד מהם, מוודאים שטקסט כזה לעולם לא מכיל תו
+   שהופך אותו לתגית. מילה בעברית לא צריכה את התווים האלה.
+   ========================================================== */
+H.cleanText = (s, max) =>
+  String(s == null ? '' : s).replace(/[<>&\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').slice(0, max || 80);
+
+/* לטקסט שמגיע מהשרת ומוצג — למקרים שבהם בכל זאת בונים HTML */
+H.esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+H.BAD_KEYS = {'__proto__':1, 'constructor':1, 'prototype':1};
+
+H.cleanState = function(raw){
+  const base = H.blank();
+  if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return base;
+  const isO = v => v && typeof v === 'object' && !Array.isArray(v);
+  const num = (v, lo, hi, d) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : (d || 0);
+  const T   = (v, max, d) => typeof v === 'string' ? H.cleanText(v, max) : (d || '');
+  const L   = (v, n, max) => Array.isArray(v)
+      ? v.filter(x => typeof x === 'string').slice(0, n).map(x => H.cleanText(x, max)) : [];
+  const keys = (o, n) => isO(o) ? Object.keys(o).filter(k => !H.BAD_KEYS[k]).slice(0, n) : [];
+  const s = base;
+
+  s.name = T(raw.name, 30); s.onboarded = raw.onboarded === true; s.peekAlways = raw.peekAlways === true;
+  s.avatar = T(raw.avatar, 20, 'fox'); s.hat = T(raw.hat, 20, 'none'); s.ring = T(raw.ring, 20, 'sun');
+  s.owned = L(raw.owned, 100, 20);
+  s.xp = num(raw.xp, 0, 1e7); s.coins = num(raw.coins, 0, 1e7); s.wins = num(raw.wins, 0, 1e6);
+  s.updatedAt = num(raw.updatedAt, 0, 8.64e15);
+  s.pack = T(raw.pack, 40); s.album = L(raw.album, 2000, 60);
+
+  const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20).filter(isO) : [];
+  s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60)}));
+  if(!s.packs.length) s.packs = base.packs;
+  if(!s.packs.some(p => p.id === s.pack)) s.pack = s.packs[0].id;
+
+  s.stats = {};
+  keys(raw.stats, 2000).forEach(k => {
+    const v = raw.stats[k]; if(!isO(v)) return;
+    s.stats[H.cleanText(k, 60)] = {ok: num(v.ok,0,1e6), bad: num(v.bad,0,1e6), run: num(v.run,0,1e6),
+                                   lv: num(v.lv,0,20), last: num(v.last,0,8.64e15)};
+  });
+  s.stars = {};
+  keys(raw.stars, 100).forEach(k => { s.stars[H.cleanText(k, 6)] = num(raw.stars[k], 0, 3); });
+  s.log = {};
+  keys(raw.log, 800).sort().slice(-400).forEach(k => {
+    const v = raw.log[k]; if(!isO(v) || !/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+    s.log[k] = {sec: num(v.sec,0,86400), right: num(v.right,0,1e5), wrong: num(v.wrong,0,1e5), rounds: num(v.rounds,0,1e5)};
+  });
+  const d = isO(raw.daily) ? raw.daily : {};
+  s.daily = {last: T(d.last, 40), streak: num(d.streak, 0, 1e5), chal: T(d.chal, 12)};
+  const u = isO(raw.usage) ? raw.usage : {};
+  s.usage = {first: num(u.first,0,8.64e15), last: num(u.last,0,8.64e15), visits: num(u.visits,0,1e7), activeSec: num(u.activeSec,0,1e9)};
+
+  s.hand = {};
+  keys(raw.hand, 40).forEach(k => {
+    const v = raw.hand[k]; if(!isO(v) || !Array.isArray(v.s)) return;
+    s.hand[H.cleanText(k, 2)] = {n: num(v.n,0,1000), s: v.s.slice(0, 192).map(x => num(x,0,1000))};
+  });
+  s.letters = {};
+  keys(raw.letters, 40).forEach(k => {
+    const v = raw.letters[k]; if(!isO(v)) return;
+    s.letters[H.cleanText(k, 2)] = {ok: num(v.ok,0,1e6), bad: num(v.bad,0,1e6)};
+  });
+  return s;
 };
 
 /* ===== 05-install.js ===== */
@@ -1405,7 +1507,7 @@ H.startOnboard = function(){
   H.$('backbtn').classList.remove('on');     /* אין לאן לחזור */
 };
 H.finishOnboard = function(){
-  H.state.name = H.$('ob-name').value.trim();
+  H.state.name = H.cleanText(H.$('ob-name').value.trim(), 30);
   H.state.onboarded = true;
   H.save();
   H.sfx.great(); H.confetti(28);
@@ -2655,14 +2757,14 @@ H.openSettings = function(){
 };
 H.applySettings = function(){
   const list = H.$('wordsIn').value.split('\n')
-    .map(x => x.replace(/^\s*\d+[.)\.\s]\s*/, '').trim())
+    .map(x => H.cleanText(x.replace(/^\s*\d+[.)\.\s]\s*/, '').trim(), 60))
     .filter(x => x.length);
   if(list.length < 2) return alert('צריך לפחות שתי מילים');
-  H.state.name = H.$('nameIn').value.trim();
+  H.state.name = H.cleanText(H.$('nameIn').value.trim(), 30);
   H.state.peekAlways = H.$('peekIn').checked;
   const p = H.pack();
-  p.topic = H.$('topicIn').value.trim() || 'הכתבה';
-  p.prize = H.$('prizeIn').value.trim();
+  p.topic = H.cleanText(H.$('topicIn').value.trim(), 80) || 'הכתבה';
+  p.prize = H.cleanText(H.$('prizeIn').value.trim(), 80);
   p.list  = list;
   H.syncStats(); H.save();
   H.toast('נשמר ✔️', 'good');
@@ -2829,7 +2931,7 @@ H.importBackup = async function(){
     return alert('הקוד לא מכיל נתוני משחק');
   if(!confirm('להחליף את כל הנתונים במכשיר הזה?')) return;
   const keepHand = H.state.hand;           /* קוד קצר לא מוחק פרופיל קיים */
-  H.state = Object.assign(H.blank(), data);
+  H.state = H.cleanState(data);
   if(!data.hand && keepHand) H.state.hand = keepHand;
   H.syncStats(); H.save();
   H.toast('שוחזר ✔️', 'good');
@@ -3197,6 +3299,7 @@ H.boot = function(){
     document.removeEventListener('pointerdown', once);
   }, {once:true});
   H.initInstall();
+  if(H.trackStart) H.trackStart();
 
   if(!H.storageOK) H.toast('\u05d4\u05d4\u05ea\u05e7\u05d3\u05de\u05d5\u05ea \u05dc\u05d0 \u05ea\u05d9\u05e9\u05de\u05e8 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u05d4\u05d6\u05d4 \u2014 \u05e4\u05ea\u05d7 \u05d3\u05e8\u05da \u05d4\u05e7\u05d9\u05e9\u05d5\u05e8', 'no');
   if(!H.useAudio) H.toast('\u05d0\u05d9\u05df \u05e7\u05d5\u05dc \u05e2\u05d1\u05e8\u05d9 \u05d1\u05de\u05db\u05e9\u05d9\u05e8 \u2014 \u05d4\u05de\u05d9\u05dc\u05d4 \u05ea\u05d5\u05e6\u05d2 \u05dc\u05e8\u05d2\u05e2 \u05d1\u05de\u05e7\u05d5\u05dd');
@@ -3264,41 +3367,59 @@ H.loadGsi = function(){
   });
 };
 
+/* שני הכפתורים תמיד מוצגים. מה שמשתנה הוא אם אפשר ללחוץ עליהם,
+   והטקסט שמסביר למה. כפתור שנעלם בלי הסבר נראה כמו משהו שלא קיים. */
 H.renderAccount = async function(){
   const box = H.$('accbox'); if(!box) return;
   const cidIn = H.$('cidIn');
   if(cidIn && document.activeElement !== cidIn) cidIn.value = H.clientId();
-  const btn = H.$('gbtn'), msg = H.$('accmsg'), out = H.$('signoutbtn'), sync = H.$('syncnow');
+  const login = H.$('loginbtn'), out = H.$('signoutbtn'), sync = H.$('syncnow');
+  const g = H.$('gbtn'), msg = H.$('accmsg');
 
   if(H.signedIn()){
-    btn.innerHTML = ''; out.style.display = ''; sync.style.display = '';
+    login.disabled = true;  login.textContent = '✅ מחובר';
+    out.disabled = false;   sync.style.display = '';
+    H.$('adminbtn').style.display = ''; H.$('delbtn').style.display = '';
+    g.innerHTML = '';
     msg.className = 'note ok';
     msg.textContent = 'מחובר כע' + H.acc.email + ' · ההתקדמות מסתנכרנת';
     return;
   }
-  out.style.display = 'none'; sync.style.display = 'none';
+  login.disabled = false; login.textContent = '🔐 התחבר עם גוגל';
+  out.disabled = true;    sync.style.display = 'none';
+  H.$('adminbtn').style.display = 'none'; H.$('delbtn').style.display = 'none';
+  g.innerHTML = '';
   if(!H.clientId()){
-    btn.innerHTML = '';
     msg.className = 'note';
-    msg.textContent = 'בלי Client ID אין התחברות, והמשחק שומר הכל רק במכשיר הזה.';
+    msg.textContent = 'אי אפשר להתחבר עדיין: חסר Client ID מגוגל. כשיהיה, הדבק אותו בשדה למעלה.';
+    return;
+  }
+  msg.className = 'note'; msg.textContent = '';
+  try{
+    await H.loadGsi();
+    google.accounts.id.initialize({
+      client_id: H.clientId(), callback: H.onCredential,
+      auto_select: false, use_fedcm_for_prompt: true
+    });
+    google.accounts.id.renderButton(g, {theme:'outline', size:'large', text:'signin_with', locale:'iw', shape:'pill'});
+  }catch(e){
+    msg.className = 'note bad';
+    msg.textContent = 'אין חיבור לגוגל. התחברות דורשת אינטרנט.';
+  }
+};
+
+/* לחיצה על "התחבר" עם או בלי Client ID */
+H.login = async function(){
+  if(!H.clientId()){
+    H.setSyncMsg('חסר Client ID מגוגל. הדבק אותו בשדה "Client ID" ואז לחץ שוב.', true);
+    const f = H.$('cidIn'); if(f) f.focus();
     return;
   }
   try{
     await H.loadGsi();
-    google.accounts.id.initialize({
-      client_id: H.clientId(),
-      callback: H.onCredential,
-      auto_select: false,
-      use_fedcm_for_prompt: true
-    });
-    btn.innerHTML = '';
-    google.accounts.id.renderButton(btn, {theme:'outline', size:'large', text:'signin_with', locale:'iw', shape:'pill'});
-    msg.className = 'note'; msg.textContent = '';
-  }catch(e){
-    btn.innerHTML = '';
-    msg.className = 'note bad';
-    msg.textContent = 'אין חיבור לגוגל. התחברות דורשת אינטרנט.';
-  }
+    google.accounts.id.initialize({client_id: H.clientId(), callback: H.onCredential, auto_select:false, use_fedcm_for_prompt:true});
+    google.accounts.id.prompt();
+  }catch(e){ H.setSyncMsg('אין חיבור לגוגל', true); }
 };
 
 H.onCredential = function(resp){
@@ -3319,7 +3440,8 @@ H.signOut = function(){
 };
 
 /* ---------- סנכרון ---------- */
-H.syncUrl = () => H.ocrUrl() ? H.ocrUrl().replace(/\/+$/, '') + '/sync' : '';
+H.apiUrl  = () => H.ocrUrl() ? H.ocrUrl().replace(/\/+$/, '') : '';
+H.syncUrl = () => H.apiUrl() ? H.apiUrl() + '/sync' : '';
 
 H.pull = async function(){
   const r = await fetch(H.syncUrl(), {headers: H.authHeader()});
@@ -3327,12 +3449,13 @@ H.pull = async function(){
   if(!r.ok) throw new Error('http ' + r.status);
   return r.json();                                  /* {state, at} */
 };
-H.push = async function(){
+H.push = async function(keep){
   if(!H.signedIn() || !H.syncUrl()) return false;
   const r = await fetch(H.syncUrl(), {
     method: 'POST',
     headers: Object.assign({'Content-Type': 'application/json'}, H.authHeader()),
-    body: JSON.stringify({state: H.state, at: H.state.updatedAt || Date.now()})
+    body: JSON.stringify({state: H.state, at: H.state.updatedAt || Date.now()}),
+    keepalive: !!keep          /* משתחרר גם כשסוגרים את הדף */
   });
   if(r.status === 409) return 'stale';              /* בשרת יש גרסה חדשה יותר */
   return r.ok;
@@ -3348,7 +3471,7 @@ H.syncOnSignIn = async function(){
       const stars = Object.keys(srv.state.stars || {}).length;
       if(confirm('נמצאה התקדמות שמורה בחשבון (' +
               (srv.state.xp || 0) + ' נקודות, ' + stars + ' תחנות). לשחזר אותה במכשיר הזה?')){
-        H.state = Object.assign(H.blank(), srv.state);
+        H.state = H.cleanState(srv.state);
         H.syncStats(); H.save(true); H.refresh();
         H.setSyncMsg('שוחרר מהחשבון ✔️');
         return;
@@ -3375,7 +3498,132 @@ H.setSyncMsg = function(t, bad){
 H.pushSoon = function(){
   if(!H.signedIn() || !H.syncUrl()) return;
   clearTimeout(H._pt);
-  H._pt = setTimeout(() => { H.push().catch(() => {}); }, 6000);
+  H._pt = setTimeout(() => { H.push().catch(() => {}); }, 45000);   /* השרת מגביל במילא במיקר הקצר */
+};
+
+/* ===== 92-usage.js ===== */
+/* ==========================================================
+   מעקב שימוש: כניסות וזמן פעיל. נשמר בהתקדמות, ומגיע לשרת רק
+   אם ההורה התחבר. אין כאן שום שליחה אנונימית: בלי חשבון, כל מה
+   שנמדד נשאר במכשיר.
+
+   "זמן פעיל" נספר רק כשהדף גלוי ויש מגע בשישים השניות האחרונות,
+   אחרת טאב שנשכח פתוח היה נספר כשעות משחק.
+   ========================================================== */
+H.IDLE_MS   = 60000;
+H.VISIT_GAP = 30 * 60000;          /* מרווח של חצי שעה מתחיל "כניסה" חדשה */
+H._lastTouch = 0; H._ticks = 0;
+
+H.touch = () => { H._lastTouch = Date.now(); };
+
+H.trackStart = function(){
+  const u = H.usage(), now = Date.now();
+  if(!u.first) u.first = now;
+  if(now - (u.last || 0) > H.VISIT_GAP) u.visits++;
+  u.last = now; H._lastTouch = now;
+  H.saveQuiet();
+  ['pointerdown','keydown','touchstart'].forEach(e =>
+    addEventListener(e, H.touch, {capture:true, passive:true}));
+  setInterval(H.tick, 5000);
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'hidden') H.flush();
+  });
+  addEventListener('pagehide', H.flush);
+};
+
+H.tick = function(){
+  if(document.visibilityState !== 'visible') return;
+  const now = Date.now();
+  if(now - H._lastTouch > H.IDLE_MS) return;
+  const u = H.usage();
+  u.activeSec += 5; u.last = now;
+  if(++H._ticks % 6 === 0) H.saveQuiet();
+};
+
+/* בסגירת הדף: שומרים מקומית, ואם יש חשבון — דוחפים עכשיו */
+H.flush = function(){
+  H.saveQuiet();
+  if(H.signedIn && H.signedIn() && H.syncUrl && H.syncUrl()) H.push(true).catch(() => {});
+};
+
+H.fmtDur = function(sec){
+  sec = Math.round(sec || 0);
+  if(sec < 60) return sec + ' שנ׳';
+  const m = Math.round(sec / 60);
+  if(m < 60) return m + ' דק׳';
+  return Math.floor(m / 60) + ' ש׳ ' + (m % 60) + ' דק׳';
+};
+H.fmtAgo = function(ts){
+  if(!ts) return '—';
+  const d = Math.floor((Date.now() - ts) / 864e5);
+  return d <= 0 ? 'היום' : d === 1 ? 'אתמול' : 'לפני ' + d + ' ימים';
+};
+
+/* ===== 93-admin.js ===== */
+/* ==========================================================
+   לוח ניהול: כמה נרשמו, ומה ההתקדמות והשימוש של כל אחד.
+   השרת הוא שמחליט מי רשאי לראות אותו (רשימת מנהלים בסוד),
+   כך שגם מי שיפתח את המסך הזה בכוח לא יקבל נתונים.
+   נשמרים ונספרים רק מי שהתחבר: משתמש בלי חשבון לא נראה כאן.
+   ========================================================== */
+H.openAdmin = async function(){
+  H.show('admin');
+  const body = H.$('admbody'), sum = H.$('admsum');
+  sum.innerHTML = ''; body.innerHTML = '';
+  const msg = (t, bad) => { body.innerHTML = '<p class="note ' + (bad ? 'bad' : '') + '">' + H.esc(t) + '</p>'; };
+  if(!H.signedIn()) return msg('צריך להתחבר קודם.', true);
+  if(!H.apiUrl()) return msg('אין כתובת שרת.', true);
+  msg('טוען…');
+  try{
+    const r = await fetch(H.apiUrl() + '/admin', {headers: H.authHeader()});
+    if(r.status === 403) return msg('אין לך הרשאת ניהול.', true);
+    if(r.status === 401){ H.acc.exp = 0; H.renderAccount(); return msg('ההתחברות פגה. התחבר מחדש.', true); }
+    if(!r.ok) return msg('שגיאה ' + r.status, true);
+    H.renderAdmin(await r.json());
+  }catch(e){ msg('אין חיבור לשרת', true); }
+};
+
+H.renderAdmin = function(d){
+  const users = Array.isArray(d.users) ? d.users : [];
+  const now = Date.now(), week = 7 * 864e5;
+  const active = users.filter(u => now - u.last < week).length;
+  const sec = users.reduce((a, u) => a + (u.sec || 0), 0);
+  const visits = users.reduce((a, u) => a + (u.visits || 0), 0);
+  const n = users.length || 1;
+  H.$('admsum').innerHTML =
+    '<div class="statbox"><b>' + (d.total || 0) + '</b><small>נרשמו</small></div>' +
+    '<div class="statbox"><b>' + active + '</b><small>פעילים בשבוע</small></div>' +
+    '<div class="statbox"><b>' + H.esc(H.fmtDur(sec / n)) + '</b><small>זמן ממוצע</small></div>' +
+    '<div class="statbox"><b>' + (visits / n).toFixed(1) + '</b><small>כניסות ממוצע</small></div>';
+  if(!users.length){
+    H.$('admbody').innerHTML = '<p class="note">עדיין אין משתמשים רשומים.</p>';
+    return;
+  }
+  H.$('admbody').innerHTML = '<div class="admwrap"><table class="admtbl"><thead><tr>' +
+    '<th>הורה</th><th>נראה</th><th>כניסות</th><th>זמן</th>' +
+    '<th>רמה</th><th>מילים</th><th>רצף</th></tr></thead><tbody>' +
+    users.map(u =>
+      '<tr><td class="em">' + H.esc(u.email) + '</td>' +
+      '<td>' + H.esc(H.fmtAgo(u.last)) + '</td>' +
+      '<td>' + (u.visits || 0) + '</td>' +
+      '<td>' + H.esc(H.fmtDur(u.sec)) + '</td>' +
+      '<td>' + (u.level || 1) + '</td>' +
+      '<td>' + (u.earned || 0) + '/' + (u.words || 0) + '</td>' +
+      '<td>' + (u.streak || 0) + '</td></tr>').join('') +
+    '</tbody></table></div>' +
+    (d.truncated ? '<p class="note bad">הרשימה קוצרה — יש יותר מהשהוצג.</p>' : '');
+};
+
+/* מחיקת החשבון והנתונים מהשרת, לבקשת ההורה */
+H.deleteAccount = async function(){
+  if(!H.signedIn() || !H.syncUrl()) return;
+  if(!confirm('למחוק את הנתונים שלך מהשרת? ההתקדמות במכשיר הזה תישאר.')) return;
+  try{
+    const r = await fetch(H.syncUrl(), {method:'DELETE', headers: H.authHeader()});
+    if(!r.ok) throw new Error('http ' + r.status);
+    H.signOut();
+    H.setSyncMsg('הנתונים נמחקו מהשרת ✔️');
+  }catch(e){ H.setSyncMsg('לא הצלחתי למחוק', true); }
 };
 
 </script>
