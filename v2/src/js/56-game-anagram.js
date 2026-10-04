@@ -23,6 +23,7 @@ H.game({
     r.left = this.SEC;
     const bar = H.$('anaclock');
     const tick = () => {
+      if(H.run !== r){ clearInterval(r.clock); return; }   /* סבב ישן שננטש: השעון שלו לא נוגע בסבב החדש */
       if(H.screen !== 'anagram') return;
       r.left -= 0.1;
       bar.style.width = Math.max(0, 100 * r.left / this.SEC) + '%';

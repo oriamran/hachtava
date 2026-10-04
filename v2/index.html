@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lSGqpYDVAXytb00/HQcl5ulZmrWZcbRvb/2yPOZRoIE=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-rUAYeVgRSXcMXwHm8QKrs0e14Y339uMbRZD4hzsokNo=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UnHbP4cir8SJzpTkSFPg2pnK/XFdV1EK7lqqkKsv7IY=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-rUAYeVgRSXcMXwHm8QKrs0e14Y339uMbRZD4hzsokNo=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -2612,6 +2612,7 @@ H.game({
     r.left = this.SEC;
     const bar = H.$('anaclock');
     const tick = () => {
+      if(H.run !== r){ clearInterval(r.clock); return; }   /* סבב ישן שננטש: השעון שלו לא נוגע בסבב החדש */
       if(H.screen !== 'anagram') return;
       r.left -= 0.1;
       bar.style.width = Math.max(0, 100 * r.left / this.SEC) + '%';
@@ -3078,7 +3079,7 @@ H.game({
     const w = H.nextWord();
     if(!w) return H.endRound();
     const bad = H.variants(w, 1)[0];
-    if(!bad) return this.next();                  /* אין לה גרסה שגויה הגיונית, מדלגים */
+    if(!bad){ H.run.total--; return this.next(); }   /* אין לה גרסה שגויה הגיונית: מדלגים ולא סופרים */
     const seen = new Set([H.sk(w)]), others = [];
     H.shuffle(H.words().map(H.disp)).forEach(x => {
       if(others.length < 3 && !seen.has(H.sk(x))){ seen.add(H.sk(x)); others.push(x); }
@@ -3130,7 +3131,7 @@ H.game({
     const w = H.nextWord();
     if(!w) return H.endRound();
     const parts = H.trickyParts(w);
-    if(!parts.length) return this.next();         /* אין במילה אות קשה, מדלגים */
+    if(!parts.length){ H.run.total--; return this.next(); }   /* אין במילה אות קשה: מדלגים ולא סופרים */
     H.run.parts = parts;
     const box = H.$('trickytiles'); box.innerHTML = '';
     H.clusters(w).forEach((c, i) => {

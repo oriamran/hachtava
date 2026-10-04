@@ -16,7 +16,7 @@ H.game({
     const w = H.nextWord();
     if(!w) return H.endRound();
     const parts = H.trickyParts(w);
-    if(!parts.length) return this.next();         /* אין במילה אות קשה, מדלגים */
+    if(!parts.length){ H.run.total--; return this.next(); }   /* אין במילה אות קשה: מדלגים ולא סופרים */
     H.run.parts = parts;
     const box = H.$('trickytiles'); box.innerHTML = '';
     H.clusters(w).forEach((c, i) => {

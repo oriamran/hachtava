@@ -9,7 +9,7 @@ H.game({
     const w = H.nextWord();
     if(!w) return H.endRound();
     const bad = H.variants(w, 1)[0];
-    if(!bad) return this.next();                  /* אין לה גרסה שגויה הגיונית, מדלגים */
+    if(!bad){ H.run.total--; return this.next(); }   /* אין לה גרסה שגויה הגיונית: מדלגים ולא סופרים */
     const seen = new Set([H.sk(w)]), others = [];
     H.shuffle(H.words().map(H.disp)).forEach(x => {
       if(others.length < 3 && !seen.has(H.sk(x))){ seen.add(H.sk(x)); others.push(x); }
