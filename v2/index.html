@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-P2oErIwAsKggGYVGO0in9R4SZw8RYZVyXHA4pUVGG+4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-SmeD65caa4uqnQGzGrvDmyo6ms424uQAPVw3y2uj2ak=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vQYvq6dqKzlfVPAz2/7S7IipxzSif4l1u8yU4NN5gqk=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-SmeD65caa4uqnQGzGrvDmyo6ms424uQAPVw3y2uj2ak=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -972,6 +972,13 @@ body.nav .wrap{padding-top:36px}
     <div id="rep-fresh"></div>
   </section>
 
+  <!-- ============ בחירת נושא למשחק ============ -->
+  <section class="screen" id="s-topic">
+    <h2 id="topictitle"></h2>
+    <p class="sub">הנושא שנבחר נשאר גם לשאר המשחקים.</p>
+    <div id="topiclist" class="playlist"></div>
+  </section>
+
   <!-- ============ התרגול של היום ============ -->
   <section class="screen" id="s-plan">
     <h2>התרגול של היום 📅</h2>
@@ -1705,6 +1712,11 @@ H.show = function(id){
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
 H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','end']);
 H.goBack = function(){
+  if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin !== 'home'){
+    if(H.pendingGame.origin === 'map') H.renderMap();
+    if(H.pendingGame.origin === 'play') H.renderPlay();
+    return H.show(H.pendingGame.origin);
+  }
   const o = H.run && H.run.origin;
   if(H.GAME_SCREENS.has(H.screen) && o && o !== 'home'){
     speechSynthesis.cancel();
@@ -3062,7 +3074,7 @@ H.renderMap = function(){
       '<span class="st-e">' + (open ? st.e : '🔒') + '</span>' +
       '<span class="st-txt"><b>' + st.t + '</b><small>' + g.e + ' ' + g.name + '</small></span>' +
       '<span class="st-stars">' + '⭐'.repeat(s) + '☆'.repeat(3 - s) + '</span>';
-    if(open) el.onclick = () => { H.sfx.tap(); H.startRound(st.g, st.id); };
+    if(open) el.onclick = () => { H.sfx.tap(); H.chooseTopic(st.g, st.id); };
     else el.onclick = () => H.toast('סיים את התחנה שלפני כדי לפתוח');
     box.appendChild(el);
   });
@@ -3081,7 +3093,7 @@ H.renderPlay = function(){
       el.querySelector('small').textContent = 'לא מתאים לרשימה הזאת';
       el.onclick = () => H.toast('המשחק הזה לא מתאים למילים ברשימה');
     } else {
-      el.onclick = () => { H.sfx.tap(); H.startRound(g.id, undefined); };
+      el.onclick = () => { H.sfx.tap(); H.chooseTopic(g.id, undefined); };
     }
     box.appendChild(el);
   });
@@ -5000,6 +5012,39 @@ H.renderPlanBtn = function(){
   b.classList.toggle('done', done);
   b.innerHTML = '<span class="m-e">' + (done ? '✅' : '📅') + '</span><b>' + (done ? 'התרגול של היום הושלם' : 'התרגול של היום') + '</b>' +
     '<small>' + (done ? 'נתראה מחר' : '3 שלבים · כ־10 דקות' + (bk.nw.length ? ' · ' + bk.nw.length + ' מילים חדשות' : '')) + '</small>';
+};
+
+/* ===== 98-topic.js ===== */
+/* ==========================================================
+   בחירת נושא מילים כשנכנסים למשחק (מ"משחקים" ומהמסע).
+   עם חבילה אחת אין מה לבחור, והמשחק מתחיל ישר.
+   ========================================================== */
+H.pendingGame = null;
+H.chooseTopic = function(gameId, station){
+  const packs = H.state.packs.filter(p => p.list.some(w => String(w).trim()));
+  const origin = ['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home';
+  if(packs.length < 2){ return H.startRound(gameId, station, undefined, {origin}); }
+  H.pendingGame = {gameId, station, origin};
+  const g = H.byId(gameId);
+  H.$('topictitle').textContent = g.e + ' ' + g.name + ': באיזה נושא?';
+  const box = H.$('topiclist'); box.innerHTML = '';
+  packs.forEach(p => {
+    const on = p.id === H.state.pack;
+    const b = H.el('button', 'gamecard' + (on ? ' on' : ''),
+      '<span class="gc-e">' + (on ? '✅' : '📝') + '</span><b>' + H.esc(p.topic || 'הכתבה') + '</b>' +
+      '<small>' + p.list.length + ' מילים' + (p.draft ? ' · טיוטה' : '') + '</small>');
+    b.onclick = () => {
+      H.sfx.tap();
+      H.state.pack = p.id; H.syncStats(); H.save(); H.refresh();
+      const pg = H.pendingGame;
+      H.startRound(pg.gameId, pg.station, undefined, {origin: pg.origin});
+    };
+    box.appendChild(b);
+  });
+  const lib = H.el('button', 'mini', '📚 עוד נושאים מהמאגר');
+  lib.onclick = () => H.openLibrary();
+  box.appendChild(lib);
+  H.show('topic');
 };
 
 </script>

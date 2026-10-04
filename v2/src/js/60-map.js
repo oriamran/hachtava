@@ -31,7 +31,7 @@ H.renderMap = function(){
       '<span class="st-e">' + (open ? st.e : '🔒') + '</span>' +
       '<span class="st-txt"><b>' + st.t + '</b><small>' + g.e + ' ' + g.name + '</small></span>' +
       '<span class="st-stars">' + '⭐'.repeat(s) + '☆'.repeat(3 - s) + '</span>';
-    if(open) el.onclick = () => { H.sfx.tap(); H.startRound(st.g, st.id); };
+    if(open) el.onclick = () => { H.sfx.tap(); H.chooseTopic(st.g, st.id); };
     else el.onclick = () => H.toast('סיים את התחנה שלפני כדי לפתוח');
     box.appendChild(el);
   });
@@ -50,7 +50,7 @@ H.renderPlay = function(){
       el.querySelector('small').textContent = 'לא מתאים לרשימה הזאת';
       el.onclick = () => H.toast('המשחק הזה לא מתאים למילים ברשימה');
     } else {
-      el.onclick = () => { H.sfx.tap(); H.startRound(g.id, undefined); };
+      el.onclick = () => { H.sfx.tap(); H.chooseTopic(g.id, undefined); };
     }
     box.appendChild(el);
   });

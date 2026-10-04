@@ -26,6 +26,11 @@ H.show = function(id){
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
 H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','end']);
 H.goBack = function(){
+  if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin !== 'home'){
+    if(H.pendingGame.origin === 'map') H.renderMap();
+    if(H.pendingGame.origin === 'play') H.renderPlay();
+    return H.show(H.pendingGame.origin);
+  }
   const o = H.run && H.run.origin;
   if(H.GAME_SCREENS.has(H.screen) && o && o !== 'home'){
     speechSynthesis.cancel();
