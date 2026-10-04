@@ -28,6 +28,7 @@ H.cleanState = function(raw){
 
   s.name = T(raw.name, 30); s.onboarded = raw.onboarded === true; s.peekAlways = raw.peekAlways === true;
   s.avatar = T(raw.avatar, 20, 'fox'); s.hat = T(raw.hat, 20, 'none'); s.ring = T(raw.ring, 20, 'sun');
+  s.bg = T(raw.bg, 20, 'day'); s.pet = T(raw.pet, 20, 'none');
   s.owned = L(raw.owned, 100, 20);
   s.xp = num(raw.xp, 0, 1e7); s.coins = num(raw.coins, 0, 1e7); s.wins = num(raw.wins, 0, 1e6);
   s.updatedAt = num(raw.updatedAt, 0, 8.64e15);

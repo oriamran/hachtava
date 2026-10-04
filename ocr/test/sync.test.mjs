@@ -87,5 +87,11 @@ const lad = sanitizeState({ stats: { a: { ok: 1, st: 3 }, b: { ok: 1, st: 99 }, 
 ok("stage kept and clamped to 0..4", lad.stats.a.st === 3 && lad.stats.b.st === 4);
 ok("a non-numeric or missing stage is dropped", !("st" in lad.stats.c) && !("st" in lad.stats.d));
 
+console.log("shop fields");
+const sh = sanitizeState({ bg: "space", pet: "chick", owned: ["a", 5, "b"] });
+ok("background and pet are kept", sh.bg === "space" && sh.pet === "chick");
+ok("defaults when absent", sanitizeState({}).bg === "day" && sanitizeState({}).pet === "none");
+ok("an oversized id is truncated", sanitizeState({ bg: "x".repeat(99) }).bg.length === 20);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

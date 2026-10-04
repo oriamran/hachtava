@@ -35,6 +35,8 @@ export function sanitizeState(raw: unknown): Obj | null {
   s.avatar      = str(raw.avatar, 20, "fox");
   s.hat         = str(raw.hat, 20, "none");
   s.ring        = str(raw.ring, 20, "sun");
+  s.bg          = str(raw.bg, 20, "day");
+  s.pet         = str(raw.pet, 20, "none");
   s.owned       = strList(raw.owned, 100, 20);
   s.xp          = num(raw.xp, 0, 10_000_000);
   s.coins       = num(raw.coins, 0, 10_000_000);

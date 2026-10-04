@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0QZcl82yaeICGVz71CekjTw24cIE1ObYoTbPPwfk7Vw=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-NWT2sqEDqDS/4cHkdHa0JNzJzVhudQnmV82IMhO9w8w=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-v47dFrDLCGTZ6wJi7U39ovIqlHpWgIfCKWLy9luqfqU=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-c0J6uf/xf6cYGmTRCCf5dQFHLBh6t6TCE1NVPELxKSs=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -688,6 +688,18 @@ body.nav .wrap{padding-top:36px}
 .searchlist span.done{background:#d9f7ea;color:#05463f;text-decoration:line-through}
 .topich{margin:16px 4px 8px;grid-column:1/-1}
 
+/* ---------- חנות: רקעים וחברים ---------- */
+.av-pet{position:absolute;bottom:-6px;inset-inline-end:-8px;font-size:19px}
+.bgdot{display:block;width:44px;height:30px;border-radius:9px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.7)}
+body[data-bg="sunset"]{background:linear-gradient(170deg,#ffb88c 0%,#ffd6a5 45%,#fde2e4 100%);background-attachment:fixed}
+body[data-bg="forest"]{background:linear-gradient(170deg,#9be7a5 0%,#c8f2c2 45%,#e9f7c9 100%);background-attachment:fixed}
+body[data-bg="candy"]{background:linear-gradient(170deg,#ffc2e2 0%,#d9c2ff 50%,#c2e9ff 100%);background-attachment:fixed}
+body[data-bg="ocean"]{background:linear-gradient(170deg,#4fc3f7 0%,#81d4fa 45%,#b2ebf2 100%);background-attachment:fixed}
+body[data-bg="night"]{background:linear-gradient(170deg,#4a4aa8 0%,#6f78d9 50%,#9aa6f2 100%);background-attachment:fixed}
+body[data-bg="space"]{background:linear-gradient(170deg,#2a2468 0%,#4a35a0 50%,#7a56cf 100%);background-attachment:fixed}
+body[data-bg="night"] h1,body[data-bg="night"] h2,body[data-bg="night"] h3,body[data-bg="night"] .sub,body[data-bg="night"] .topic,
+body[data-bg="space"] h1,body[data-bg="space"] h2,body[data-bg="space"] h3,body[data-bg="space"] .sub,body[data-bg="space"] .topic{color:#fff}
+
 </style>
 </head>
 <body>
@@ -806,7 +818,9 @@ body.nav .wrap{padding-top:36px}
     <p class="sub">יש לך <b id="shopcoins">0</b> 🪙</p>
     <h3>דמות</h3><div id="shop-avatar" class="shoprow"></div>
     <h3>כובע</h3><div id="shop-hat" class="shoprow"></div>
-    <h3>רקע</h3><div id="shop-ring" class="shoprow"></div>
+    <h3>מסגרת</h3><div id="shop-ring" class="shoprow"></div>
+    <h3>רקע</h3><div id="shop-bg" class="shoprow"></div>
+    <h3>חבר</h3><div id="shop-pet" class="shoprow"></div>
   </section>
 
   <!-- ============ זיכרון ============ -->
@@ -977,7 +991,7 @@ body.nav .wrap{padding-top:36px}
   <section class="screen" id="s-topic">
     <h2 id="topictitle"></h2>
     <p class="sub">הנושא שנבחר נשאר גם לשאר המשחקים.</p>
-    <div id="topiclist" class="playlist"></div>
+    <div id="topiclist"></div>
   </section>
 
   <!-- ============ התרגול של היום ============ -->
@@ -1165,19 +1179,39 @@ H.AVATARS = [
   {id:'panda',  e:'🐼', name:'פנדה',   cost:0},
   {id:'frog',   e:'🐸', name:'צפרדע', cost:0},
   {id:'cat',    e:'🐱', name:'חתול',   cost:0},
+  {id:'bunny',  e:'🐰', name:'ארנב',   cost:30},
   {id:'koala',  e:'🐨', name:'קואלה', cost:40},
+  {id:'tiger',  e:'🐯', name:'נמר',     cost:50},
+  {id:'monkey', e:'🐵', name:'קוף',     cost:50},
   {id:'lion',   e:'🦁', name:'אריה',   cost:60},
+  {id:'turtle', e:'🐢', name:'צב',       cost:60},
+  {id:'pengu',  e:'🐧', name:'פינגווין', cost:70},
   {id:'owl',    e:'🦉', name:'ינשוף', cost:80},
+  {id:'dolphin',e:'🐬', name:'דולפין', cost:90},
+  {id:'eleph',  e:'🐘', name:'פיל',     cost:90},
   {id:'octo',   e:'🐙', name:'תמנון', cost:100},
+  {id:'wolf',   e:'🐺', name:'זאב',     cost:110},
+  {id:'shark',  e:'🦈', name:'כריש',   cost:130},
   {id:'dragon', e:'🐉', name:'דרקון', cost:150},
-  {id:'uni',    e:'🦄', name:'חד־קרן', cost:200}
+  {id:'robot',  e:'🤖', name:'רובוט', cost:160},
+  {id:'alien',  e:'👽', name:'חייזר', cost:180},
+  {id:'uni',    e:'🦄', name:'חד־קרן', cost:200},
+  {id:'wizard', e:'🧙', name:'קוסם',   cost:220},
+  {id:'trex',   e:'🦖', name:'דינוזאור', cost:250}
 ];
 H.HATS = [
-  {id:'none',   e:'',        name:'בלי',        cost:0},
-  {id:'crown',  e:'👑', name:'כתר',      cost:50},
-  {id:'party',  e:'🎉', name:'מסיבה',  cost:30},
+  {id:'none',   e:'',   name:'בלי',        cost:0},
+  {id:'flower', e:'🌸', name:'פרח',        cost:20},
   {id:'cap',    e:'🧢', name:'כובע',    cost:25},
-  {id:'star',   e:'⭐',      name:'כוכב',    cost:70},
+  {id:'party',  e:'🎉', name:'מסיבה',  cost:30},
+  {id:'sun',    e:'👒', name:'כובע שמש', cost:35},
+  {id:'tophat', e:'🎩', name:'צילינדר', cost:40},
+  {id:'crown',  e:'👑', name:'כתר',      cost:50},
+  {id:'grad',   e:'🎓', name:'בוגר',      cost:60},
+  {id:'shades', e:'😎', name:'משקפי שמש', cost:60},
+  {id:'star',   e:'⭐',  name:'כוכב',    cost:70},
+  {id:'helmet', e:'🪖', name:'קסדה',    cost:70},
+  {id:'phones', e:'🎧', name:'אוזניות', cost:80},
   {id:'rocket', e:'🚀', name:'חללית', cost:120}
 ];
 H.RINGS = [
@@ -1185,15 +1219,42 @@ H.RINGS = [
   {id:'mint',  name:'מנטה',  css:'linear-gradient(135deg,#7ef0c4,#2ec4b6)', cost:0},
   {id:'berry', name:'פטל',   css:'linear-gradient(135deg,#ff9ebb,#ff5d8f)', cost:35},
   {id:'sky',   name:'שמיים', css:'linear-gradient(135deg,#9bd7ff,#3a86ff)', cost:35},
+  {id:'lime',  name:'ליים',   css:'linear-gradient(135deg,#d9f99d,#65a30d)', cost:40},
   {id:'plum',  name:'חציל', css:'linear-gradient(135deg,#c9a7ff,#7c5cd6)', cost:60},
+  {id:'lava',  name:'לבה',   css:'linear-gradient(135deg,#ffb36b,#e11d48)', cost:70},
+  {id:'ocean', name:'אוקיינוס', css:'linear-gradient(135deg,#67e8f9,#1d4ed8)', cost:80},
+  {id:'gold',  name:'זהב',   css:'linear-gradient(135deg,#fff3a3,#eab308,#b45309)', cost:120},
   {id:'rain',  name:'קשת',   css:'linear-gradient(135deg,#ff8fab,#ffd84d,#7ef0c4,#9bd7ff)', cost:150}
+];
+/* רקע כללי של המשחק. ה-css כאן הוא התצוגה בחנות, והרקע עצמו מוגדר ב-app.css לפי data-bg */
+H.BGS = [
+  {id:'day',    name:'יום',       css:'linear-gradient(170deg,#7cc6f0,#bfe9f5,#a8e6c9)', cost:0},
+  {id:'sunset', name:'שקיעה',   css:'linear-gradient(170deg,#ffb88c,#ffd6a5,#fde2e4)', cost:80},
+  {id:'forest', name:'יער',       css:'linear-gradient(170deg,#9be7a5,#c8f2c2,#e9f7c9)', cost:80},
+  {id:'candy',  name:'סוכריות', css:'linear-gradient(170deg,#ffc2e2,#d9c2ff,#c2e9ff)', cost:100},
+  {id:'ocean',  name:'ים',         css:'linear-gradient(170deg,#4fc3f7,#81d4fa,#b2ebf2)', cost:100},
+  {id:'night',  name:'לילה',     css:'linear-gradient(170deg,#3b3b8f,#5a5ac7,#7e8ae8)', cost:120},
+  {id:'space',  name:'חלל',       css:'linear-gradient(170deg,#1a1a40,#3a2a7a,#6a3fb5)', cost:160}
+];
+/* חבר שמלווה את הדמות */
+H.PETS = [
+  {id:'none',  e:'',   name:'בלי',    cost:0},
+  {id:'chick', e:'🐥', name:'אפרוח', cost:30},
+  {id:'dog',   e:'🐶', name:'כלב',    cost:40},
+  {id:'fish',  e:'🐠', name:'דג',      cost:40},
+  {id:'bee',   e:'🐝', name:'דבורה', cost:50},
+  {id:'ladyb', e:'🐞', name:'פרת משה', cost:50},
+  {id:'butter',e:'🦋', name:'פרפר',   cost:60},
+  {id:'bunnyp',e:'🐇', name:'ארנבון', cost:70},
+  {id:'lizard',e:'🦎', name:'לטאה',   cost:80},
+  {id:'ghost', e:'👻', name:'רוח רפאים', cost:100}
 ];
 
 H.blank = () => ({
   name: '', onboarded: false, peekAlways: false,
   level: 'a2', nikud: 'auto', tour: false,
   usage: {first: 0, last: 0, visits: 0, activeSec: 0, games: {}, hist: {}},
-  avatar: 'fox', hat: 'none', ring: 'sun',
+  avatar: 'fox', hat: 'none', ring: 'sun', bg: 'day', pet: 'none',
   owned: ['fox','panda','frog','cat','none','sun','mint'],
   xp: 0, coins: 0,
   packs: [{id:'p1', topic: H.DEFAULT_TOPIC, list: H.DEFAULT_WORDS.slice(), prize: H.DEFAULT_PRIZE}],
@@ -1441,6 +1502,7 @@ H.cleanState = function(raw){
 
   s.name = T(raw.name, 30); s.onboarded = raw.onboarded === true; s.peekAlways = raw.peekAlways === true;
   s.avatar = T(raw.avatar, 20, 'fox'); s.hat = T(raw.hat, 20, 'none'); s.ring = T(raw.ring, 20, 'sun');
+  s.bg = T(raw.bg, 20, 'day'); s.pet = T(raw.pet, 20, 'none');
   s.owned = L(raw.owned, 100, 20);
   s.xp = num(raw.xp, 0, 1e7); s.coins = num(raw.coins, 0, 1e7); s.wins = num(raw.wins, 0, 1e6);
   s.updatedAt = num(raw.updatedAt, 0, 8.64e15);
@@ -1748,8 +1810,11 @@ H.paint = function(){
   const ring = H.RINGS.find(r => r.id === s.ring) || H.RINGS[0];
   const av = H.$('avatarchip');
   av.style.background = ring.css;
+  const pet = H.PETS.find(p => p.id === s.pet);
   av.innerHTML = '<span class="av-e">' + a.e + '</span>' +
-                 (hat && hat.e ? '<span class="av-hat">' + hat.e + '</span>' : '');
+                 (hat && hat.e ? '<span class="av-hat">' + hat.e + '</span>' : '') +
+                 (pet && pet.e ? '<span class="av-pet">' + pet.e + '</span>' : '');
+  document.body.dataset.bg = H.BGS.some(b => b.id === s.bg) ? s.bg : 'day';
 };
 
 /* הודעה קופצת */
@@ -3398,10 +3463,10 @@ H.renderShop = function(){
     const box = H.$('shop-' + kind); box.innerHTML = '';
     items.forEach(it => {
       const owned = it.cost === 0 || H.owns(it.id);
-      const on = H.state[kind === 'ring' ? 'ring' : kind === 'hat' ? 'hat' : 'avatar'] === it.id;
+      const on = H.state[kind] === it.id;
       const el = H.el('button', 'shopitem' + (on ? ' on' : '') + (owned ? '' : ' buyable'));
-      const face = kind === 'ring'
-        ? '<span class="ringdot" style="background:' + it.css + '"></span>'
+      const face = (kind === 'ring' || kind === 'bg')
+        ? '<span class="' + (kind === 'bg' ? 'bgdot' : 'ringdot') + '" style="background:' + it.css + '"></span>'
         : '<span class="shop-e">' + (it.e || '—') + '</span>';
       el.innerHTML = face + '<b>' + it.name + '</b>' +
         (owned ? (on ? '<small class="tagon">נבחר</small>' : '<small>שלך</small>')
@@ -3411,9 +3476,7 @@ H.renderShop = function(){
           if(!H.buy(it.id, it.cost)) return H.sfx.bad(), H.toast('אין מספיק מטבעות', 'no');
           H.sfx.coin(); H.toast('קנית! 🎉', 'good');
         } else H.sfx.tap();
-        if(kind === 'avatar') H.state.avatar = it.id;
-        if(kind === 'hat')    H.state.hat = it.id;
-        if(kind === 'ring')   H.state.ring = it.id;
+        H.state[kind] = it.id;
         H.save(); H.renderShop(); H.paint();
       };
       box.appendChild(el);
@@ -3422,6 +3485,8 @@ H.renderShop = function(){
   mk(H.AVATARS, 'avatar');
   mk(H.HATS,    'hat');
   mk(H.RINGS,   'ring');
+  mk(H.BGS,     'bg');
+  mk(H.PETS,    'pet');
   H.$('shopcoins').textContent = H.state.coins;
 };
 

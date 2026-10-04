@@ -28,19 +28,39 @@ H.AVATARS = [
   {id:'panda',  e:'🐼', name:'פנדה',   cost:0},
   {id:'frog',   e:'🐸', name:'צפרדע', cost:0},
   {id:'cat',    e:'🐱', name:'חתול',   cost:0},
+  {id:'bunny',  e:'🐰', name:'ארנב',   cost:30},
   {id:'koala',  e:'🐨', name:'קואלה', cost:40},
+  {id:'tiger',  e:'🐯', name:'נמר',     cost:50},
+  {id:'monkey', e:'🐵', name:'קוף',     cost:50},
   {id:'lion',   e:'🦁', name:'אריה',   cost:60},
+  {id:'turtle', e:'🐢', name:'צב',       cost:60},
+  {id:'pengu',  e:'🐧', name:'פינגווין', cost:70},
   {id:'owl',    e:'🦉', name:'ינשוף', cost:80},
+  {id:'dolphin',e:'🐬', name:'דולפין', cost:90},
+  {id:'eleph',  e:'🐘', name:'פיל',     cost:90},
   {id:'octo',   e:'🐙', name:'תמנון', cost:100},
+  {id:'wolf',   e:'🐺', name:'זאב',     cost:110},
+  {id:'shark',  e:'🦈', name:'כריש',   cost:130},
   {id:'dragon', e:'🐉', name:'דרקון', cost:150},
-  {id:'uni',    e:'🦄', name:'חד־קרן', cost:200}
+  {id:'robot',  e:'🤖', name:'רובוט', cost:160},
+  {id:'alien',  e:'👽', name:'חייזר', cost:180},
+  {id:'uni',    e:'🦄', name:'חד־קרן', cost:200},
+  {id:'wizard', e:'🧙', name:'קוסם',   cost:220},
+  {id:'trex',   e:'🦖', name:'דינוזאור', cost:250}
 ];
 H.HATS = [
-  {id:'none',   e:'',        name:'בלי',        cost:0},
-  {id:'crown',  e:'👑', name:'כתר',      cost:50},
-  {id:'party',  e:'🎉', name:'מסיבה',  cost:30},
+  {id:'none',   e:'',   name:'בלי',        cost:0},
+  {id:'flower', e:'🌸', name:'פרח',        cost:20},
   {id:'cap',    e:'🧢', name:'כובע',    cost:25},
-  {id:'star',   e:'⭐',      name:'כוכב',    cost:70},
+  {id:'party',  e:'🎉', name:'מסיבה',  cost:30},
+  {id:'sun',    e:'👒', name:'כובע שמש', cost:35},
+  {id:'tophat', e:'🎩', name:'צילינדר', cost:40},
+  {id:'crown',  e:'👑', name:'כתר',      cost:50},
+  {id:'grad',   e:'🎓', name:'בוגר',      cost:60},
+  {id:'shades', e:'😎', name:'משקפי שמש', cost:60},
+  {id:'star',   e:'⭐',  name:'כוכב',    cost:70},
+  {id:'helmet', e:'🪖', name:'קסדה',    cost:70},
+  {id:'phones', e:'🎧', name:'אוזניות', cost:80},
   {id:'rocket', e:'🚀', name:'חללית', cost:120}
 ];
 H.RINGS = [
@@ -48,15 +68,42 @@ H.RINGS = [
   {id:'mint',  name:'מנטה',  css:'linear-gradient(135deg,#7ef0c4,#2ec4b6)', cost:0},
   {id:'berry', name:'פטל',   css:'linear-gradient(135deg,#ff9ebb,#ff5d8f)', cost:35},
   {id:'sky',   name:'שמיים', css:'linear-gradient(135deg,#9bd7ff,#3a86ff)', cost:35},
+  {id:'lime',  name:'ליים',   css:'linear-gradient(135deg,#d9f99d,#65a30d)', cost:40},
   {id:'plum',  name:'חציל', css:'linear-gradient(135deg,#c9a7ff,#7c5cd6)', cost:60},
+  {id:'lava',  name:'לבה',   css:'linear-gradient(135deg,#ffb36b,#e11d48)', cost:70},
+  {id:'ocean', name:'אוקיינוס', css:'linear-gradient(135deg,#67e8f9,#1d4ed8)', cost:80},
+  {id:'gold',  name:'זהב',   css:'linear-gradient(135deg,#fff3a3,#eab308,#b45309)', cost:120},
   {id:'rain',  name:'קשת',   css:'linear-gradient(135deg,#ff8fab,#ffd84d,#7ef0c4,#9bd7ff)', cost:150}
+];
+/* רקע כללי של המשחק. ה-css כאן הוא התצוגה בחנות, והרקע עצמו מוגדר ב-app.css לפי data-bg */
+H.BGS = [
+  {id:'day',    name:'יום',       css:'linear-gradient(170deg,#7cc6f0,#bfe9f5,#a8e6c9)', cost:0},
+  {id:'sunset', name:'שקיעה',   css:'linear-gradient(170deg,#ffb88c,#ffd6a5,#fde2e4)', cost:80},
+  {id:'forest', name:'יער',       css:'linear-gradient(170deg,#9be7a5,#c8f2c2,#e9f7c9)', cost:80},
+  {id:'candy',  name:'סוכריות', css:'linear-gradient(170deg,#ffc2e2,#d9c2ff,#c2e9ff)', cost:100},
+  {id:'ocean',  name:'ים',         css:'linear-gradient(170deg,#4fc3f7,#81d4fa,#b2ebf2)', cost:100},
+  {id:'night',  name:'לילה',     css:'linear-gradient(170deg,#3b3b8f,#5a5ac7,#7e8ae8)', cost:120},
+  {id:'space',  name:'חלל',       css:'linear-gradient(170deg,#1a1a40,#3a2a7a,#6a3fb5)', cost:160}
+];
+/* חבר שמלווה את הדמות */
+H.PETS = [
+  {id:'none',  e:'',   name:'בלי',    cost:0},
+  {id:'chick', e:'🐥', name:'אפרוח', cost:30},
+  {id:'dog',   e:'🐶', name:'כלב',    cost:40},
+  {id:'fish',  e:'🐠', name:'דג',      cost:40},
+  {id:'bee',   e:'🐝', name:'דבורה', cost:50},
+  {id:'ladyb', e:'🐞', name:'פרת משה', cost:50},
+  {id:'butter',e:'🦋', name:'פרפר',   cost:60},
+  {id:'bunnyp',e:'🐇', name:'ארנבון', cost:70},
+  {id:'lizard',e:'🦎', name:'לטאה',   cost:80},
+  {id:'ghost', e:'👻', name:'רוח רפאים', cost:100}
 ];
 
 H.blank = () => ({
   name: '', onboarded: false, peekAlways: false,
   level: 'a2', nikud: 'auto', tour: false,
   usage: {first: 0, last: 0, visits: 0, activeSec: 0, games: {}, hist: {}},
-  avatar: 'fox', hat: 'none', ring: 'sun',
+  avatar: 'fox', hat: 'none', ring: 'sun', bg: 'day', pet: 'none',
   owned: ['fox','panda','frog','cat','none','sun','mint'],
   xp: 0, coins: 0,
   packs: [{id:'p1', topic: H.DEFAULT_TOPIC, list: H.DEFAULT_WORDS.slice(), prize: H.DEFAULT_PRIZE}],

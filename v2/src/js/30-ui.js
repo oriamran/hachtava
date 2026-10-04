@@ -61,8 +61,11 @@ H.paint = function(){
   const ring = H.RINGS.find(r => r.id === s.ring) || H.RINGS[0];
   const av = H.$('avatarchip');
   av.style.background = ring.css;
+  const pet = H.PETS.find(p => p.id === s.pet);
   av.innerHTML = '<span class="av-e">' + a.e + '</span>' +
-                 (hat && hat.e ? '<span class="av-hat">' + hat.e + '</span>' : '');
+                 (hat && hat.e ? '<span class="av-hat">' + hat.e + '</span>' : '') +
+                 (pet && pet.e ? '<span class="av-pet">' + pet.e + '</span>' : '');
+  document.body.dataset.bg = H.BGS.some(b => b.id === s.bg) ? s.bg : 'day';
 };
 
 /* הודעה קופצת */
