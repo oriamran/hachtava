@@ -23,6 +23,21 @@ H.show = function(id){
   window.scrollTo(0, 0);
   H.paint();
 };
+/* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
+H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','end']);
+H.goBack = function(){
+  const o = H.run && H.run.origin;
+  if(H.GAME_SCREENS.has(H.screen) && o && o !== 'home'){
+    speechSynthesis.cancel();
+    if(H.loop){ cancelAnimationFrame(H.loop); H.loop = null; }
+    if(H.run.game && H.run.game.stop) H.run.game.stop();
+    if(o === 'map') H.renderMap();
+    if(o === 'play') H.renderPlay();
+    if(o === 'plan') H.renderPlan();
+    return H.show(o);
+  }
+  H.home();
+};
 H.home = function(){
   speechSynthesis.cancel();
   if(H.loop){ cancelAnimationFrame(H.loop); H.loop = null; }
@@ -94,6 +109,8 @@ H.finish = function(opt){
     H.state.stars[opt.station] = opt.stars; H.save();
   }
   H.endAgain = opt.onAgain || null;
+  const og = H.run && H.run.origin;
+  H.$('endhome').textContent = og === 'play' ? '🎮 למשחקים' : og === 'map' ? '🗺️ למפה' : og === 'plan' ? '📅 לתוכנית' : '🏠 בית';
   H.$('againbtn').style.display = opt.onAgain ? '' : 'none';
   H.$('againbtn').textContent = opt.againLabel || '🔁 עוד פעם';
   if(opt.xp) H.reward(opt.xp);

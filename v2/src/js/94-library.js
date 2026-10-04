@@ -117,8 +117,11 @@ H.openLibrary = function(){ H.renderLibrary(); H.show('lib'); };
 H.renderLibrary = function(){
   const box = H.$('libbody'); box.innerHTML = '';
   const have = new Set(H.state.packs.map(p => p.libId).filter(Boolean));
-  H.LIB.forEach(tier => {
-    box.appendChild(H.el('h3', '', tier.name + ' · ' + tier.note));
+  /* הכיתה של הילד קודם */
+  const all = H.LIB.reduce((a, t) => a + t.topics.reduce((b, x) => b + x.words.length, 0), 0);
+  box.appendChild(H.el('p', 'note', 'מאגר המילים: ' + all + ' מילים ב־' + H.LIB.reduce((a, t) => a + t.topics.length, 0) + ' נושאים. לחץ על "הוסף" והחבילה תופיע ברשימות שלך.'));
+  H.LIB.slice().sort((a, b) => (b.id === H.state.level) - (a.id === H.state.level)).forEach(tier => {
+    box.appendChild(H.el('h3', '', tier.name + ' · ' + tier.note + (tier.id === H.state.level ? ' · הכיתה שלך' : '')));
     if(tier.soon){ box.appendChild(H.el('div', 'libsoon', '\u05d1\u05e7\u05e8\u05d5\u05d1 \u00b7 \u05d4\u05de\u05d9\u05dc\u05d9\u05dd \u05e2\u05d5\u05d3 \u05d1\u05db\u05ea\u05d9\u05d1\u05d4')); return; }
     const grid = H.el('div', 'libgrid');
     tier.topics.forEach(t => {

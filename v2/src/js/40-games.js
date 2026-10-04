@@ -19,8 +19,10 @@ H.needWords = function(){
 H.startRound = function(gameId, station, words, extra){
   if(!(words && words.length) && H.needWords()) return;
   const g = H.byId(gameId);
+  /* מאיפה באנו, כדי שכפתור החזרה יחזיר לרשימת המשחקים או למפה ולא תמיד לבית */
+  const origin = (extra && extra.origin) || (['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home');
   H.run = Object.assign({
-    game: g, station,
+    game: g, station, origin,
     queue: words ? words.slice() : H.pickWords(H.roundSize()),
     total: 0, right: 0, wrong: 0,
     word: null
@@ -72,7 +74,7 @@ H.endRound = function(){
     text: 'נכון ' + r.right + ' מתוך ' + r.total +
           (r.wrong ? ' · טעויות: ' + r.wrong : ''),
     stars, xp, station: r.station,
-    onAgain: () => H.startRound(r.game.id, r.station)
+    onAgain: () => H.startRound(r.game.id, r.station, undefined, {origin: r.origin})
   });
 };
 

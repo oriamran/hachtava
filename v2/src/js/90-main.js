@@ -21,9 +21,9 @@ H.boot = function(){
   else H.show('home');
 
   /* כפתורים קבועים */
-  H.$('backbtn').onclick   = () => { H.sfx.tap(); H.home(); };
+  H.$('backbtn').onclick   = () => { H.sfx.tap(); H.goBack(); };
   H.$('againbtn').onclick  = () => { if(H.endAgain) H.endAgain(); };
-  H.$('endhome').onclick   = () => H.home();
+  H.$('endhome').onclick   = () => H.goBack();
   H.$('buildcheck').onclick= () => H.byId('build').check();
   H.$('anacheck').onclick  = () => H.byId('anagram').check();
   H.$('buildhint').onclick = () => H.byId('build').hint();

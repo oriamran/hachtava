@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-UnHbP4cir8SJzpTkSFPg2pnK/XFdV1EK7lqqkKsv7IY=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-rUAYeVgRSXcMXwHm8QKrs0e14Y339uMbRZD4hzsokNo=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-P2oErIwAsKggGYVGO0in9R4SZw8RYZVyXHA4pUVGG+4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-SmeD65caa4uqnQGzGrvDmyo6ms424uQAPVw3y2uj2ak=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -642,7 +642,7 @@ body.nav .wrap{padding-top:36px}
 .admtbl.small{font-size:12px}
 
 /* תפריט עליון בצד ימין (ב-RTL: תחילת השורה) */
-.homenav{display:flex;flex-wrap:nowrap;gap:4px;justify-content:flex-start;margin:0 0 4px}
+.homenav{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-start;margin:0 0 4px}
 .mini.tb{min-height:40px;padding:8px 7px;font-size:12px;white-space:nowrap;flex:0 1 auto}
 
 .tip-src{display:inline-block;margin-top:6px;font-size:12px;color:var(--plum);text-decoration:underline}
@@ -725,6 +725,7 @@ body.nav .wrap{padding-top:36px}
   <!-- ============ בית ============ -->
   <section class="screen on" id="s-home">
     <nav class="homenav" aria-label="תפריט">
+      <button class="mini tb" onclick="H.openLibrary()">📚 מאגר מילים</button>
       <button class="mini tb" onclick="H.openSettings()">⚙️ הורים</button>
       <button class="mini tb" onclick="H.startTour()">❓ מדריך</button>
       <button class="mini tb" onclick="H.show('tips')">💡 טיפים</button>
@@ -1701,6 +1702,21 @@ H.show = function(id){
   window.scrollTo(0, 0);
   H.paint();
 };
+/* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
+H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','end']);
+H.goBack = function(){
+  const o = H.run && H.run.origin;
+  if(H.GAME_SCREENS.has(H.screen) && o && o !== 'home'){
+    speechSynthesis.cancel();
+    if(H.loop){ cancelAnimationFrame(H.loop); H.loop = null; }
+    if(H.run.game && H.run.game.stop) H.run.game.stop();
+    if(o === 'map') H.renderMap();
+    if(o === 'play') H.renderPlay();
+    if(o === 'plan') H.renderPlan();
+    return H.show(o);
+  }
+  H.home();
+};
 H.home = function(){
   speechSynthesis.cancel();
   if(H.loop){ cancelAnimationFrame(H.loop); H.loop = null; }
@@ -1772,6 +1788,8 @@ H.finish = function(opt){
     H.state.stars[opt.station] = opt.stars; H.save();
   }
   H.endAgain = opt.onAgain || null;
+  const og = H.run && H.run.origin;
+  H.$('endhome').textContent = og === 'play' ? '🎮 למשחקים' : og === 'map' ? '🗺️ למפה' : og === 'plan' ? '📅 לתוכנית' : '🏠 בית';
   H.$('againbtn').style.display = opt.onAgain ? '' : 'none';
   H.$('againbtn').textContent = opt.againLabel || '🔁 עוד פעם';
   if(opt.xp) H.reward(opt.xp);
@@ -1839,8 +1857,10 @@ H.needWords = function(){
 H.startRound = function(gameId, station, words, extra){
   if(!(words && words.length) && H.needWords()) return;
   const g = H.byId(gameId);
+  /* מאיפה באנו, כדי שכפתור החזרה יחזיר לרשימת המשחקים או למפה ולא תמיד לבית */
+  const origin = (extra && extra.origin) || (['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home');
   H.run = Object.assign({
-    game: g, station,
+    game: g, station, origin,
     queue: words ? words.slice() : H.pickWords(H.roundSize()),
     total: 0, right: 0, wrong: 0,
     word: null
@@ -1892,7 +1912,7 @@ H.endRound = function(){
     text: 'נכון ' + r.right + ' מתוך ' + r.total +
           (r.wrong ? ' · טעויות: ' + r.wrong : ''),
     stars, xp, station: r.station,
-    onAgain: () => H.startRound(r.game.id, r.station)
+    onAgain: () => H.startRound(r.game.id, r.station, undefined, {origin: r.origin})
   });
 };
 
@@ -4000,9 +4020,9 @@ H.boot = function(){
   else H.show('home');
 
   /* כפתורים קבועים */
-  H.$('backbtn').onclick   = () => { H.sfx.tap(); H.home(); };
+  H.$('backbtn').onclick   = () => { H.sfx.tap(); H.goBack(); };
   H.$('againbtn').onclick  = () => { if(H.endAgain) H.endAgain(); };
-  H.$('endhome').onclick   = () => H.home();
+  H.$('endhome').onclick   = () => H.goBack();
   H.$('buildcheck').onclick= () => H.byId('build').check();
   H.$('anacheck').onclick  = () => H.byId('anagram').check();
   H.$('buildhint').onclick = () => H.byId('build').hint();
@@ -4586,8 +4606,11 @@ H.openLibrary = function(){ H.renderLibrary(); H.show('lib'); };
 H.renderLibrary = function(){
   const box = H.$('libbody'); box.innerHTML = '';
   const have = new Set(H.state.packs.map(p => p.libId).filter(Boolean));
-  H.LIB.forEach(tier => {
-    box.appendChild(H.el('h3', '', tier.name + ' · ' + tier.note));
+  /* הכיתה של הילד קודם */
+  const all = H.LIB.reduce((a, t) => a + t.topics.reduce((b, x) => b + x.words.length, 0), 0);
+  box.appendChild(H.el('p', 'note', 'מאגר המילים: ' + all + ' מילים ב־' + H.LIB.reduce((a, t) => a + t.topics.length, 0) + ' נושאים. לחץ על "הוסף" והחבילה תופיע ברשימות שלך.'));
+  H.LIB.slice().sort((a, b) => (b.id === H.state.level) - (a.id === H.state.level)).forEach(tier => {
+    box.appendChild(H.el('h3', '', tier.name + ' · ' + tier.note + (tier.id === H.state.level ? ' · הכיתה שלך' : '')));
     if(tier.soon){ box.appendChild(H.el('div', 'libsoon', '\u05d1\u05e7\u05e8\u05d5\u05d1 \u00b7 \u05d4\u05de\u05d9\u05dc\u05d9\u05dd \u05e2\u05d5\u05d3 \u05d1\u05db\u05ea\u05d9\u05d1\u05d4')); return; }
     const grid = H.el('div', 'libgrid');
     tier.topics.forEach(t => {
