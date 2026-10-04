@@ -651,3 +651,4 @@ body.nav .wrap{padding-top:36px}
 .searchlist{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
 .searchlist span{background:#fff;border-radius:999px;padding:4px 12px;font-size:16px;letter-spacing:2px}
 .searchlist span.done{background:#d9f7ea;color:#05463f;text-decoration:line-through}
+.topich{margin:16px 4px 8px;grid-column:1/-1}

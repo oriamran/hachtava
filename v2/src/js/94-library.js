@@ -139,13 +139,25 @@ H.renderLibrary = function(){
   });
 };
 
+/* מוסיף נושא מהמאגר כחבילה. אם כבר נוסף, מחזיר את החבילה הקיימת. */
+H.addLibPack = function(tierId, topicId){
+  const tier = H.LIB.find(x => x.id === tierId), t = tier && tier.topics.find(x => x.id === topicId);
+  if(!t) return null;
+  const have = H.state.packs.find(p => p.libId === tierId + '/' + topicId);
+  if(have) return have;
+  if(H.state.packs.length >= 40){ H.toast('יש יותר מדי חבילות. מחק אחת קודם.', 'no'); return null; }
+  const p = H.addPack((tier.plain ? tier.name.replace('כיתות ', '') + ' · ' : '') + t.name, t.words.slice(), H.prize());
+  p.libId = tierId + '/' + topicId;
+  p.draft = !tier.plain;
+  H.syncStats(); H.save();
+  return p;
+};
+
 H.importTopic = function(tierId, topicId){
   const tier = H.LIB.find(x => x.id === tierId), t = tier && tier.topics.find(x => x.id === topicId);
   if(!t) return;
-  if(H.state.packs.length >= 40) return H.toast('יש יותר מדי חבילות. מחק אחת קודם.', 'no');
-  const p = H.addPack((tier.plain ? tier.name.replace('כיתות ', '') + ' · ' : '') + t.name, t.words.slice(), H.prize());
-  p.libId = tierId + '/' + topicId;
-  H.syncStats();
+  const p = H.addLibPack(tierId, topicId);
+  if(!p) return;
   if(tier.plain){
     /* מילים בלי ניקוד: אין מה לבדוק בעורך הניקוד, אז נכנסים ישר */
     p.draft = false; H.save(); H.refresh();

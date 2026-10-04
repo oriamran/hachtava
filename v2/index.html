@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vQYvq6dqKzlfVPAz2/7S7IipxzSif4l1u8yU4NN5gqk=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-SmeD65caa4uqnQGzGrvDmyo6ms424uQAPVw3y2uj2ak=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0QZcl82yaeICGVz71CekjTw24cIE1ObYoTbPPwfk7Vw=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-NWT2sqEDqDS/4cHkdHa0JNzJzVhudQnmV82IMhO9w8w=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -686,6 +686,7 @@ body.nav .wrap{padding-top:36px}
 .searchlist{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
 .searchlist span{background:#fff;border-radius:999px;padding:4px 12px;font-size:16px;letter-spacing:2px}
 .searchlist span.done{background:#d9f7ea;color:#05463f;text-decoration:line-through}
+.topich{margin:16px 4px 8px;grid-column:1/-1}
 
 </style>
 </head>
@@ -4640,13 +4641,25 @@ H.renderLibrary = function(){
   });
 };
 
+/* מוסיף נושא מהמאגר כחבילה. אם כבר נוסף, מחזיר את החבילה הקיימת. */
+H.addLibPack = function(tierId, topicId){
+  const tier = H.LIB.find(x => x.id === tierId), t = tier && tier.topics.find(x => x.id === topicId);
+  if(!t) return null;
+  const have = H.state.packs.find(p => p.libId === tierId + '/' + topicId);
+  if(have) return have;
+  if(H.state.packs.length >= 40){ H.toast('יש יותר מדי חבילות. מחק אחת קודם.', 'no'); return null; }
+  const p = H.addPack((tier.plain ? tier.name.replace('כיתות ', '') + ' · ' : '') + t.name, t.words.slice(), H.prize());
+  p.libId = tierId + '/' + topicId;
+  p.draft = !tier.plain;
+  H.syncStats(); H.save();
+  return p;
+};
+
 H.importTopic = function(tierId, topicId){
   const tier = H.LIB.find(x => x.id === tierId), t = tier && tier.topics.find(x => x.id === topicId);
   if(!t) return;
-  if(H.state.packs.length >= 40) return H.toast('יש יותר מדי חבילות. מחק אחת קודם.', 'no');
-  const p = H.addPack((tier.plain ? tier.name.replace('כיתות ', '') + ' · ' : '') + t.name, t.words.slice(), H.prize());
-  p.libId = tierId + '/' + topicId;
-  H.syncStats();
+  const p = H.addLibPack(tierId, topicId);
+  if(!p) return;
   if(tier.plain){
     /* מילים בלי ניקוד: אין מה לבדוק בעורך הניקוד, אז נכנסים ישר */
     p.draft = false; H.save(); H.refresh();
@@ -5017,34 +5030,74 @@ H.renderPlanBtn = function(){
 /* ===== 98-topic.js ===== */
 /* ==========================================================
    בחירת נושא מילים כשנכנסים למשחק (מ"משחקים" ומהמסע).
-   עם חבילה אחת אין מה לבחור, והמשחק מתחיל ישר.
+   המסך מציג את הרשימות של הילד, ומתחתיהן את נושאי המאגר המובנה:
+   בחירה בנושא מהמאגר מוסיפה אותו כחבילה ומתחילה איתו, בלי לעבור בהורים.
    ========================================================== */
 H.pendingGame = null;
+H.topicMore = false;
+
 H.chooseTopic = function(gameId, station){
-  const packs = H.state.packs.filter(p => p.list.some(w => String(w).trim()));
   const origin = ['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home';
-  if(packs.length < 2){ return H.startRound(gameId, station, undefined, {origin}); }
   H.pendingGame = {gameId, station, origin};
-  const g = H.byId(gameId);
+  H.topicMore = false;
+  H.renderTopic();
+  H.show('topic');
+};
+
+H.startPending = function(){
+  const pg = H.pendingGame;
+  H.refresh();
+  H.startRound(pg.gameId, pg.station, undefined, {origin: pg.origin});
+};
+
+H.renderTopic = function(){
+  const pg = H.pendingGame, g = H.byId(pg.gameId);
   H.$('topictitle').textContent = g.e + ' ' + g.name + ': באיזה נושא?';
   const box = H.$('topiclist'); box.innerHTML = '';
-  packs.forEach(p => {
-    const on = p.id === H.state.pack;
-    const b = H.el('button', 'gamecard' + (on ? ' on' : ''),
-      '<span class="gc-e">' + (on ? '✅' : '📝') + '</span><b>' + H.esc(p.topic || 'הכתבה') + '</b>' +
-      '<small>' + p.list.length + ' מילים' + (p.draft ? ' · טיוטה' : '') + '</small>');
-    b.onclick = () => {
-      H.sfx.tap();
-      H.state.pack = p.id; H.syncStats(); H.save(); H.refresh();
-      const pg = H.pendingGame;
-      H.startRound(pg.gameId, pg.station, undefined, {origin: pg.origin});
-    };
-    box.appendChild(b);
+
+  const mine = H.state.packs.filter(p => p.list.some(w => String(w).trim()));
+  if(mine.length){
+    box.appendChild(H.el('h3', 'topich', 'הרשימות שלי'));
+    const grid = H.el('div', 'playlist');
+    mine.forEach(p => {
+      const on = p.id === H.state.pack;
+      const b = H.el('button', 'gamecard' + (on ? ' on' : ''),
+        '<span class="gc-e">' + (on ? '✅' : '📝') + '</span><b>' + H.esc(p.topic || 'הכתבה') + '</b>' +
+        '<small>' + p.list.length + ' מילים' + (p.draft ? ' · טיוטה' : '') + '</small>');
+      b.onclick = () => { H.sfx.tap(); H.state.pack = p.id; H.syncStats(); H.save(); H.startPending(); };
+      grid.appendChild(b);
+    });
+    box.appendChild(grid);
+  }
+
+  /* מהמאגר: הכיתה של הילד קודם, והשאר אחרי "עוד כיתות" */
+  const have = new Set(H.state.packs.map(p => p.libId).filter(Boolean));
+  const tiers = H.LIB.slice().sort((a, b) => (b.id === H.state.level) - (a.id === H.state.level));
+  tiers.forEach((tier, i) => {
+    if(i > 0 && !H.topicMore) return;
+    const ts = tier.topics.filter(t => !have.has(tier.id + '/' + t.id));
+    if(!ts.length) return;
+    box.appendChild(H.el('h3', 'topich', 'מהמאגר: ' + tier.name + (tier.id === H.state.level ? ' · הכיתה שלך' : '')));
+    const grid = H.el('div', 'playlist');
+    ts.forEach(t => {
+      const b = H.el('button', 'gamecard',
+        '<span class="gc-e">' + t.e + '</span><b>' + H.esc(t.name) + '</b><small>' + t.words.length + ' מילים</small>');
+      b.onclick = () => {
+        H.sfx.tap();
+        const p = H.addLibPack(tier.id, t.id);
+        if(!p) return;
+        H.state.pack = p.id; H.syncStats(); H.save();
+        H.startPending();
+      };
+      grid.appendChild(b);
+    });
+    box.appendChild(grid);
   });
-  const lib = H.el('button', 'mini', '📚 עוד נושאים מהמאגר');
-  lib.onclick = () => H.openLibrary();
-  box.appendChild(lib);
-  H.show('topic');
+  if(!H.topicMore){
+    const more = H.el('button', 'mini', '➕ נושאים של כיתות אחרות');
+    more.onclick = () => { H.topicMore = true; H.renderTopic(); };
+    box.appendChild(more);
+  }
 };
 
 </script>
