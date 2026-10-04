@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-uyvGBSP8c1VY56oRWEItUfyKw6dW0NyTjr7jDCg1R0I=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-rUAYeVgRSXcMXwHm8QKrs0e14Y339uMbRZD4hzsokNo=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lSGqpYDVAXytb00/HQcl5ulZmrWZcbRvb/2yPOZRoIE=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-rUAYeVgRSXcMXwHm8QKrs0e14Y339uMbRZD4hzsokNo=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1012,7 +1012,7 @@ body.nav .wrap{padding-top:36px}
   <!-- ============ ספריית מילים ============ -->
   <section class="screen" id="s-lib">
     <h2>ספריית מילים 📚</h2>
-    <p class="sub">מילים מוכנות לפי כיתה ונושא. כל חבילה נכנסת כ<b>טיוטה</b>: הניקוד נכתב על ידי מודל ולא נבדק על ידי מורה, אז עבור על כל מילה ואשר.</p>
+    <p class="sub">מילים מוכנות לפי כיתה ונושא. בכיתות א׳–ב׳ כל חבילה נכנסת כ<b>טיוטה</b>: הניקוד נכתב על ידי מודל ולא נבדק על ידי מורה, אז עבור על כל מילה ואשר. בכיתות ג׳–ו׳ המילים בלי ניקוד, ועדיין כדאי להציץ בהן.</p>
     <div id="libbody"></div>
   </section>
 
@@ -1442,7 +1442,7 @@ H.cleanState = function(raw){
   /* התקדמות שמורה לפי המילה בלי ניקוד. שמירות ישנות נשמרו עם ניקוד — ממיירים. */
   s.album = [...new Set(s.album.map(w => H.strip(w)))];
 
-  const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20).filter(isO) : [];
+  const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 40).filter(isO) : [];
   s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60),
                              draft: p.draft === true, libId: T(p.libId, 40)}));
   if(!s.packs.length) s.packs = base.packs;
@@ -1627,7 +1627,10 @@ H.ac = function(){
   if(H.actx && H.actx.state === 'suspended') H.actx.resume();
   return H.actx;
 };
+/* אפקטי הצליל המסונתזים כבויים. ההקראה של המילים (H.speak) נשארת, כי היא חלק מההכתבה. */
+H.SFX_ON = false;
 H.tone = function(freq, dur, type, vol, delay){
+  if(!H.SFX_ON) return;
   const c = H.ac(); if(!c) return;
   const t0 = c.currentTime + (delay || 0);
   const o = c.createOscillator(), g = c.createGain();
@@ -4488,10 +4491,93 @@ H.LIB = [
     {id:'holidays', e:'🕎', name:'חגים', words:[
       'שׁוֹפָר','תַּפּוּחַ','דְּבַשׁ','סֻכָּה','לוּלָב','אֶתְרוֹג','חֲנֻכִּיָּה','סְבִיבוֹן',
       'סוּפְגָּנִיָּה','מְגִלָּה','פּוּרִים','מַצָּה','הַגָּדָה','שַׁבָּת','נֵר']}
+,
+    {id:'food', e:'🍎', name:'אוכל', words:[
+      'לֶחֶם', 'חָלָב', 'גְּבִינָה', 'בֵּיצָה', 'תַּפּוּז', 'בָּנָנָה', 'עֻגָּה', 'שׁוֹקוֹלָד',
+      'מָרָק', 'אֹרֶז', 'דָּגִים', 'עַגְבָנִיָּה', 'מְלָפְפוֹן', 'גֶּזֶר', 'מַיִם']},
+    {id:'body', e:'🧍', name:'גוף', words:[
+      'רֹאשׁ', 'יָד', 'רֶגֶל', 'עַיִן', 'אֹזֶן', 'אַף', 'פֶּה', 'שֵׂעָר',
+      'שֵׁן', 'לֵב', 'בֶּטֶן', 'גַּב', 'אֶצְבַּע', 'יָדַיִם', 'פָּנִים']},
+    {id:'nature', e:'🌳', name:'טבע', words:[
+      'עֵץ', 'פֶּרַח', 'שֶׁמֶשׁ', 'יָרֵחַ', 'כּוֹכָב', 'עָנָן', 'גֶּשֶׁם', 'נָהָר',
+      'יָם', 'הַר', 'שָׂדֶה', 'אֶבֶן', 'חוֹל', 'עָלֶה', 'יַעַר']},
+    {id:'clothes', e:'👕', name:'בגדים', words:[
+      'חֻלְצָה', 'מִכְנָסַיִם', 'שִׂמְלָה', 'גַּרְבַּיִם', 'נַעֲלַיִם', 'כּוֹבַע', 'מְעִיל', 'צָעִיף',
+      'כְּפָפוֹת', 'חֲגוֹרָה', 'סַנְדָּל', 'חֲצָאִית', 'כִּיס', 'כַּפְתּוֹר', 'שַׁרְשֶׁרֶת']},
+    {id:'transport', e:'🚌', name:'תחבורה', words:[
+      'אוֹטוֹבּוּס', 'מְכוֹנִית', 'רַכֶּבֶת', 'מָטוֹס', 'אֳנִיָּה', 'אוֹפַנַּיִם', 'מַשָּׂאִית', 'מוֹנִית',
+      'כְּבִישׁ', 'רַמְזוֹר', 'תַּחֲנָה', 'נֶהָג', 'נוֹסֵעַ', 'מִדְרָכָה', 'גֶּשֶׁר']},
+    {id:'weather', e:'⛅', name:'עונות ומזג אוויר', words:[
+      'קַיִץ', 'חֹרֶף', 'סְתָו', 'אָבִיב', 'חַם', 'קַר', 'רוּחַ', 'סְעָרָה',
+      'שֶׁלֶג', 'בָּרָק', 'רַעַם', 'עָנָן', 'קֶשֶׁת', 'טַל', 'שָׁמַיִם']},
+    {id:'colors', e:'🎨', name:'צבעים וצורות', words:[
+      'אָדֹם', 'כָּחֹל', 'צָהֹב', 'יָרֹק', 'כָּתֹם', 'סָגֹל', 'לָבָן', 'שָׁחֹר',
+      'אָפֹר', 'חוּם', 'וָרֹד', 'עִגּוּל', 'מְרֻבָּע', 'מְשֻׁלָּשׁ', 'מַלְבֵּן']},
+    {id:'feelings', e:'😊', name:'רגשות', words:[
+      'שָׂמֵחַ', 'עָצוּב', 'כּוֹעֵס', 'פּוֹחֵד', 'מִתְרַגֵּשׁ', 'גֵּאֶה', 'עָיֵף', 'רָעֵב',
+      'צָמֵא', 'מְבֻלְבָּל', 'מְאֻכְזָב', 'אוֹהֵב', 'מִסְתַּקְרֵן', 'בּוֹדֵד', 'רָגוּעַ']},
+    {id:'places', e:'🏙️', name:'מקומות', words:[
+      'גַּן', 'חֲנוּת', 'שׁוּק', 'מִסְעָדָה', 'סִפְרִיָּה', 'חוֹף', 'מִגְרָשׁ', 'קוֹלְנוֹעַ',
+      'מוּזֵאוֹן', 'מִשְׁטָרָה', 'דּוֹאַר', 'בַּנְק', 'מִרְפֵּאָה', 'בֵּית כְּנֶסֶת']},
+    {id:'shabbat', e:'🕯️', name:'שבת', words:[
+      'שַׁבָּת', 'קִדּוּשׁ', 'חַלָּה', 'נֵרוֹת', 'יַיִן', 'שִׁירִים', 'סְעוּדָה', 'מְנוּחָה',
+      'עֶרֶב', 'הַבְדָּלָה', 'בְּשָׂמִים', 'פָּרָשָׁה', 'תּוֹרָה', 'חַמִּין', 'אוֹרְחִים']}
   ]},
-  /* שכבות שעוד לא נכתבו: מוצגות כדי שההורה יידע שהן בדרך */
-  {id:'d4', name:'כיתות ג׳–ד׳', note:'בלי ניקוד', soon:true, topics:[]},
-  {id:'f6', name:'כיתות ה׳–ו׳', note:'בלי ניקוד', soon:true, topics:[]}
+  {id:'d4', name:'כיתות ג׳–ד׳', note:'בלי ניקוד', plain:true, topics:[
+    {id:'tet', e:'🔤', name:'ט או ת', words:[
+      'טיול', 'טלפון', 'טעים', 'טבעת', 'טרקטור', 'תיק', 'תלמיד', 'תפוח',
+      'תאריך', 'תחנה', 'תמונה', 'תרגיל', 'טוב', 'תור', 'טיפה']},
+    {id:'kuf', e:'🔤', name:'ק או כ', words:[
+      'קוף', 'כלב', 'קרח', 'כסא', 'קיר', 'כיתה', 'קפה', 'כדור',
+      'קשה', 'כביש', 'קטן', 'כתר', 'קבוצה', 'כישרון', 'קלף']},
+    {id:'ayin', e:'🔤', name:'א או ע', words:[
+      'אור', 'עור', 'אמא', 'עמוד', 'אוזן', 'עין', 'אבא', 'עץ',
+      'אגם', 'ענן', 'אדמה', 'עולם', 'אהבה', 'עבודה', 'עשב']},
+    {id:'he', e:'🔤', name:'ה׳ בסוף מילה', words:[
+      'שמחה', 'תפילה', 'ארוחה', 'כיתה', 'שדה', 'סוכה', 'ילדה', 'מכונה',
+      'גבינה', 'מדינה', 'בריכה', 'עוגה', 'תמונה', 'אהבה', 'שיחה']},
+    {id:'holidays', e:'🕎', name:'חגים ומועדים', words:[
+      'ראש השנה', 'יום כיפור', 'סוכות', 'שמחת תורה', 'חנוכה', 'טו בשבט', 'פורים', 'פסח',
+      'ספירת העומר', 'שבועות', 'יום העצמאות', 'יום ירושלים', 'שבת', 'ליל סדר', 'מגילה']},
+    {id:'animals', e:'🐘', name:'בעלי חיים', words:[
+      'אריה', 'פיל', 'נמר', 'דוב', 'קוף', 'זברה', 'ציפור', 'דולפין',
+      'תנין', 'צב', 'נחש', 'ארנב', 'חתול', 'כלב', 'עטלף']},
+    {id:'science', e:'🔬', name:'מים וצמחים', words:[
+      'מים', 'אדמה', 'אוויר', 'אש', 'צמח', 'זרע', 'שורש', 'גזע',
+      'עלה', 'פרי', 'ענף', 'פרח', 'אבן', 'כוכב', 'גשם']},
+    {id:'school', e:'🏫', name:'בית ספר', words:[
+      'מחברת', 'עיפרון', 'מחק', 'מורה', 'תלמיד', 'שיעור', 'הפסקה', 'לוח',
+      'ספרייה', 'מחשב', 'תיק', 'חדר', 'מנהל', 'שאלה', 'תשובה']},
+    {id:'city', e:'🚦', name:'עיר ותחבורה', words:[
+      'אוטובוס', 'רכבת', 'מכונית', 'רמזור', 'מדרכה', 'כביש', 'תחנה', 'נהג',
+      'מטוס', 'אופניים', 'מונית', 'גשר', 'צומת', 'מנהרה', 'שדה תעופה']},
+    {id:'family', e:'👨‍👩‍👧', name:'משפחה ואנשים', words:[
+      'אמא', 'אבא', 'סבא', 'סבתא', 'אח', 'אחות', 'דוד', 'דודה',
+      'בן דוד', 'נכד', 'נכדה', 'הורים', 'ילדים', 'משפחה', 'שכן']}
+  ]},
+  {id:'f6', name:'כיתות ה׳–ו׳', note:'בלי ניקוד', plain:true, topics:[
+    {id:'tet', e:'🔤', name:'ט או ת', words:[
+      'טבלה', 'תבלין', 'טעות', 'תעודה', 'טירה', 'תירס', 'טביעה', 'תנועה',
+      'טכנולוגיה', 'תקשורת', 'תחרות', 'טענה', 'תכונה', 'תיאבון', 'תעשייה']},
+    {id:'kuf', e:'🔤', name:'ק או כ', words:[
+      'קשר', 'כתר', 'קהל', 'כהן', 'קריאה', 'כריזה', 'קלט', 'כלי',
+      'קיבוץ', 'כנסת', 'קניון', 'כיסוי', 'קיץ', 'כוכב', 'קורס']},
+    {id:'ayin', e:'🔤', name:'א או ע', words:[
+      'אחריות', 'עבודה', 'ארגון', 'עיתון', 'אמונה', 'עולם', 'אומץ', 'עצמאות',
+      'אזרח', 'עדות', 'אפשרות', 'עתיד', 'אוצר', 'עניין', 'אירוע']},
+    {id:'tech', e:'💻', name:'מדע וטכנולוגיה', words:[
+      'טכנולוגיה', 'מחשב', 'אינטרנט', 'אנרגיה', 'חשמל', 'מדען', 'ניסוי', 'מעבדה',
+      'כוח משיכה', 'מערכת השמש', 'כוכב לכת', 'טלסקופ', 'תגלית', 'רובוט', 'המצאה']},
+    {id:'civics', e:'🏛️', name:'מדינה ואזרחות', words:[
+      'מדינה', 'ממשלה', 'כנסת', 'בחירות', 'דגל', 'המנון', 'עצמאות', 'חוקה',
+      'אזרח', 'זכויות', 'חובות', 'דמוקרטיה', 'ירושלים', 'עלייה', 'שלום']},
+    {id:'env', e:'🌍', name:'סביבה וטבע', words:[
+      'סביבה', 'מחזור', 'זיהום', 'יער', 'מדבר', 'אקלים', 'בעלי חיים', 'מערכת אקולוגית',
+      'שמורת טבע', 'התחממות', 'גשמים', 'אוזון', 'צמחייה', 'חי', 'צומח']},
+    {id:'values', e:'💛', name:'מידות ורגשות', words:[
+      'סבלנות', 'כבוד', 'ענווה', 'יושר', 'נדיבות', 'התחשבות', 'הוגנות', 'אומץ',
+      'התלהבות', 'סקרנות', 'ביישנות', 'קנאה', 'תקווה', 'אכזבה', 'חברות']}
+  ]}
 ];
 
 H.openLibrary = function(){ H.renderLibrary(); H.show('lib'); };
@@ -4521,10 +4607,17 @@ H.renderLibrary = function(){
 H.importTopic = function(tierId, topicId){
   const tier = H.LIB.find(x => x.id === tierId), t = tier && tier.topics.find(x => x.id === topicId);
   if(!t) return;
-  if(H.state.packs.length >= 20) return H.toast('יש יותר מדי חבילות. מחק אחת קודם.', 'no');
-  const p = H.addPack(t.name, t.words.slice(), H.prize());
-  p.draft = true; p.libId = tierId + '/' + topicId;
-  H.syncStats(); H.save(); H.refresh();
+  if(H.state.packs.length >= 40) return H.toast('יש יותר מדי חבילות. מחק אחת קודם.', 'no');
+  const p = H.addPack((tier.plain ? tier.name.replace('כיתות ', '') + ' · ' : '') + t.name, t.words.slice(), H.prize());
+  p.libId = tierId + '/' + topicId;
+  H.syncStats();
+  if(tier.plain){
+    /* מילים בלי ניקוד: אין מה לבדוק בעורך הניקוד, אז נכנסים ישר */
+    p.draft = false; H.save(); H.refresh();
+    H.toast('החבילה נוספה: ' + t.name, 'good');
+    return H.home();
+  }
+  p.draft = true; H.save(); H.refresh();
   H.toast('החבילה נוספה כטיוטה — עבור על הניקוד', 'level');
   H.openNikud();                       /* ישר לבדיקה, לא לשחק */
 };

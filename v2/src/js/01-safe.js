@@ -38,7 +38,7 @@ H.cleanState = function(raw){
   /* התקדמות שמורה לפי המילה בלי ניקוד. שמירות ישנות נשמרו עם ניקוד — ממיירים. */
   s.album = [...new Set(s.album.map(w => H.strip(w)))];
 
-  const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 20).filter(isO) : [];
+  const packs = Array.isArray(raw.packs) ? raw.packs.slice(0, 40).filter(isO) : [];
   s.packs = packs.map(p => ({id: T(p.id, 40), topic: T(p.topic, 80), prize: T(p.prize, 80), list: L(p.list, 200, 60),
                              draft: p.draft === true, libId: T(p.libId, 40)}));
   if(!s.packs.length) s.packs = base.packs;

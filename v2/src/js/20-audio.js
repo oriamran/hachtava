@@ -31,7 +31,10 @@ H.ac = function(){
   if(H.actx && H.actx.state === 'suspended') H.actx.resume();
   return H.actx;
 };
+/* אפקטי הצליל המסונתזים כבויים. ההקראה של המילים (H.speak) נשארת, כי היא חלק מההכתבה. */
+H.SFX_ON = false;
 H.tone = function(freq, dur, type, vol, delay){
+  if(!H.SFX_ON) return;
   const c = H.ac(); if(!c) return;
   const t0 = c.currentTime + (delay || 0);
   const o = c.createOscillator(), g = c.createGain();
