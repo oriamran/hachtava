@@ -85,6 +85,7 @@
     <div class="tiles">
       <button class="menu wide plan" id="planbtn" onclick="H.openPlan()"></button>
       <button class="menu wide chal" id="chalbtn" onclick="H.startChallenge()"></button>
+      <button class="menu wide world" id="worldbtn" onclick="H.openWorld()"></button>
       <button class="menu big-map" data-go="map">
         <span class="m-e">🗺️</span><b>המסע</b><small>תחנות שנפתחות אחת אחרי השנייה</small>
       </button>
@@ -299,6 +300,12 @@
     <div id="rep-done"></div>
     <h3>עוד לא תורגלו</h3>
     <div id="rep-fresh"></div>
+  </section>
+
+  <!-- ============ האי שלי (תלת־ממד) ============ -->
+  <section class="screen" id="s-world">
+    <div id="worldhud" class="worldhud"></div>
+    <canvas id="worldcv" class="worldcv"></canvas>
   </section>
 
   <!-- ============ בחירת נושא למשחק ============ -->

@@ -61,6 +61,8 @@ H.cleanState = function(raw){
   const pl = isO(raw.plan) ? raw.plan : {};
   s.plan = {d: T(pl.d, 12), n: num(pl.n, 0, 9), intro: T(pl.intro, 12), pre: {}};
   keys(pl.pre, 20).forEach(k => { if(pl.pre[k] === true) s.plan.pre[H.cleanText(k, 40)] = true; });
+  const wd = isO(raw.world) ? raw.world : {};
+  s.world = {d: T(wd.d, 12), gems: num(wd.gems, 0, 50), chest: wd.chest === true};
   s.stars = {};
   keys(raw.stars, 100).forEach(k => { s.stars[H.cleanText(k, 6)] = num(raw.stars[k], 0, 3); });
   s.log = {};

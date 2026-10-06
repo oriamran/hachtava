@@ -24,7 +24,7 @@ H.show = function(id){
   H.paint();
 };
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
-H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','end']);
+H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','world','end']);
 H.goBack = function(){
   if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin !== 'home'){
     if(H.pendingGame.origin === 'map') H.renderMap();

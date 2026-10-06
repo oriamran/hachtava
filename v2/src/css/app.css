@@ -664,3 +664,13 @@ body[data-bg="night"]{background:linear-gradient(170deg,#4a4aa8 0%,#6f78d9 50%,#
 body[data-bg="space"]{background:linear-gradient(170deg,#2a2468 0%,#4a35a0 50%,#7a56cf 100%);background-attachment:fixed}
 body[data-bg="night"] h1,body[data-bg="night"] h2,body[data-bg="night"] h3,body[data-bg="night"] .sub,body[data-bg="night"] .topic,
 body[data-bg="space"] h1,body[data-bg="space"] h2,body[data-bg="space"] h3,body[data-bg="space"] .sub,body[data-bg="space"] .topic{color:#fff}
+
+/* ---------- האי שלי ---------- */
+.menu.world{background:linear-gradient(135deg,#d9f4ff,#c9f0d4)}
+.worldhud{text-align:center;margin:0 0 8px}
+.wh-sub{font-size:13px;color:var(--ink2);margin:4px 0;font-weight:700}
+.wh-word{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;direction:rtl;margin-top:4px}
+.wh-word span{min-width:44px;height:50px;line-height:50px;font-size:28px;background:#fff;border-radius:12px;box-shadow:0 3px 0 var(--cardEdge);color:var(--ink2)}
+.wh-word span.now{background:var(--sun);color:#fff}
+.wh-word span.got{background:linear-gradient(135deg,#8ff0cd,var(--mint));color:#05463f}
+.worldcv{display:block;width:100%;height:calc(100vh - 240px);min-height:300px;max-height:620px;border-radius:22px;box-shadow:var(--drop);touch-action:none;background:#9bd7ff}
