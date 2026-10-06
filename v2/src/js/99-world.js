@@ -84,7 +84,20 @@ H.world = (function(){
     Object.keys(H.MODELS || {}).forEach(k => {
       const m = H.MODELS[k], raw = b64(m.v), i16 = new Int16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.length));
       const f = new Float32Array(i16.length); for(let i = 0; i < i16.length; i++) f[i] = i16[i] / 256;
-      MOD[k] = {n: m.n, v: f, c: b64(m.c)};
+      /* נורמלים רכים: ממצעים בין משולשים שחולקים קודקוד, אבל רק כשהזווית ביניהם קטנה (קצוות חדים נשארים חדים) */
+      const n = m.n, tn = new Float32Array(n * 3), key = new Map(), kf = (i, k2) => Math.round(f[i*9+k2*3]*50) + ',' + Math.round(f[i*9+k2*3+1]*50) + ',' + Math.round(f[i*9+k2*3+2]*50);
+      for(let i = 0; i < n; i++){
+        const ax = f[i*9], ay = f[i*9+1], az = f[i*9+2], ux = f[i*9+3]-ax, uy = f[i*9+4]-ay, uz = f[i*9+5]-az, vx = f[i*9+6]-ax, vy = f[i*9+7]-ay, vz = f[i*9+8]-az;
+        const nx = uy*vz-uz*vy, ny = uz*vx-ux*vz, nz = ux*vy-uy*vx, l = Math.hypot(nx, ny, nz) || 1; tn[i*3] = nx/l; tn[i*3+1] = ny/l; tn[i*3+2] = nz/l;
+        for(let k2 = 0; k2 < 3; k2++){ const kk = kf(i, k2); if(!key.has(kk)) key.set(kk, []); key.get(kk).push(i); }
+      }
+      const vn = new Float32Array(n * 9);
+      for(let i = 0; i < n; i++) for(let k2 = 0; k2 < 3; k2++){
+        let sx = 0, sy = 0, sz = 0;
+        key.get(kf(i, k2)).forEach(j => { const d = tn[i*3]*tn[j*3] + tn[i*3+1]*tn[j*3+1] + tn[i*3+2]*tn[j*3+2]; if(d > .5){ sx += tn[j*3]; sy += tn[j*3+1]; sz += tn[j*3+2]; } });
+        const l = Math.hypot(sx, sy, sz) || 1; vn[i*9+k2*3] = sx / l; vn[i*9+k2*3+1] = sy / l; vn[i*9+k2*3+2] = sz / l;
+      }
+      MOD[k] = {n: m.n, v: f, c: b64(m.c), vn};
     });
   })();
   /* סיבוב סביב Y, ואז סביב Z (ללהבי טחנת הרוח), ואז הזזה */
@@ -95,13 +108,19 @@ H.world = (function(){
 
   /* ---------- בניית רשת ---------- */
   function Mesh(rnd){ this.p = []; this.n = []; this.c = []; this.rnd = rnd || Math.random; }
+  /* משולש עם נורמל וצבע לכל קודקוד: הצללה רכה בלי "משבצות" */
+  Mesh.prototype.triV = function(a, b, c, na, nb, nc, ca, cb, cc){
+    this.p.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
+    this.n.push(na[0], na[1], na[2], nb[0], nb[1], nb[2], nc[0], nc[1], nc[2]);
+    this.c.push(ca[0], ca[1], ca[2], cb[0], cb[1], cb[2], cc[0], cc[1], cc[2]);
+  };
   Mesh.prototype.tri = function(a, b, c, col, o){
     const ux = b[0]-a[0], uy = b[1]-a[1], uz = b[2]-a[2], vx = c[0]-a[0], vy = c[1]-a[1], vz = c[2]-a[2];
     let nx = uy*vz-uz*vy, ny = uz*vx-ux*vz, nz = ux*vy-uy*vx; const l = Math.hypot(nx, ny, nz) || 1; nx/=l; ny/=l; nz/=l;
     const cx = (a[0]+b[0]+c[0])/3, cy = (a[1]+b[1]+c[1])/3, cz = (a[2]+b[2]+c[2])/3;
     const out = o ? (nx*(cx-o[0]) + ny*(cy-o[1]) + nz*(cz-o[2])) >= 0 : ny >= 0;     /* בלי origin: הפנים כלפי מעלה */
     if(!out){ nx = -nx; ny = -ny; nz = -nz; }
-    const j = .9 + .2 * this.rnd();
+    const j = .965 + .07 * this.rnd();
     for(const v of [a, b, c]){ this.p.push(v[0], v[1], v[2]); this.n.push(nx, ny, nz); this.c.push(col[0]*j, col[1]*j, col[2]*j); }
   };
   /* משולש עם כיוון לפי הסדר, בלי היפוך (למודלים מבלנדר) */
@@ -115,9 +134,12 @@ H.world = (function(){
     const m = MOD[name]; if(!m) return;
     const c = Math.cos(ry || 0), sn = Math.sin(ry || 0), t = tint || [1, 1, 1];
     for(let i = 0; i < m.n; i++){
-      const P = [];
-      for(let k = 0; k < 3; k++){ const ox = m.v[i*9+k*3] * s, oy = m.v[i*9+k*3+1] * s, oz = m.v[i*9+k*3+2] * s; P.push([x + ox*c + oz*sn, y + oy, z - ox*sn + oz*c]); }
-      this.tri3(P[0], P[1], P[2], [m.c[i*3] / 255 * t[0], m.c[i*3+1] / 255 * t[1], m.c[i*3+2] / 255 * t[2]]);
+      const P = [], Nn = [], col = [m.c[i*3] / 255 * t[0], m.c[i*3+1] / 255 * t[1], m.c[i*3+2] / 255 * t[2]];
+      for(let k = 0; k < 3; k++){
+        const ox = m.v[i*9+k*3] * s, oy = m.v[i*9+k*3+1] * s, oz = m.v[i*9+k*3+2] * s; P.push([x + ox*c + oz*sn, y + oy, z - ox*sn + oz*c]);
+        const nx = m.vn[i*9+k*3], ny = m.vn[i*9+k*3+1], nz = m.vn[i*9+k*3+2]; Nn.push([nx*c + nz*sn, ny, -nx*sn + nz*c]);
+      }
+      this.triV(P[0], P[1], P[2], Nn[0], Nn[1], Nn[2], col, col, col);
     }
   };
   Mesh.prototype.quad = function(a, b, c, d, col, o){ this.tri(a, b, c, col, o); this.tri(a, c, d, col, o); };
@@ -141,8 +163,18 @@ H.world = (function(){
       this.tri([cx,cy+h,cz], [cx+ca,cy+h,cz+sa], [cx+cb,cy+h,cz+sb], col, o);
     }
   };
-  Mesh.prototype.ball = function(cx, cy, cz, r, col, rings, seg){
+  Mesh.prototype.ball = function(cx, cy, cz, r, col, rings, seg, flat){
     rings = rings || 4; seg = seg || 7; const o = [cx, cy, cz];
+    if(!flat){                                  /* כדור חלק: נורמל לפי המרכז */
+      const pt = (i, j) => { const v = i / rings * Math.PI, u = j / seg * 6.2832, nx = Math.sin(v) * Math.cos(u), ny = Math.cos(v), nz = Math.sin(v) * Math.sin(u);
+        return {p: [cx + r * nx, cy + r * ny, cz + r * nz], n: [nx, ny, nz]}; };
+      const sh = [col[0] * (.97 + .06 * this.rnd()), col[1] * (.97 + .06 * this.rnd()), col[2] * (.97 + .06 * this.rnd())];
+      for(let i = 0; i < rings; i++) for(let j = 0; j < seg; j++){
+        const a = pt(i, j), b = pt(i, j + 1), c = pt(i + 1, j + 1), d = pt(i + 1, j);
+        this.triV(a.p, c.p, b.p, a.n, c.n, b.n, sh, sh, sh); this.triV(a.p, d.p, c.p, a.n, d.n, c.n, sh, sh, sh);
+      }
+      return;
+    }
     const pt = (i, j) => { const v = i / rings * Math.PI, u = j / seg * 6.2832;
       return [cx + r*Math.sin(v)*Math.cos(u), cy + r*Math.cos(v), cz + r*Math.sin(v)*Math.sin(u)]; };
     for(let i = 0; i < rings; i++) for(let j = 0; j < seg; j++){
@@ -205,24 +237,25 @@ H.world = (function(){
     const x = c.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; draw(x, w, h);
     const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return texCache[key] = t;
   }
-  const emojiTex = e => texOf('e' + e, 128, 128, (x, w, h) => { x.font = '96px serif'; x.fillText(e, w/2, h/2 + 6); });
-  const letterTex = ch => texOf('l' + ch, 128, 128, (x, w, h) => {
-    x.fillStyle = '#fff'; x.beginPath(); x.arc(64, 64, 58, 0, 6.2832); x.fill();
-    x.fillStyle = '#7c5cd6'; x.beginPath(); x.arc(64, 64, 50, 0, 6.2832); x.fill();
-    x.fillStyle = '#fff'; x.font = 'bold 78px "Arial Hebrew",Arial,sans-serif'; x.fillText(ch, 64, 70); });
-  const labelTex = t => texOf('t' + t, 256, 64, (x, w, h) => {
+  const emojiTex = e => texOf('e' + e, 256, 256, (x, w, h) => { x.font = '190px serif'; x.fillText(e, w/2, h/2 + 12); });
+  const letterTex = ch => texOf('l' + ch, 256, 256, (x, w, h) => {
+    x.fillStyle = '#fff'; x.beginPath(); x.arc(128, 128, 116, 0, 6.2832); x.fill();
+    x.fillStyle = '#7c5cd6'; x.beginPath(); x.arc(128, 128, 100, 0, 6.2832); x.fill();
+    x.fillStyle = '#fff'; x.font = 'bold 156px "Arial Hebrew",Arial,sans-serif'; x.fillText(ch, 128, 140); });
+  const labelTex = t => texOf('t' + t, 512, 128, (x, w, h) => {
     x.fillStyle = 'rgba(255,255,255,.95)'; x.beginPath();
-    if(x.roundRect) x.roundRect(4, 6, w - 8, h - 12, 22); else x.rect(4, 6, w - 8, h - 12);
-    x.fill(); x.fillStyle = '#2b2250'; x.font = 'bold 34px "Arial Hebrew",Arial,sans-serif'; x.fillText(t, w/2, h/2 + 2); });
+    if(x.roundRect) x.roundRect(8, 12, w - 16, h - 24, 44); else x.rect(8, 12, w - 16, h - 24);
+    x.fill(); x.fillStyle = '#2b2250'; x.font = 'bold 68px "Arial Hebrew",Arial,sans-serif'; x.fillText(t, w/2, h/2 + 4); });
   const avatarTex = () => {
     const a = (H.AVATARS.find(v => v.id === H.state.avatar) || H.AVATARS[0]).e;
     const hat = (H.HATS.find(v => v.id === H.state.hat) || {}).e || '';
-    return texOf('av' + a + hat, 128, 160, (x, w, h) => { x.font = '88px serif'; x.fillText(a, w/2, 100);
-      if(hat){ x.font = '50px serif'; x.fillText(hat, w/2, 30); } });
+    return texOf('av' + a + hat, 256, 256, (x, w, h) => { x.font = '170px serif'; x.fillText(a, w/2, 156);
+      if(hat){ x.font = '100px serif'; x.fillText(hat, w/2, 46); } });
   };
 
   /* ---------- בניית הסצנה ---------- */
@@ -241,19 +274,22 @@ H.world = (function(){
       for(let i = 0; i < 8; i++){ const a = i / 8 * 6.2832, b = (i + 1) / 8 * 6.2832;
         mesh.tri([x, y, z], [x + Math.cos(a) * r, hgt(x + Math.cos(a) * r, z + Math.sin(a) * r) + .05, z + Math.sin(a) * r], [x + Math.cos(b) * r, hgt(x + Math.cos(b) * r, z + Math.sin(b) * r) + .05, z + Math.sin(b) * r], c); }
     };
-    /* קרקע: דשא, חול בחוף, סלע בפסגות */
-    const N = Math.ceil((2 * R + 4) / STEP);
+    /* קרקע: נורמל וצבע לכל קודקוד, כדי שההצללה תהיה רכה וצבע משתנה בהדרגה (בלי "משבצות") */
+    const sand = [.94, .86, .62];
+    const nz2 = (x, z) => .5 + .5 * Math.sin(x * .55 + 1.3) * Math.sin(z * .47 + .4);
+    const vcol = (x, z, h) => {
+      const rr = Math.hypot(x, z), n = nz2(x, z);
+      let col = [g[0] * (.94 + .1 * n) * (1 + Math.max(0, h) * .05), g[1] * (.94 + .1 * n) * (1 + Math.max(0, h) * .045), g[2] * (.94 + .1 * n)];
+      col = mix3(col, rock, smooth(2.2, 3.5, h));
+      return mix3(col, sand, Math.max(smooth(R - 8, R - 6.2, rr), smooth(-.1, -.45, h)));
+    };
+    const vnorm = (x, z) => { const e = .4, dx = (hgt(x + e, z) - hgt(x - e, z)) / (2 * e), dz = (hgt(x, z + e) - hgt(x, z - e)) / (2 * e), l = Math.hypot(dx, 1, dz); return [-dx / l, 1 / l, -dz / l]; };
+    const N = Math.ceil((2 * R + 4) / STEP), V = [];
+    for(let i = 0; i <= N; i++){ V[i] = []; for(let j = 0; j <= N; j++){ const x = -R - 2 + i * STEP, z = -R - 2 + j * STEP, h = hgt(x, z); V[i][j] = {p: [x, h, z], n: vnorm(x, z), c: vcol(x, z, h)}; } }
     for(let i = 0; i < N; i++) for(let j = 0; j < N; j++){
-      const gx = -R - 2 + i * STEP, gz = -R - 2 + j * STEP;
-      if(Math.hypot(gx + STEP / 2, gz + STEP / 2) > R + 1.5) continue;
-      const a = [gx, hgt(gx, gz), gz], b = [gx + STEP, hgt(gx + STEP, gz), gz], c = [gx + STEP, hgt(gx + STEP, gz + STEP), gz + STEP], d = [gx, hgt(gx, gz + STEP), gz + STEP];
-      const avg = (a[1] + b[1] + c[1] + d[1]) / 4, rr = Math.hypot(gx + STEP / 2, gz + STEP / 2);
-      const jit = .92 + .16 * rnd();
-      let col = [g[0] * jit * (1 + Math.max(0, avg) * .05), g[1] * jit * (1 + Math.max(0, avg) * .045), g[2] * jit];
-      if(avg > 2.3) col = mix3(col, rock, clamp((avg - 2.3) / 1.2, 0, 1));
-      if(rr > R - 6.2 || avg < -.25) col = [.94 * jit, .86 * jit, .62 * jit];
-      else if(rr > R - 7.4) col = mix3(col, [.94, .86, .62], .5);
-      mesh.tri(a, b, c, col); mesh.tri(a, c, d, col);
+      const A = V[i][j], B = V[i+1][j], C = V[i+1][j+1], D = V[i][j+1];
+      if(Math.hypot(A.p[0] + STEP / 2, A.p[2] + STEP / 2) > R + 1.5) continue;
+      mesh.triV(A.p, B.p, C.p, A.n, B.n, C.n, A.c, B.c, C.c); mesh.triV(A.p, C.p, D.p, A.n, C.n, D.n, A.c, C.c, D.c);
     }
     /* כיכר ומגדל המילים במרכז: ציון דרך שרואים מרחוק */
     const cy = hgt(0, 0);
@@ -328,7 +364,7 @@ H.world = (function(){
       const a = rnd() * 6.2832, r = 6 + rnd() * (R - 10), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
       if(y < .05 || near(x, z, 1.6)) continue;
       const rr = .3 + rnd() * .6; blob(x, z, rr * 1.1);
-      mesh.ball(x, y + rr * .35, z, rr, [.62 + .1 * rnd(), .62, .66], 3, 5);
+      mesh.ball(x, y + rr * .35, z, rr, [.62 + .1 * rnd(), .62, .66], 3, 5, true);
     }
     for(let i = 0; i < 40; i++){      /* שיחים */
       const a = rnd() * 6.2832, r = 5 + rnd() * (R - 9), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
@@ -544,7 +580,7 @@ H.world = (function(){
     gl.bindTexture(gl.TEXTURE_2D, tx); gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
   function draw(){
-    const dpr = Math.min(window.matchMedia && matchMedia('(pointer:coarse)').matches ? 1.75 : 2, window.devicePixelRatio || 1) * qual;
+    const dpr = Math.min(window.matchMedia && matchMedia('(pointer:coarse)').matches ? 2.5 : 2, window.devicePixelRatio || 1) * qual;
     const w = Math.max(2, Math.round(cv.clientWidth * dpr)), h = Math.max(2, Math.round(cv.clientHeight * dpr));
     if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
     gl.viewport(0, 0, cv.width, cv.height);
@@ -604,7 +640,7 @@ H.world = (function(){
       if(it.type === 'letter') push(dist(it.x, y, it.z) - 1, () => sprite(c, letterTex(it.ch), it.x, y, it.z, 1.15, 1.15));
       if(it.type === 'chest') push(dist(it.x, y, it.z), () => sprite(c, emojiTex('🎁'), it.x, hgt(it.x, it.z) + 1.9, it.z, 1, 1)); });
     const av = S.av, ay = hgt(av.x, av.z) + 1.05 + (av.moving ? Math.abs(Math.sin(av.ph)) * .25 : Math.sin(S.t * 2) * .03);
-    push(dist(av.x, ay, av.z), () => sprite(c, avatarTex(), av.x, ay, av.z, 1.6, 2));
+    push(dist(av.x, ay, av.z), () => sprite(c, avatarTex(), av.x, ay + .1, av.z, 2.1, 2.1));
     const pet = (H.PETS.find(p => p.id === H.state.pet) || {}).e;
     if(pet) push(dist(S.pet.x, 0, S.pet.z), () => sprite(c, emojiTex(pet), S.pet.x, hgt(S.pet.x, S.pet.z) + .5 + (av.moving ? Math.abs(Math.sin(av.ph + 1)) * .15 : 0), S.pet.z, .9, .9));
     list.sort((a, b) => b.d - a.d).forEach(o => o.f());
@@ -615,7 +651,7 @@ H.world = (function(){
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
     /* מכשיר איטי: מורידים רזולוציה כדי לשמור על זרימה */
     frame.acc = (frame.acc || 0) + dt; frame.n = (frame.n || 0) + 1;
-    if(frame.n >= 60){ const avg = frame.acc / frame.n; if(avg > .034 && qual > .55) qual -= .15; else if(avg < .019 && qual < 1) qual = Math.min(1, qual + .1); frame.acc = 0; frame.n = 0; }
+    if(frame.n >= 60){ const avg = frame.acc / frame.n; if(avg > .042 && qual > .7) qual -= .1; else if(avg < .019 && qual < 1) qual = Math.min(1, qual + .1); frame.acc = 0; frame.n = 0; }
     try{ update(dt); draw(); }catch(e){ console.warn(e); running = false; return; }
     requestAnimationFrame(frame);
   }
