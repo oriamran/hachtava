@@ -20,12 +20,12 @@ H.show = function(id){
   H.$('backbtn').classList.toggle('on', !bare);
   document.body.classList.toggle('nav', !bare);
   if(id === 'tips') H.renderTips();
-  document.body.classList.toggle('inworld', id === 'world');
+  document.body.classList.toggle('inworld', id === 'world' || id === 'voxel');
   window.scrollTo(0, 0);
   H.paint();
 };
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
-H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','world','end']);
+H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','world','voxel','end']);
 /* חזרה לאי אחרי משחק שנפתח משער */
 H.returnToWorld = function(){
   speechSynthesis.cancel();
@@ -34,6 +34,7 @@ H.returnToWorld = function(){
 };
 H.goBack = function(){
   if(H.screen === 'world' && H.world.mode() === 'explore') return H.home();     /* יציאה מהאי */
+  if(H.screen === 'voxel' && H.vox.mode() === 'free'){ H.vox.flush(); return H.home(); }
   if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin === 'world') return H.returnToWorld();
   if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin !== 'home'){
     if(H.pendingGame.origin === 'map') H.renderMap();

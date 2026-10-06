@@ -696,3 +696,30 @@ body.inworld .hud,body.inworld #backbtn{display:none!important}
 .worldgo .go{padding:10px 20px;font-size:17px;width:100%}
 .whint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);text-align:center;font-size:11px;color:rgba(255,255,255,.95);text-shadow:0 1px 3px rgba(0,0,0,.35);margin:0;pointer-events:none}
 @supports (height:100dvh){#s-world{height:100dvh}}
+
+/* ---------- עולם הבנייה (בלוקים) ---------- */
+.menu.voxel{background:linear-gradient(135deg,#e6f6d0,#f3e6c8)}
+#s-voxel{position:fixed;inset:0;z-index:60;padding:0;margin:0;background:#9bd7ff;overflow:hidden;touch-action:none}
+#s-voxel.on{display:block;animation:none}
+#s-voxel .worldcv{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;border-radius:0;box-shadow:none;image-rendering:auto}
+#s-voxel .worldhud{position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 0;margin:0;pointer-events:none;text-align:center}
+#s-voxel .worldhud button,#s-voxel .worldhud .wh-sub{pointer-events:auto}
+#s-voxel .wh-sub{display:inline-block;background:rgba(255,255,255,.85);border-radius:999px;padding:5px 12px;margin:8px 0 0;font-size:13px}
+.vxbar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:4px;padding:6px;background:rgba(40,36,60,.55);border-radius:14px;max-width:calc(100vw - 20px);z-index:2}
+.vxslot{position:relative;width:42px;height:42px;padding:0;border:3px solid rgba(255,255,255,.35);border-radius:8px;background:rgba(0,0,0,.25);overflow:hidden;box-shadow:none;min-height:0}
+.vxslot img{width:100%;height:100%;image-rendering:pixelated;display:block}
+.vxslot.on{border-color:#fff;box-shadow:0 0 0 2px #ffcf3f}
+.vxslot.lock img{opacity:.45}
+.vxslot i{position:absolute;right:1px;bottom:0;font-size:13px;font-style:normal}
+.vxslot.more{color:#fff;font-size:22px;line-height:1;background:rgba(255,255,255,.2)}
+.vxbtns{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 82px);display:flex;flex-direction:column;gap:12px;z-index:2}
+.vxbtn{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.88);font-size:28px;padding:0;box-shadow:var(--drop);min-height:0}
+.vxbtn.brk{background:#ffd3de}
+#s-voxel .wstick{bottom:calc(env(safe-area-inset-bottom,0px) + 82px)}
+.vxpal{position:absolute;left:10px;right:10px;top:70px;bottom:80px;background:rgba(255,255,255,.97);border-radius:20px;padding:12px;overflow:auto;z-index:5;box-shadow:var(--drop)}
+.vxp-h{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
+.vxp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.vxp-b{padding:6px;border-radius:10px;background:#f1edff;min-height:0;box-shadow:none;text-align:center}
+.vxp-b img{width:40px;height:40px;image-rendering:pixelated;display:block;margin:0 auto 2px}
+.vxp-b small{font-size:10px;color:var(--ink2);display:block;min-height:12px}
+.vxp-b.lock{opacity:.6}

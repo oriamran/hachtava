@@ -93,5 +93,11 @@ ok("background and pet are kept", sh.bg === "space" && sh.pet === "chick");
 ok("defaults when absent", sanitizeState({}).bg === "day" && sanitizeState({}).pet === "none");
 ok("an oversized id is truncated", sanitizeState({ bg: "x".repeat(99) }).bg.length === 20);
 
+console.log("voxel build state");
+const vb = sanitizeState({ build: { e: "AAECAw==", hot: [1, 2, "x", 999, 20] } });
+ok("edits string and hot bar kept, bad ids dropped", vb.build.e === "AAECAw==" && JSON.stringify(vb.build.hot) === "[1,2,20]", JSON.stringify(vb.build));
+ok("non-base64 edits dropped", sanitizeState({ build: { e: "<script>" } }).build.e === "");
+ok("oversized edits are truncated", sanitizeState({ build: { e: "A".repeat(90000) } }).build.e.length === 36000);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

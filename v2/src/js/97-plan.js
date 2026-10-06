@@ -11,7 +11,7 @@
    סולם השלבים (H.stage): 0 חדשה, 1 הוכרה, 2 זוהתה, 3 הורכבה, 4 נכתבה.
    ========================================================== */
 H.PLAN_STEPS = 3;
-H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky','search'], assemble:['build','missing','anagram','proof','flash','hunt'], write:['write','selfcheck']};
+H.PLAN_GROUPS = {recog:['pick','memory','bubbles','tricky','search'], assemble:['build','missing','anagram','proof','flash','hunt','blocks'], write:['write','selfcheck']};
 H.GROUP_TITLE = {recog:'מכירים את המילים', assemble:'מרכיבים את המילים', write:'כותבים מהזיכרון', review:'חוזרים על מה שלמדנו'};
 H.PLAN_PREFS = [
   ['recog', 'assemble', 'write', 'review'],

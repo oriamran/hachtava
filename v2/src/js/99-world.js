@@ -675,6 +675,21 @@ H.world = (function(){
     }
     return null;
   }
+  /* איזה שער נמצא מתחת לאצבע: מטילים את מרכז הקשת והסמל למסך */
+  function portalAtTap(cx, cy){
+    if(!S || mode !== 'explore' || !S.cam) return null;
+    const r = cv.getBoundingClientRect(), vp = S.cam.vp, lim = Math.max(46, Math.min(r.width, r.height) * .08);
+    let best = null, bd = 1e9;
+    S.portals.forEach(q => [1.6, 3.4].forEach(dy => {
+      const x = q.x, y = q.y + dy, z = q.z, w = vp[3]*x + vp[7]*y + vp[11]*z + vp[15];
+      if(w <= .5) return;
+      const nx = (vp[0]*x + vp[4]*y + vp[8]*z + vp[12]) / w, ny = (vp[1]*x + vp[5]*y + vp[9]*z + vp[13]) / w;
+      const sx = r.left + (nx * .5 + .5) * r.width, sy = r.top + (1 - (ny * .5 + .5)) * r.height, d = Math.hypot(sx - cx, sy - cy);
+      const scale = clamp(30 / w, .6, 2.2);                    /* שער קרוב גדול יותר */
+      if(d < lim * scale && d < bd){ bd = d; best = q; }
+    }));
+    return best;
+  }
   function bind(){
     if(bind.done) return; bind.done = true;
     cv.addEventListener('pointerdown', e => {
@@ -693,6 +708,13 @@ H.world = (function(){
     const up = e => {
       ptr.delete(e.pointerId); pinch = 0;
       if(tap && !tap.moved && performance.now() - tap.t < 400 && S){
+        /* לחיצה על שער (הסמל, הקשת או התווית) פותחת ישר את המשחק */
+        const q = portalAtTap(e.clientX, e.clientY);
+        if(q){
+          const ok = !q.g.canPlay || q.g.canPlay(H.words().map(H.disp));
+          if(ok){ H.sfx.tap(); tap = null; return go(q.g.id); }
+          H.toast('המשחק הזה לא מתאים לנושא'); tap = null; return;
+        }
         const hit = groundHit(e.clientX, e.clientY);
         if(hit){ S.av.tx = hit[0]; S.av.tz = hit[1]; S.av.moving = true; }
       }

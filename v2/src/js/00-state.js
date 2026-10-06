@@ -115,6 +115,7 @@ H.blank = () => ({
   daily: {last: '', streak: 0},
   plan: {d: '', n: 0, intro: '', pre: {}},   /* התרגול של היום */
   world: {d: '', gems: 0, chest: false},     /* האי: אבני חן ותיבה ליום */
+  build: {e: '', hot: []},                   /* עולם הבנייה: שינויים שנשמרו (בסיס64) ושורת הבלוקים */
   wins: 0
 });
 
@@ -235,7 +236,7 @@ H.isDue = function(s){
    מילה בלי שלב שמור (התקדמות ישנה) מוסקת מהנתונים שיש. */
 H.STAGE_GROUPS = {pick:'recog', memory:'recog', bubbles:'recog',
                   build:'assemble', anagram:'assemble', missing:'assemble', 'catch':'assemble',
-                  proof:'assemble', flash:'assemble', tricky:'recog', search:'recog', hunt:'assemble', write:'write', selfcheck:'write'};
+                  proof:'assemble', flash:'assemble', tricky:'recog', search:'recog', hunt:'assemble', blocks:'assemble', write:'write', selfcheck:'write'};
 H.STAGE_TARGET = {recog: 2, assemble: 3, write: 4};
 H.stage = function(word){
   const s = H.state.stats[H.sk(word)];

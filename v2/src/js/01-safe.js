@@ -63,6 +63,8 @@ H.cleanState = function(raw){
   keys(pl.pre, 20).forEach(k => { if(pl.pre[k] === true) s.plan.pre[H.cleanText(k, 40)] = true; });
   const wd = isO(raw.world) ? raw.world : {};
   s.world = {d: T(wd.d, 12), gems: num(wd.gems, 0, 50), chest: wd.chest === true};
+  const bd = isO(raw.build) ? raw.build : {};
+  s.build = {e: (typeof bd.e === 'string' && /^[A-Za-z0-9+\/=]*$/.test(bd.e)) ? bd.e.slice(0, 36000) : '', hot: Array.isArray(bd.hot) ? bd.hot.filter(n => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : []};
   s.stars = {};
   keys(raw.stars, 100).forEach(k => { s.stars[H.cleanText(k, 6)] = num(raw.stars[k], 0, 3); });
   s.log = {};
