@@ -7,7 +7,7 @@ H.pendingGame = null;
 H.topicMore = false;
 
 H.chooseTopic = function(gameId, station){
-  const origin = ['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home';
+  const origin = H.screen === 'world' || gameId === null ? 'world' : (['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home');
   H.pendingGame = {gameId, station, origin};
   H.topicMore = false;
   H.renderTopic();
@@ -17,12 +17,13 @@ H.chooseTopic = function(gameId, station){
 H.startPending = function(){
   const pg = H.pendingGame;
   H.refresh();
+  if(!pg.gameId) return H.returnToWorld();            /* בחירת נושא לטיול באי */
   H.startRound(pg.gameId, pg.station, undefined, {origin: pg.origin});
 };
 
 H.renderTopic = function(){
-  const pg = H.pendingGame, g = H.byId(pg.gameId);
-  H.$('topictitle').textContent = g.e + ' ' + g.name + ': באיזה נושא?';
+  const pg = H.pendingGame, g = pg.gameId ? H.byId(pg.gameId) : null;
+  H.$('topictitle').textContent = g ? g.e + ' ' + g.name + ': באיזה נושא?' : '🏝️ באיזה נושא לטייל?';
   const box = H.$('topiclist'); box.innerHTML = '';
 
   const mine = H.state.packs.filter(p => p.list.some(w => String(w).trim()));

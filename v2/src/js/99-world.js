@@ -22,7 +22,8 @@ H.WORLD_THEMES = {
 H.world = (function(){
   const R = H.WORLD_R;
   let gl = null, cv = null, progL = null, progS = null, running = false, last = 0;
-  let mode = 'explore', S = null, cam = {yaw: .7, pitch: .55, dist: 9};
+  let mode = 'explore', S = null, cam = {yaw: .7, pitch: .55, dist: 9}, lastPos = null, qual = 1;
+  const keys = {}, stick = {x: 0, y: 0, id: null};
   const texCache = {}, ptr = new Map();
   let tap = null, pinch = 0;
 
@@ -167,7 +168,7 @@ H.world = (function(){
   function plantsOf(){
     const seen = new Set(), out = [];
     H.words().forEach(w => { const k = H.sk(w); if(!seen.has(k)){ seen.add(k); out.push(w); } });
-    return out.slice(0, 60);
+    return out.slice(0, 40);
   }
   function build(){
     const th = theme(), rnd = rngOf(1234), mesh = new Mesh(rnd);
@@ -199,8 +200,25 @@ H.world = (function(){
       }
       plants.push({w, x, z, y, st});
     });
+    /* שערים למשחקים: טבעת סביב האי, כל משחק בצבע משלו */
+    const portals = [];
+    if(mode === 'explore'){
+      const cols = [[1,.45,.55],[1,.7,.25],[.35,.8,.95],[.55,.85,.4],[.75,.55,1],[1,.6,.8],[.4,.9,.8]];
+      const n = H.GAMES.length;
+      H.GAMES.forEach((g, i) => {
+        const a = i / n * 6.2832 + .3, x = Math.cos(a) * 16, z = Math.sin(a) * 16, y = hgt(x, z), col = cols[i % cols.length];
+        const tx = -Math.sin(a), tz = Math.cos(a);
+        mesh.cyl(x, y - .05, z, 1.7, .3, 12, [.85, .85, .9]);
+        mesh.cyl(x, y + .22, z, 1.35, .06, 12, col);
+        mesh.cyl(x + tx * 1.05, y, z + tz * 1.05, .2, 2.3, 6, [.95, .93, .85]);
+        mesh.cyl(x - tx * 1.05, y, z - tz * 1.05, .2, 2.3, 6, [.95, .93, .85]);
+        mesh.ball(x + tx * 1.05, y + 2.4, z + tz * 1.05, .3, col, 3, 6);
+        mesh.ball(x - tx * 1.05, y + 2.4, z - tz * 1.05, .3, col, 3, 6);
+        portals.push({g, x, z, y});
+      });
+    }
     /* עצים, סלעים ופרחים */
-    const near = (x, z, d) => plants.some(p => Math.hypot(p.x - x, p.z - z) < d) || Math.hypot(x, z) < 3;
+    const near = (x, z, d) => plants.some(p => Math.hypot(p.x - x, p.z - z) < d) || Math.hypot(x, z) < 3 || portals.some(q => Math.hypot(q.x - x, q.z - z) < 3.2);
     for(let i = 0; i < 90; i++){
       const a = rnd() * 6.2832, r = 12.5 + rnd() * (R - 17), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
       if(y < .08 || near(x, z, 2)) continue;
@@ -218,7 +236,7 @@ H.world = (function(){
       mesh.cyl(x, y, z, .025, .28, 4, [.3, .65, .3]);
       mesh.ball(x, y + .33, z, .09, [[1,.5,.6],[1,.85,.3],[.8,.6,1],[1,1,1]][i % 4], 2, 4);
     }
-    return {mesh: mesh.upload(), plants};
+    return {mesh: mesh.upload(), plants, portals};
   }
 
   /* ---------- מצב הסצנה ---------- */
@@ -236,21 +254,25 @@ H.world = (function(){
     if(!W.chest){ const a = rnd() * 6.2832, r = 9 + rnd() * 7; items.push({type: 'chest', x: Math.cos(a) * r, z: Math.sin(a) * r, ph: 0}); }
     return items;
   }
-  function begin(m){
+  function begin(m, keep){
     if(!initGL()) return false;
     mode = m;
+    /* בטלפון עומד המסך צר וגבוה, אז המצלמה רחוקה יותר כדי שיראו את האי */
+    const portrait = cv.clientWidth / Math.max(1, cv.clientHeight) < .75;
+    cam.dist = portrait ? 14 : 10.5; cam.pitch = portrait ? .72 : .6;
     const b = build();
-    S = {mesh: b.mesh, plants: b.plants, th: theme(), av: {x: 0, z: 5, tx: 0, tz: 5, moving: false, ph: 0, face: 1},
-         pet: {x: 1.4, z: 5.6}, items: m === 'explore' ? spawnExplore() : [], wild: [], clouds: [], label: null, t: 0,
+    S = {mesh: b.mesh, plants: b.plants, portals: b.portals, near: null, th: theme(),
+         av: {x: keep && lastPos ? lastPos.x : 0, z: keep && lastPos ? lastPos.z : 5, tx: 0, tz: 5, moving: false, ph: 0, face: 1},
+         pet: {x: (keep && lastPos ? lastPos.x : 0) + 1.4, z: (keep && lastPos ? lastPos.z : 5) + .6}, items: m === 'explore' ? spawnExplore() : [], wild: [], clouds: [], label: null, t: 0,
          need: [], idx: 0, miss: 0, lastWrong: -9, onDone: null};
     const rnd = rngOf(77);
     for(let i = 0; i < 7; i++) S.wild.push({e: ['🦋','🐝','🦋','🐞','🦋','🐦','🦋'][i], a: rnd() * 6.2832, r: 4 + rnd() * 12, sp: .15 + rnd() * .25, h: 1.2 + rnd() * 1.4, ph: rnd() * 6});
     for(let i = 0; i < 6; i++) S.clouds.push({x: (rnd() - .5) * 60, z: (rnd() - .5) * 60, y: 13 + rnd() * 4, s: 4 + rnd() * 3});
-    renderHud();
+    renderHud(); renderPrompt();
     if(!running){ running = true; last = performance.now(); requestAnimationFrame(frame); }
     return true;
   }
-  function end(){ running = false; if(H.state.world) H.save(); }
+  function end(){ if(S && mode === 'explore') lastPos = {x: S.av.x, z: S.av.z}; running = false; document.body.classList.remove('inworld'); if(H.state.world) H.save(); }
 
   /* ---------- ציד אותיות ---------- */
   function hunt(word, onDone){
@@ -269,20 +291,50 @@ H.world = (function(){
   }
   function renderHud(){
     const box = H.$('worldhud'); if(!box) return;
+    const top = '<div class="wh-top"><button class="wh-exit" id="wexit">✕ יציאה</button>' +
+      '<span class="wh-coins">🪙 ' + H.state.coins + '</span>' +
+      (mode === 'explore' ? '<button class="wh-topic" id="wtopic">📝 ' + H.esc(H.topic() || 'הכתבה') + ' ▾</button>' : '') + '</div>';
     if(mode === 'hunt' && S){
-      box.innerHTML = '<div class="wh-word">' + S.need.map((c, i) => '<span class="' + (i < S.idx ? 'got' : (i === S.idx ? 'now' : '')) + '">' + (i < S.idx ? H.esc(c) : '▢') + '</span>').join('') + '</div>' +
-        '<div class="wh-sub">אסוף את האותיות לפי הסדר · <button class="mini" data-say>🔊 שמע</button></div>';
-      box.querySelectorAll('[data-say]').forEach(b => b.onclick = () => H.say(S.word));
+      box.innerHTML = top + '<div class="wh-word">' + S.need.map((c, i) => '<span class="' + (i < S.idx ? 'got' : (i === S.idx ? 'now' : '')) + '">' + (i < S.idx ? H.esc(c) : '▢') + '</span>').join('') + '</div>' +
+        '<div class="wh-sub"><button class="mini" id="wsay">🔊 שמע שוב</button></div>';
+      H.$('wsay').onclick = () => H.say(S.word);
     } else {
       const W = daily();
-      box.innerHTML = '<div class="wh-sub">💎 ' + W.gems + '/' + H.WORLD_GEMS + ' היום · ' + (W.chest ? '🎁 התיבה נפתחה' : '🎁 תיבת אוצר מחכה באי') + ' · 🌱 ' + S.plants.filter(p => p.st >= 3).length + '/' + S.plants.length + ' גדלו</div>' +
-        '<div class="wh-sub">לחץ על האדמה כדי ללכת · גרור כדי להסתובב</div>';
+      box.innerHTML = top + '<div class="wh-sub">💎 ' + W.gems + '/' + H.WORLD_GEMS + ' · ' + (W.chest ? '🎁 נפתחה' : '🎁 תיבה מחכה') + ' · 🌱 ' + S.plants.filter(p => p.st >= 3).length + '/' + S.plants.length + '</div>';
     }
+    H.$('wexit').onclick = () => { H.sfx.tap(); H.goBack(); };
+    const tp = H.$('wtopic'); if(tp) tp.onclick = () => { end(); H.chooseTopic(null); };
+  }
+  function renderPrompt(){
+    const box = H.$('worldgo'); if(!box) return;
+    const q = S && S.near;
+    if(!q || mode !== 'explore'){ box.style.display = 'none'; return; }
+    const g = q.g, ok = !g.canPlay || g.canPlay(H.words().map(H.disp));
+    box.style.display = '';
+    box.innerHTML = '<div class="wg-t">' + g.e + ' ' + H.esc(g.name) + '</div><div class="wg-d">' + H.esc(g.desc) + '</div>' +
+      (ok ? '<button class="go" id="wgo">שחק ▶</button>' : '<div class="wg-d">לא מתאים לנושא הזה</div>');
+    if(ok) H.$('wgo').onclick = () => { H.sfx.tap(); go(q.g.id); };
+  }
+  function go(id){
+    if(S) lastPos = {x: S.av.x, z: S.av.z};
+    running = false;
+    H.startRound(id, undefined, undefined, {origin: 'world'});
   }
 
   /* ---------- עדכון ---------- */
   function update(dt){
     S.t += dt; const av = S.av;
+    /* ג'ויסטיק ומקשים: תנועה ביחס למצלמה */
+    let ix = stick.x, iy = stick.y;
+    if(keys.ArrowLeft || keys.a) ix -= 1; if(keys.ArrowRight || keys.d) ix += 1;
+    if(keys.ArrowUp || keys.w) iy -= 1; if(keys.ArrowDown || keys.s) iy += 1;
+    const mag = Math.min(1, Math.hypot(ix, iy));
+    if(mag > .12){
+      const fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw), rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw);
+      const dx = (fx * -iy + rx * ix), dz = (fz * -iy + rz * ix), dl = Math.hypot(dx, dz) || 1;
+      av.x += dx / dl * 4.8 * mag * dt; av.z += dz / dl * 4.8 * mag * dt; av.moving = false; av.ph += dt * 11;
+      if(Math.abs(dx) > .05) av.face = dx > 0 ? 1 : -1;
+    }
     if(av.moving){
       const dx = av.tx - av.x, dz = av.tz - av.z, d = Math.hypot(dx, dz);
       if(d < .08) av.moving = false;
@@ -293,6 +345,10 @@ H.world = (function(){
     const pd = Math.hypot(av.x - S.pet.x, av.z - S.pet.z);
     if(pd > 1.5){ const k = Math.min(1, dt * 3.2); S.pet.x += (av.x - S.pet.x) * k * (1 - 1.3 / pd); S.pet.z += (av.z - S.pet.z) * k * (1 - 1.3 / pd); }
     S.wild.forEach(w => { w.a += w.sp * dt; });
+    /* שער קרוב: מציעים לשחק */
+    let np = null, pd2 = 2.6;
+    S.portals.forEach(q => { const d = Math.hypot(q.x - av.x, q.z - av.z); if(d < pd2){ pd2 = d; np = q; } });
+    if(np !== S.near){ S.near = np; renderPrompt(); }
     /* קרבה לצמח: תווית עם המילה */
     let near = null, nd = 2.2;
     S.plants.forEach(p => { const d = Math.hypot(p.x - av.x, p.z - av.z); if(d < nd){ nd = d; near = p; } });
@@ -340,7 +396,8 @@ H.world = (function(){
     gl.bindTexture(gl.TEXTURE_2D, tx); gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
   function draw(){
-    const w = Math.round(cv.clientWidth * Math.min(2, window.devicePixelRatio || 1)), h = Math.round(cv.clientHeight * Math.min(2, window.devicePixelRatio || 1));
+    const dpr = Math.min(window.matchMedia && matchMedia('(pointer:coarse)').matches ? 1.75 : 2, window.devicePixelRatio || 1) * qual;
+    const w = Math.max(2, Math.round(cv.clientWidth * dpr)), h = Math.max(2, Math.round(cv.clientHeight * dpr));
     if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
     gl.viewport(0, 0, cv.width, cv.height);
     const th = S.th; gl.clearColor(th.sky[0], th.sky[1], th.sky[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -377,6 +434,9 @@ H.world = (function(){
       push(dist(x, y, z), () => sprite(c, emojiTex(wd.e), x, y, z, .8, .8)); });
     S.plants.forEach(p => { const y = p.y + (p.st >= 4 || H.isEarned(p.w) ? 2.6 : (p.st >= 3 ? 1.9 : 1.1));
       if(S.label && S.label.p === p) push(dist(p.x, y, p.z) - 3, () => sprite(c, labelTex(H.disp(p.w)), p.x, y, p.z, 2.6, .65)); });
+    S.portals.forEach(q => { const d0 = dist(q.x, q.y + 3.3, q.z);
+      push(d0, () => sprite(c, emojiTex(q.g.e), q.x, q.y + 3.4 + Math.sin(S.t * 2 + q.x) * .12, q.z, 1.5, 1.5));
+      if(d0 > 7 && d0 < 22) push(d0 - 1, () => sprite(c, labelTex(q.g.name), q.x, q.y + 4.5, q.z, 2.6, .65)); });
     S.items.forEach(it => { const y = hgt(it.x, it.z) + 1.9 + Math.sin(S.t * 2 + it.ph) * .12;
       if(it.type === 'letter') push(dist(it.x, y, it.z) - 1, () => sprite(c, letterTex(it.ch), it.x, y, it.z, 1.15, 1.15));
       if(it.type === 'chest') push(dist(it.x, y, it.z), () => sprite(c, emojiTex('🎁'), it.x, hgt(it.x, it.z) + 1.9, it.z, 1, 1)); });
@@ -390,6 +450,9 @@ H.world = (function(){
     if(!running) return;
     if(H.screen !== 'world'){ running = false; return; }
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
+    /* מכשיר איטי: מורידים רזולוציה כדי לשמור על זרימה */
+    frame.acc = (frame.acc || 0) + dt; frame.n = (frame.n || 0) + 1;
+    if(frame.n >= 60){ const avg = frame.acc / frame.n; if(avg > .034 && qual > .55) qual -= .15; else if(avg < .019 && qual < 1) qual = Math.min(1, qual + .1); frame.acc = 0; frame.n = 0; }
     try{ update(dt); draw(); }catch(e){ console.warn(e); running = false; return; }
     requestAnimationFrame(frame);
   }
@@ -406,14 +469,15 @@ H.world = (function(){
   function bind(){
     if(bind.done) return; bind.done = true;
     cv.addEventListener('pointerdown', e => {
-      cv.setPointerCapture(e.pointerId); ptr.set(e.pointerId, {x: e.clientX, y: e.clientY});
+      try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+      ptr.set(e.pointerId, {x: e.clientX, y: e.clientY});
       tap = ptr.size === 1 ? {x: e.clientX, y: e.clientY, t: performance.now(), moved: false} : null;
       if(ptr.size === 2){ const [a, b] = [...ptr.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
     });
     cv.addEventListener('pointermove', e => {
       const p = ptr.get(e.pointerId); if(!p) return;
       const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-      if(ptr.size === 2){ const [a, b] = [...ptr.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if(pinch) cam.dist = clamp(cam.dist * pinch / d, 5, 16); pinch = d; return; }
+      if(ptr.size === 2){ const [a, b] = [...ptr.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if(pinch) cam.dist = clamp(cam.dist * pinch / d, 6, 22); pinch = d; return; }
       if(tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap.moved = true;
       if(tap && tap.moved){ cam.yaw -= dx * .008; cam.pitch = clamp(cam.pitch + dy * .005, .25, 1.15); }
     });
@@ -426,13 +490,26 @@ H.world = (function(){
       tap = null;
     };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-    cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * .01, 5, 16); }, {passive: false});
+    window.addEventListener('keydown', e => { if(H.screen !== 'world') return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = true; if(k.startsWith('Arrow')) e.preventDefault(); });
+    window.addEventListener('keyup', e => { const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = false; });
+    window.addEventListener('blur', () => { for(const k in keys) keys[k] = false; });
+    const st = H.$('wstick'), kn = H.$('wknob');
+    if(st){
+      const setv = (cx, cy) => { const r = st.getBoundingClientRect(), mx = r.left + r.width / 2, my = r.top + r.height / 2, rad = r.width / 2 - 16;
+        let dx = cx - mx, dy = cy - my; const l = Math.hypot(dx, dy); if(l > rad){ dx *= rad / l; dy *= rad / l; }
+        stick.x = dx / rad; stick.y = dy / rad; kn.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; };
+      st.addEventListener('pointerdown', e => { try{ st.setPointerCapture(e.pointerId); }catch(_){} stick.id = e.pointerId; setv(e.clientX, e.clientY); e.preventDefault(); e.stopPropagation(); });
+      st.addEventListener('pointermove', e => { if(stick.id === e.pointerId) setv(e.clientX, e.clientY); });
+      const rel = e => { if(stick.id !== e.pointerId) return; stick.id = null; stick.x = stick.y = 0; kn.style.transform = ''; };
+      st.addEventListener('pointerup', rel); st.addEventListener('pointercancel', rel);
+    }
+    cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * .01, 6, 22); }, {passive: false});
   }
 
   return {
     supported(){ return initGL(); },
-    open(m){ if(!initGL()) return false; bind(); return begin(m || 'explore'); },
-    hunt, end, state: () => S
+    open(m, keep){ if(!initGL()) return false; bind(); document.body.classList.add('inworld'); return begin(m || 'explore', keep); },
+    hunt, end, state: () => S, mode: () => mode, refresh(){ renderHud(); }
   };
 })();
 
@@ -440,7 +517,7 @@ H.world = (function(){
 H.openWorld = function(){
   H.run = {origin: 'home', game: null, word: null, right: 0, wrong: 0, total: 0, queue: []};
   H.show('world');
-  if(!H.world.open('explore')){ H.toast('הדפדפן הזה לא תומך בתלת־ממד'); H.home(); }
+  if(!H.world.open('explore', true)){ H.toast('הדפדפן הזה לא תומך בתלת־ממד'); H.home(); }
 };
 H.renderWorldBtn = function(){
   const b = H.$('worldbtn'); if(!b) return;

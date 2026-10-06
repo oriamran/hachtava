@@ -4,11 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Uruxjjfu/fIhgiCjV9CcDffe/h3P2KDiW+pisYZCCpU=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-dgCLtEin2ZFVLliAd6OXA1rLd+tbIYdZ3K7Qy7wtBmw=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dQ8U/zsV9zLV+sfgw7CmWVwXZ/ttTKa681lGYZ39+9c=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-LNM24cV0l6FhZE8DfaUZaijjEncodqQoAPeCHiaYgSU=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="48x48" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ארץ המילים">
@@ -710,6 +713,28 @@ body[data-bg="space"] h1,body[data-bg="space"] h2,body[data-bg="space"] h3,body[
 .wh-word span.got{background:linear-gradient(135deg,#8ff0cd,var(--mint));color:#05463f}
 .worldcv{display:block;width:100%;height:calc(100vh - 240px);min-height:300px;max-height:620px;border-radius:22px;box-shadow:var(--drop);touch-action:none;background:#9bd7ff}
 
+/* ---------- האי במסך מלא ---------- */
+body.inworld{overflow:hidden}
+body.inworld .hud,body.inworld #backbtn{display:none!important}
+#s-world{position:fixed;inset:0;z-index:60;padding:0;margin:0;background:#9bd7ff;overflow:hidden;touch-action:none}
+#s-world.on{display:block;animation:none}
+#s-world .worldcv{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;border-radius:0;box-shadow:none}
+#s-world .worldhud{position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 0;margin:0;pointer-events:none;text-align:center}
+#s-world .worldhud button,#s-world .worldhud .wh-sub{pointer-events:auto}
+.wh-top{display:flex;justify-content:space-between;align-items:center;gap:8px;direction:rtl}
+.wh-exit,.wh-topic{background:rgba(255,255,255,.92);color:var(--ink);padding:9px 14px;font-size:14px;min-height:42px;box-shadow:var(--drop);border-radius:999px;max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wh-coins{background:rgba(255,255,255,.92);border-radius:999px;padding:9px 14px;font-weight:800;font-size:14px;box-shadow:var(--drop)}
+#s-world .wh-sub{display:inline-block;background:rgba(255,255,255,.85);border-radius:999px;padding:5px 12px;margin:8px 0 0;font-size:13px}
+#s-world .wh-word{margin-top:10px}
+.wstick{position:absolute;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:124px;height:124px;border-radius:50%;background:rgba(255,255,255,.35);border:3px solid rgba(255,255,255,.75);touch-action:none;z-index:2}
+.wstick i{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(255,255,255,.95);box-shadow:var(--drop);pointer-events:none}
+.worldgo{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:min(220px,46vw);background:rgba(255,255,255,.96);border-radius:22px;padding:12px 14px;text-align:center;box-shadow:var(--drop);z-index:2}
+.wg-t{font-size:18px;font-weight:800}
+.wg-d{font-size:12px;color:var(--ink2);margin:3px 0 8px;line-height:1.4}
+.worldgo .go{padding:10px 20px;font-size:17px;width:100%}
+.whint{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);text-align:center;font-size:11px;color:rgba(255,255,255,.95);text-shadow:0 1px 3px rgba(0,0,0,.35);margin:0;pointer-events:none}
+@supports (height:100dvh){#s-world{height:100dvh}}
+
 </style>
 </head>
 <body>
@@ -1000,8 +1025,11 @@ body[data-bg="space"] h1,body[data-bg="space"] h2,body[data-bg="space"] h3,body[
 
   <!-- ============ האי שלי (תלת־ממד) ============ -->
   <section class="screen" id="s-world">
-    <div id="worldhud" class="worldhud"></div>
     <canvas id="worldcv" class="worldcv"></canvas>
+    <div id="worldhud" class="worldhud"></div>
+    <div id="worldgo" class="worldgo" style="display:none"></div>
+    <div id="wstick" class="wstick" aria-label="ג'ויסטיק"><i id="wknob"></i></div>
+    <p class="whint">ג'ויסטיק או לחיצה על האדמה כדי ללכת · גרור כדי להסתובב</p>
   </section>
 
   <!-- ============ בחירת נושא למשחק ============ -->
@@ -1789,12 +1817,21 @@ H.show = function(id){
   H.$('backbtn').classList.toggle('on', !bare);
   document.body.classList.toggle('nav', !bare);
   if(id === 'tips') H.renderTips();
+  document.body.classList.toggle('inworld', id === 'world');
   window.scrollTo(0, 0);
   H.paint();
 };
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
 H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','world','end']);
+/* חזרה לאי אחרי משחק שנפתח משער */
+H.returnToWorld = function(){
+  speechSynthesis.cancel();
+  H.show('world');
+  if(!H.world.open('explore', true)){ H.home(); }
+};
 H.goBack = function(){
+  if(H.screen === 'world' && H.world.mode() === 'explore') return H.home();     /* יציאה מהאי */
+  if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin === 'world') return H.returnToWorld();
   if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin !== 'home'){
     if(H.pendingGame.origin === 'map') H.renderMap();
     if(H.pendingGame.origin === 'play') H.renderPlay();
@@ -1808,6 +1845,7 @@ H.goBack = function(){
     if(o === 'map') H.renderMap();
     if(o === 'play') H.renderPlay();
     if(o === 'plan') H.renderPlan();
+    if(o === 'world') return H.returnToWorld();
     return H.show(o);
   }
   H.home();
@@ -1887,7 +1925,7 @@ H.finish = function(opt){
   }
   H.endAgain = opt.onAgain || null;
   const og = H.run && H.run.origin;
-  H.$('endhome').textContent = og === 'play' ? '🎮 למשחקים' : og === 'map' ? '🗺️ למפה' : og === 'plan' ? '📅 לתוכנית' : '🏠 בית';
+  H.$('endhome').textContent = og === 'play' ? '🎮 למשחקים' : og === 'map' ? '🗺️ למפה' : og === 'plan' ? '📅 לתוכנית' : og === 'world' ? '🏝️ לאי' : '🏠 בית';
   H.$('againbtn').style.display = opt.onAgain ? '' : 'none';
   H.$('againbtn').textContent = opt.againLabel || '🔁 עוד פעם';
   if(opt.xp) H.reward(opt.xp);
@@ -5122,7 +5160,7 @@ H.pendingGame = null;
 H.topicMore = false;
 
 H.chooseTopic = function(gameId, station){
-  const origin = ['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home';
+  const origin = H.screen === 'world' || gameId === null ? 'world' : (['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home');
   H.pendingGame = {gameId, station, origin};
   H.topicMore = false;
   H.renderTopic();
@@ -5132,12 +5170,13 @@ H.chooseTopic = function(gameId, station){
 H.startPending = function(){
   const pg = H.pendingGame;
   H.refresh();
+  if(!pg.gameId) return H.returnToWorld();            /* בחירת נושא לטיול באי */
   H.startRound(pg.gameId, pg.station, undefined, {origin: pg.origin});
 };
 
 H.renderTopic = function(){
-  const pg = H.pendingGame, g = H.byId(pg.gameId);
-  H.$('topictitle').textContent = g.e + ' ' + g.name + ': באיזה נושא?';
+  const pg = H.pendingGame, g = pg.gameId ? H.byId(pg.gameId) : null;
+  H.$('topictitle').textContent = g ? g.e + ' ' + g.name + ': באיזה נושא?' : '🏝️ באיזה נושא לטייל?';
   const box = H.$('topiclist'); box.innerHTML = '';
 
   const mine = H.state.packs.filter(p => p.list.some(w => String(w).trim()));
@@ -5210,7 +5249,8 @@ H.WORLD_THEMES = {
 H.world = (function(){
   const R = H.WORLD_R;
   let gl = null, cv = null, progL = null, progS = null, running = false, last = 0;
-  let mode = 'explore', S = null, cam = {yaw: .7, pitch: .55, dist: 9};
+  let mode = 'explore', S = null, cam = {yaw: .7, pitch: .55, dist: 9}, lastPos = null, qual = 1;
+  const keys = {}, stick = {x: 0, y: 0, id: null};
   const texCache = {}, ptr = new Map();
   let tap = null, pinch = 0;
 
@@ -5355,7 +5395,7 @@ H.world = (function(){
   function plantsOf(){
     const seen = new Set(), out = [];
     H.words().forEach(w => { const k = H.sk(w); if(!seen.has(k)){ seen.add(k); out.push(w); } });
-    return out.slice(0, 60);
+    return out.slice(0, 40);
   }
   function build(){
     const th = theme(), rnd = rngOf(1234), mesh = new Mesh(rnd);
@@ -5387,8 +5427,25 @@ H.world = (function(){
       }
       plants.push({w, x, z, y, st});
     });
+    /* שערים למשחקים: טבעת סביב האי, כל משחק בצבע משלו */
+    const portals = [];
+    if(mode === 'explore'){
+      const cols = [[1,.45,.55],[1,.7,.25],[.35,.8,.95],[.55,.85,.4],[.75,.55,1],[1,.6,.8],[.4,.9,.8]];
+      const n = H.GAMES.length;
+      H.GAMES.forEach((g, i) => {
+        const a = i / n * 6.2832 + .3, x = Math.cos(a) * 16, z = Math.sin(a) * 16, y = hgt(x, z), col = cols[i % cols.length];
+        const tx = -Math.sin(a), tz = Math.cos(a);
+        mesh.cyl(x, y - .05, z, 1.7, .3, 12, [.85, .85, .9]);
+        mesh.cyl(x, y + .22, z, 1.35, .06, 12, col);
+        mesh.cyl(x + tx * 1.05, y, z + tz * 1.05, .2, 2.3, 6, [.95, .93, .85]);
+        mesh.cyl(x - tx * 1.05, y, z - tz * 1.05, .2, 2.3, 6, [.95, .93, .85]);
+        mesh.ball(x + tx * 1.05, y + 2.4, z + tz * 1.05, .3, col, 3, 6);
+        mesh.ball(x - tx * 1.05, y + 2.4, z - tz * 1.05, .3, col, 3, 6);
+        portals.push({g, x, z, y});
+      });
+    }
     /* עצים, סלעים ופרחים */
-    const near = (x, z, d) => plants.some(p => Math.hypot(p.x - x, p.z - z) < d) || Math.hypot(x, z) < 3;
+    const near = (x, z, d) => plants.some(p => Math.hypot(p.x - x, p.z - z) < d) || Math.hypot(x, z) < 3 || portals.some(q => Math.hypot(q.x - x, q.z - z) < 3.2);
     for(let i = 0; i < 90; i++){
       const a = rnd() * 6.2832, r = 12.5 + rnd() * (R - 17), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
       if(y < .08 || near(x, z, 2)) continue;
@@ -5406,7 +5463,7 @@ H.world = (function(){
       mesh.cyl(x, y, z, .025, .28, 4, [.3, .65, .3]);
       mesh.ball(x, y + .33, z, .09, [[1,.5,.6],[1,.85,.3],[.8,.6,1],[1,1,1]][i % 4], 2, 4);
     }
-    return {mesh: mesh.upload(), plants};
+    return {mesh: mesh.upload(), plants, portals};
   }
 
   /* ---------- מצב הסצנה ---------- */
@@ -5424,21 +5481,25 @@ H.world = (function(){
     if(!W.chest){ const a = rnd() * 6.2832, r = 9 + rnd() * 7; items.push({type: 'chest', x: Math.cos(a) * r, z: Math.sin(a) * r, ph: 0}); }
     return items;
   }
-  function begin(m){
+  function begin(m, keep){
     if(!initGL()) return false;
     mode = m;
+    /* בטלפון עומד המסך צר וגבוה, אז המצלמה רחוקה יותר כדי שיראו את האי */
+    const portrait = cv.clientWidth / Math.max(1, cv.clientHeight) < .75;
+    cam.dist = portrait ? 14 : 10.5; cam.pitch = portrait ? .72 : .6;
     const b = build();
-    S = {mesh: b.mesh, plants: b.plants, th: theme(), av: {x: 0, z: 5, tx: 0, tz: 5, moving: false, ph: 0, face: 1},
-         pet: {x: 1.4, z: 5.6}, items: m === 'explore' ? spawnExplore() : [], wild: [], clouds: [], label: null, t: 0,
+    S = {mesh: b.mesh, plants: b.plants, portals: b.portals, near: null, th: theme(),
+         av: {x: keep && lastPos ? lastPos.x : 0, z: keep && lastPos ? lastPos.z : 5, tx: 0, tz: 5, moving: false, ph: 0, face: 1},
+         pet: {x: (keep && lastPos ? lastPos.x : 0) + 1.4, z: (keep && lastPos ? lastPos.z : 5) + .6}, items: m === 'explore' ? spawnExplore() : [], wild: [], clouds: [], label: null, t: 0,
          need: [], idx: 0, miss: 0, lastWrong: -9, onDone: null};
     const rnd = rngOf(77);
     for(let i = 0; i < 7; i++) S.wild.push({e: ['🦋','🐝','🦋','🐞','🦋','🐦','🦋'][i], a: rnd() * 6.2832, r: 4 + rnd() * 12, sp: .15 + rnd() * .25, h: 1.2 + rnd() * 1.4, ph: rnd() * 6});
     for(let i = 0; i < 6; i++) S.clouds.push({x: (rnd() - .5) * 60, z: (rnd() - .5) * 60, y: 13 + rnd() * 4, s: 4 + rnd() * 3});
-    renderHud();
+    renderHud(); renderPrompt();
     if(!running){ running = true; last = performance.now(); requestAnimationFrame(frame); }
     return true;
   }
-  function end(){ running = false; if(H.state.world) H.save(); }
+  function end(){ if(S && mode === 'explore') lastPos = {x: S.av.x, z: S.av.z}; running = false; document.body.classList.remove('inworld'); if(H.state.world) H.save(); }
 
   /* ---------- ציד אותיות ---------- */
   function hunt(word, onDone){
@@ -5457,20 +5518,50 @@ H.world = (function(){
   }
   function renderHud(){
     const box = H.$('worldhud'); if(!box) return;
+    const top = '<div class="wh-top"><button class="wh-exit" id="wexit">✕ יציאה</button>' +
+      '<span class="wh-coins">🪙 ' + H.state.coins + '</span>' +
+      (mode === 'explore' ? '<button class="wh-topic" id="wtopic">📝 ' + H.esc(H.topic() || 'הכתבה') + ' ▾</button>' : '') + '</div>';
     if(mode === 'hunt' && S){
-      box.innerHTML = '<div class="wh-word">' + S.need.map((c, i) => '<span class="' + (i < S.idx ? 'got' : (i === S.idx ? 'now' : '')) + '">' + (i < S.idx ? H.esc(c) : '▢') + '</span>').join('') + '</div>' +
-        '<div class="wh-sub">אסוף את האותיות לפי הסדר · <button class="mini" data-say>🔊 שמע</button></div>';
-      box.querySelectorAll('[data-say]').forEach(b => b.onclick = () => H.say(S.word));
+      box.innerHTML = top + '<div class="wh-word">' + S.need.map((c, i) => '<span class="' + (i < S.idx ? 'got' : (i === S.idx ? 'now' : '')) + '">' + (i < S.idx ? H.esc(c) : '▢') + '</span>').join('') + '</div>' +
+        '<div class="wh-sub"><button class="mini" id="wsay">🔊 שמע שוב</button></div>';
+      H.$('wsay').onclick = () => H.say(S.word);
     } else {
       const W = daily();
-      box.innerHTML = '<div class="wh-sub">💎 ' + W.gems + '/' + H.WORLD_GEMS + ' היום · ' + (W.chest ? '🎁 התיבה נפתחה' : '🎁 תיבת אוצר מחכה באי') + ' · 🌱 ' + S.plants.filter(p => p.st >= 3).length + '/' + S.plants.length + ' גדלו</div>' +
-        '<div class="wh-sub">לחץ על האדמה כדי ללכת · גרור כדי להסתובב</div>';
+      box.innerHTML = top + '<div class="wh-sub">💎 ' + W.gems + '/' + H.WORLD_GEMS + ' · ' + (W.chest ? '🎁 נפתחה' : '🎁 תיבה מחכה') + ' · 🌱 ' + S.plants.filter(p => p.st >= 3).length + '/' + S.plants.length + '</div>';
     }
+    H.$('wexit').onclick = () => { H.sfx.tap(); H.goBack(); };
+    const tp = H.$('wtopic'); if(tp) tp.onclick = () => { end(); H.chooseTopic(null); };
+  }
+  function renderPrompt(){
+    const box = H.$('worldgo'); if(!box) return;
+    const q = S && S.near;
+    if(!q || mode !== 'explore'){ box.style.display = 'none'; return; }
+    const g = q.g, ok = !g.canPlay || g.canPlay(H.words().map(H.disp));
+    box.style.display = '';
+    box.innerHTML = '<div class="wg-t">' + g.e + ' ' + H.esc(g.name) + '</div><div class="wg-d">' + H.esc(g.desc) + '</div>' +
+      (ok ? '<button class="go" id="wgo">שחק ▶</button>' : '<div class="wg-d">לא מתאים לנושא הזה</div>');
+    if(ok) H.$('wgo').onclick = () => { H.sfx.tap(); go(q.g.id); };
+  }
+  function go(id){
+    if(S) lastPos = {x: S.av.x, z: S.av.z};
+    running = false;
+    H.startRound(id, undefined, undefined, {origin: 'world'});
   }
 
   /* ---------- עדכון ---------- */
   function update(dt){
     S.t += dt; const av = S.av;
+    /* ג'ויסטיק ומקשים: תנועה ביחס למצלמה */
+    let ix = stick.x, iy = stick.y;
+    if(keys.ArrowLeft || keys.a) ix -= 1; if(keys.ArrowRight || keys.d) ix += 1;
+    if(keys.ArrowUp || keys.w) iy -= 1; if(keys.ArrowDown || keys.s) iy += 1;
+    const mag = Math.min(1, Math.hypot(ix, iy));
+    if(mag > .12){
+      const fx = -Math.sin(cam.yaw), fz = -Math.cos(cam.yaw), rx = Math.cos(cam.yaw), rz = -Math.sin(cam.yaw);
+      const dx = (fx * -iy + rx * ix), dz = (fz * -iy + rz * ix), dl = Math.hypot(dx, dz) || 1;
+      av.x += dx / dl * 4.8 * mag * dt; av.z += dz / dl * 4.8 * mag * dt; av.moving = false; av.ph += dt * 11;
+      if(Math.abs(dx) > .05) av.face = dx > 0 ? 1 : -1;
+    }
     if(av.moving){
       const dx = av.tx - av.x, dz = av.tz - av.z, d = Math.hypot(dx, dz);
       if(d < .08) av.moving = false;
@@ -5481,6 +5572,10 @@ H.world = (function(){
     const pd = Math.hypot(av.x - S.pet.x, av.z - S.pet.z);
     if(pd > 1.5){ const k = Math.min(1, dt * 3.2); S.pet.x += (av.x - S.pet.x) * k * (1 - 1.3 / pd); S.pet.z += (av.z - S.pet.z) * k * (1 - 1.3 / pd); }
     S.wild.forEach(w => { w.a += w.sp * dt; });
+    /* שער קרוב: מציעים לשחק */
+    let np = null, pd2 = 2.6;
+    S.portals.forEach(q => { const d = Math.hypot(q.x - av.x, q.z - av.z); if(d < pd2){ pd2 = d; np = q; } });
+    if(np !== S.near){ S.near = np; renderPrompt(); }
     /* קרבה לצמח: תווית עם המילה */
     let near = null, nd = 2.2;
     S.plants.forEach(p => { const d = Math.hypot(p.x - av.x, p.z - av.z); if(d < nd){ nd = d; near = p; } });
@@ -5528,7 +5623,8 @@ H.world = (function(){
     gl.bindTexture(gl.TEXTURE_2D, tx); gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
   function draw(){
-    const w = Math.round(cv.clientWidth * Math.min(2, window.devicePixelRatio || 1)), h = Math.round(cv.clientHeight * Math.min(2, window.devicePixelRatio || 1));
+    const dpr = Math.min(window.matchMedia && matchMedia('(pointer:coarse)').matches ? 1.75 : 2, window.devicePixelRatio || 1) * qual;
+    const w = Math.max(2, Math.round(cv.clientWidth * dpr)), h = Math.max(2, Math.round(cv.clientHeight * dpr));
     if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
     gl.viewport(0, 0, cv.width, cv.height);
     const th = S.th; gl.clearColor(th.sky[0], th.sky[1], th.sky[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -5565,6 +5661,9 @@ H.world = (function(){
       push(dist(x, y, z), () => sprite(c, emojiTex(wd.e), x, y, z, .8, .8)); });
     S.plants.forEach(p => { const y = p.y + (p.st >= 4 || H.isEarned(p.w) ? 2.6 : (p.st >= 3 ? 1.9 : 1.1));
       if(S.label && S.label.p === p) push(dist(p.x, y, p.z) - 3, () => sprite(c, labelTex(H.disp(p.w)), p.x, y, p.z, 2.6, .65)); });
+    S.portals.forEach(q => { const d0 = dist(q.x, q.y + 3.3, q.z);
+      push(d0, () => sprite(c, emojiTex(q.g.e), q.x, q.y + 3.4 + Math.sin(S.t * 2 + q.x) * .12, q.z, 1.5, 1.5));
+      if(d0 > 7 && d0 < 22) push(d0 - 1, () => sprite(c, labelTex(q.g.name), q.x, q.y + 4.5, q.z, 2.6, .65)); });
     S.items.forEach(it => { const y = hgt(it.x, it.z) + 1.9 + Math.sin(S.t * 2 + it.ph) * .12;
       if(it.type === 'letter') push(dist(it.x, y, it.z) - 1, () => sprite(c, letterTex(it.ch), it.x, y, it.z, 1.15, 1.15));
       if(it.type === 'chest') push(dist(it.x, y, it.z), () => sprite(c, emojiTex('🎁'), it.x, hgt(it.x, it.z) + 1.9, it.z, 1, 1)); });
@@ -5578,6 +5677,9 @@ H.world = (function(){
     if(!running) return;
     if(H.screen !== 'world'){ running = false; return; }
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
+    /* מכשיר איטי: מורידים רזולוציה כדי לשמור על זרימה */
+    frame.acc = (frame.acc || 0) + dt; frame.n = (frame.n || 0) + 1;
+    if(frame.n >= 60){ const avg = frame.acc / frame.n; if(avg > .034 && qual > .55) qual -= .15; else if(avg < .019 && qual < 1) qual = Math.min(1, qual + .1); frame.acc = 0; frame.n = 0; }
     try{ update(dt); draw(); }catch(e){ console.warn(e); running = false; return; }
     requestAnimationFrame(frame);
   }
@@ -5594,14 +5696,15 @@ H.world = (function(){
   function bind(){
     if(bind.done) return; bind.done = true;
     cv.addEventListener('pointerdown', e => {
-      cv.setPointerCapture(e.pointerId); ptr.set(e.pointerId, {x: e.clientX, y: e.clientY});
+      try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+      ptr.set(e.pointerId, {x: e.clientX, y: e.clientY});
       tap = ptr.size === 1 ? {x: e.clientX, y: e.clientY, t: performance.now(), moved: false} : null;
       if(ptr.size === 2){ const [a, b] = [...ptr.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
     });
     cv.addEventListener('pointermove', e => {
       const p = ptr.get(e.pointerId); if(!p) return;
       const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-      if(ptr.size === 2){ const [a, b] = [...ptr.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if(pinch) cam.dist = clamp(cam.dist * pinch / d, 5, 16); pinch = d; return; }
+      if(ptr.size === 2){ const [a, b] = [...ptr.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if(pinch) cam.dist = clamp(cam.dist * pinch / d, 6, 22); pinch = d; return; }
       if(tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap.moved = true;
       if(tap && tap.moved){ cam.yaw -= dx * .008; cam.pitch = clamp(cam.pitch + dy * .005, .25, 1.15); }
     });
@@ -5614,13 +5717,26 @@ H.world = (function(){
       tap = null;
     };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-    cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * .01, 5, 16); }, {passive: false});
+    window.addEventListener('keydown', e => { if(H.screen !== 'world') return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = true; if(k.startsWith('Arrow')) e.preventDefault(); });
+    window.addEventListener('keyup', e => { const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = false; });
+    window.addEventListener('blur', () => { for(const k in keys) keys[k] = false; });
+    const st = H.$('wstick'), kn = H.$('wknob');
+    if(st){
+      const setv = (cx, cy) => { const r = st.getBoundingClientRect(), mx = r.left + r.width / 2, my = r.top + r.height / 2, rad = r.width / 2 - 16;
+        let dx = cx - mx, dy = cy - my; const l = Math.hypot(dx, dy); if(l > rad){ dx *= rad / l; dy *= rad / l; }
+        stick.x = dx / rad; stick.y = dy / rad; kn.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; };
+      st.addEventListener('pointerdown', e => { try{ st.setPointerCapture(e.pointerId); }catch(_){} stick.id = e.pointerId; setv(e.clientX, e.clientY); e.preventDefault(); e.stopPropagation(); });
+      st.addEventListener('pointermove', e => { if(stick.id === e.pointerId) setv(e.clientX, e.clientY); });
+      const rel = e => { if(stick.id !== e.pointerId) return; stick.id = null; stick.x = stick.y = 0; kn.style.transform = ''; };
+      st.addEventListener('pointerup', rel); st.addEventListener('pointercancel', rel);
+    }
+    cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * .01, 6, 22); }, {passive: false});
   }
 
   return {
     supported(){ return initGL(); },
-    open(m){ if(!initGL()) return false; bind(); return begin(m || 'explore'); },
-    hunt, end, state: () => S
+    open(m, keep){ if(!initGL()) return false; bind(); document.body.classList.add('inworld'); return begin(m || 'explore', keep); },
+    hunt, end, state: () => S, mode: () => mode, refresh(){ renderHud(); }
   };
 })();
 
@@ -5628,7 +5744,7 @@ H.world = (function(){
 H.openWorld = function(){
   H.run = {origin: 'home', game: null, word: null, right: 0, wrong: 0, total: 0, queue: []};
   H.show('world');
-  if(!H.world.open('explore')){ H.toast('הדפדפן הזה לא תומך בתלת־ממד'); H.home(); }
+  if(!H.world.open('explore', true)){ H.toast('הדפדפן הזה לא תומך בתלת־ממד'); H.home(); }
 };
 H.renderWorldBtn = function(){
   const b = H.$('worldbtn'); if(!b) return;

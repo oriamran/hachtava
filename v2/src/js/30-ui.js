@@ -20,12 +20,21 @@ H.show = function(id){
   H.$('backbtn').classList.toggle('on', !bare);
   document.body.classList.toggle('nav', !bare);
   if(id === 'tips') H.renderTips();
+  document.body.classList.toggle('inworld', id === 'world');
   window.scrollTo(0, 0);
   H.paint();
 };
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
 H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','world','end']);
+/* חזרה לאי אחרי משחק שנפתח משער */
+H.returnToWorld = function(){
+  speechSynthesis.cancel();
+  H.show('world');
+  if(!H.world.open('explore', true)){ H.home(); }
+};
 H.goBack = function(){
+  if(H.screen === 'world' && H.world.mode() === 'explore') return H.home();     /* יציאה מהאי */
+  if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin === 'world') return H.returnToWorld();
   if(H.screen === 'topic' && H.pendingGame && H.pendingGame.origin !== 'home'){
     if(H.pendingGame.origin === 'map') H.renderMap();
     if(H.pendingGame.origin === 'play') H.renderPlay();
@@ -39,6 +48,7 @@ H.goBack = function(){
     if(o === 'map') H.renderMap();
     if(o === 'play') H.renderPlay();
     if(o === 'plan') H.renderPlan();
+    if(o === 'world') return H.returnToWorld();
     return H.show(o);
   }
   H.home();
@@ -118,7 +128,7 @@ H.finish = function(opt){
   }
   H.endAgain = opt.onAgain || null;
   const og = H.run && H.run.origin;
-  H.$('endhome').textContent = og === 'play' ? '🎮 למשחקים' : og === 'map' ? '🗺️ למפה' : og === 'plan' ? '📅 לתוכנית' : '🏠 בית';
+  H.$('endhome').textContent = og === 'play' ? '🎮 למשחקים' : og === 'map' ? '🗺️ למפה' : og === 'plan' ? '📅 לתוכנית' : og === 'world' ? '🏝️ לאי' : '🏠 בית';
   H.$('againbtn').style.display = opt.onAgain ? '' : 'none';
   H.$('againbtn').textContent = opt.againLabel || '🔁 עוד פעם';
   if(opt.xp) H.reward(opt.xp);
