@@ -51,9 +51,12 @@ H.world = (function(){
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   /* גבעות בין השערים, כיכר ושטחי שערים שטוחים, וירידה אל המים בקצה האי */
   const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
-  let HILLS = [], PADS = [];
+  let HILLS = [], PADS = [], LMS = [];
   function prepareTerrain(){
-    const n = H.GAMES.length, rnd = rngOf(4242); PADS = []; HILLS = [];
+    const n = H.GAMES.length, rnd = rngOf(4242); PADS = []; HILLS = []; LMS = [];
+    /* ציוני דרך (מודלים מבלנדר): במקומות קבועים, על קרקע שטוחה */
+    [['windmill', .95, 13.2], ['cottage', 2.55, 12.8], ['cottage', 3.35, 13.4], ['camp', 4.5, 12.6], ['lighthouse', 5.6, 17.6]]
+      .forEach(l => LMS.push({name: l[0], a: l[1], x: Math.cos(l[1]) * l[2], z: Math.sin(l[1]) * l[2]}));
     for(let i = 0; i < n; i++){
       const a = i / n * 6.2832 + .3;
       PADS.push({x: Math.cos(a) * 16, z: Math.sin(a) * 16});
@@ -68,10 +71,27 @@ H.world = (function(){
     for(let i = 0; i < HILLS.length; i++){ const q = HILLS[i], d2 = ((x - q.x) * (x - q.x) + (z - q.z) * (z - q.z)) / (q.s * q.s); if(d2 < 12) hill += q.h * Math.exp(-d2); }
     let flat = smooth(8, 12, r);
     for(let i = 0; i < PADS.length; i++){ const d = Math.hypot(x - PADS[i].x, z - PADS[i].z); if(d < 6) flat = Math.min(flat, smooth(2.4, 5.8, d)); }
+    for(let i = 0; i < LMS.length; i++){ const d = Math.hypot(x - LMS[i].x, z - LMS[i].z); if(d < 6) flat = Math.min(flat, smooth(2.2, 5.2, d)); }
     h += hill * flat;
     const e = Math.max(0, (r - (R - 7)) / 7);
     return h - e * e * 2.4;
   };
+
+  /* ---------- מודלים מ-Blender ---------- */
+  const MOD = {};
+  (function(){
+    const b64 = t => { const bin = atob(t), a = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; };
+    Object.keys(H.MODELS || {}).forEach(k => {
+      const m = H.MODELS[k], raw = b64(m.v), i16 = new Int16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.length));
+      const f = new Float32Array(i16.length); for(let i = 0; i < i16.length; i++) f[i] = i16[i] / 256;
+      MOD[k] = {n: m.n, v: f, c: b64(m.c)};
+    });
+  })();
+  /* סיבוב סביב Y, ואז סביב Z (ללהבי טחנת הרוח), ואז הזזה */
+  M.modelZ = (x, y, z, s, ry, rz) => { const cy = Math.cos(ry), sy = Math.sin(ry), cz = Math.cos(rz), sz = Math.sin(rz);
+    return new Float32Array([s*(cy*cz), s*sz, s*(-sy*cz), 0,  s*(-cy*sz), s*cz, s*(sy*sz), 0,  s*sy, 0, s*cy, 0,  x, y, z, 1]); };
+  /* פנים אל מרכז האי מהזווית a */
+  const faceCenter = a => Math.atan2(-Math.cos(a), -Math.sin(a));
 
   /* ---------- בניית רשת ---------- */
   function Mesh(rnd){ this.p = []; this.n = []; this.c = []; this.rnd = rnd || Math.random; }
@@ -83,6 +103,22 @@ H.world = (function(){
     if(!out){ nx = -nx; ny = -ny; nz = -nz; }
     const j = .9 + .2 * this.rnd();
     for(const v of [a, b, c]){ this.p.push(v[0], v[1], v[2]); this.n.push(nx, ny, nz); this.c.push(col[0]*j, col[1]*j, col[2]*j); }
+  };
+  /* משולש עם כיוון לפי הסדר, בלי היפוך (למודלים מבלנדר) */
+  Mesh.prototype.tri3 = function(a, b, c, col){
+    const ux = b[0]-a[0], uy = b[1]-a[1], uz = b[2]-a[2], vx = c[0]-a[0], vy = c[1]-a[1], vz = c[2]-a[2];
+    let nx = uy*vz-uz*vy, ny = uz*vx-ux*vz, nz = ux*vy-uy*vx; const l = Math.hypot(nx, ny, nz) || 1; nx/=l; ny/=l; nz/=l;
+    const j = .96 + .08 * this.rnd();
+    for(const v of [a, b, c]){ this.p.push(v[0], v[1], v[2]); this.n.push(nx, ny, nz); this.c.push(col[0]*j, col[1]*j, col[2]*j); }
+  };
+  Mesh.prototype.model = function(name, x, y, z, s, ry, tint){
+    const m = MOD[name]; if(!m) return;
+    const c = Math.cos(ry || 0), sn = Math.sin(ry || 0), t = tint || [1, 1, 1];
+    for(let i = 0; i < m.n; i++){
+      const P = [];
+      for(let k = 0; k < 3; k++){ const ox = m.v[i*9+k*3] * s, oy = m.v[i*9+k*3+1] * s, oz = m.v[i*9+k*3+2] * s; P.push([x + ox*c + oz*sn, y + oy, z - ox*sn + oz*c]); }
+      this.tri3(P[0], P[1], P[2], [m.c[i*3] / 255 * t[0], m.c[i*3+1] / 255 * t[1], m.c[i*3+2] / 255 * t[2]]);
+    }
   };
   Mesh.prototype.quad = function(a, b, c, d, col, o){ this.tri(a, b, c, col, o); this.tri(a, c, d, col, o); };
   Mesh.prototype.box = function(cx, cy, cz, sx, sy, sz, col){
@@ -157,6 +193,8 @@ H.world = (function(){
     const disc = new Mesh(() => .5);
     for(let i = 0; i < 10; i++){ const a = i/10*6.2832, b = (i+1)/10*6.2832; disc.tri([0,0,0], [Math.cos(a),0,Math.sin(a)], [Math.cos(b),0,Math.sin(b)], [1,1,1]); }
     S0.disc = disc.upload();
+    S0.mod = {};
+    ['chest', 'crystal', 'blades'].forEach(k => { const mm = new Mesh(() => .5); mm.model(k, 0, 0, 0, 1, 0); S0.mod[k] = mm.upload(); });
     return true;
   }
   const S0 = {};
@@ -250,17 +288,26 @@ H.world = (function(){
       H.GAMES.forEach((gm, i) => {
         const a = i / n * 6.2832 + .3, x = Math.cos(a) * 16, z = Math.sin(a) * 16, y = hgt(x, z), col = cols[i % cols.length];
         const tx = -Math.sin(a), tz = Math.cos(a);
-        mesh.cyl(x, y - .05, z, 1.8, .34, 12, [.85, .85, .9]);
-        mesh.cyl(x, y + .26, z, 1.4, .06, 12, col);
-        for(const sgn of [1, -1]){
-          mesh.cyl(x + tx * 1.05 * sgn, y, z + tz * 1.05 * sgn, .22, 2.4, 6, [.95, .93, .85]);
-          mesh.cyl(x + tx * 1.05 * sgn, y + 2.4, z + tz * 1.05 * sgn, .3, .18, 6, col);
-          mesh.ball(x + tx * 1.05 * sgn, y + 2.75, z + tz * 1.05 * sgn, .3, col, 3, 6);
-        }
-        portals.push({g: gm, x, z, y});
+        mesh.cyl(x, y + .02, z, 1.45, .08, 12, col);                              /* משטח צבעוני לכל משחק */
+        mesh.model('arch', x, y, z, 1, Math.atan2(-tz, tx));
+        portals.push({g: gm, x, z, y, col});
       });
     }
-    const near = (x, z, d) => plants.some(p => Math.hypot(p.x - x, p.z - z) < d) || Math.hypot(x, z) < 3.2 || portals.some(q => Math.hypot(q.x - x, q.z - z) < 3.4);
+    S0.blades = null; const blades = [];
+    LMS.forEach(l => {
+      const y = hgt(l.x, l.z), ry = faceCenter(l.a);
+      blob(l.x, l.z, l.name === 'lighthouse' ? 2.3 : 2.1);
+      mesh.model(l.name, l.x, y, l.z, l.name === 'lighthouse' ? 1.25 : 1, ry);
+      if(l.name === 'windmill'){ const c = Math.cos(ry), sn = Math.sin(ry), ox = 0, oz = 1.18; blades.push({x: l.x + ox * c + oz * sn, y: y + 3.65, z: l.z - ox * sn + oz * c, ry}); }
+    });
+    /* מזח וסירה בחוף, שלט, דגלים וכד' */
+    { const a = 1.75, r0 = 16.4, y0 = -.05, ry = Math.atan2(-Math.cos(a), -Math.sin(a)) + 3.1416;
+      mesh.model('pier', Math.cos(a) * r0, y0, Math.sin(a) * r0, 1, ry + 3.1416);
+      mesh.model('boat', Math.cos(a + .12) * (R - .5), -.38, Math.sin(a + .12) * (R - .5), 1.1, a); }
+    mesh.model('sign', 2.9, hgt(2.9, 2.2), 2.2, 1, .6);
+    [[0, 1], [3.1416, 1], [1.57, 1], [4.71, 1]].forEach(f => { const x = Math.cos(f[0]) * 3.6, z = Math.sin(f[0]) * 3.6; mesh.model('flag', x, hgt(x, z), z, .9, f[0]); });
+    const lmNear = (x, z, d) => LMS.some(l => Math.hypot(l.x - x, l.z - z) < d);
+    const near = (x, z, d) => plants.some(p => Math.hypot(p.x - x, p.z - z) < d) || Math.hypot(x, z) < 3.2 || portals.some(q => Math.hypot(q.x - x, q.z - z) < 3.4) || lmNear(x, z, 3.6);
     /* יער: אורנים גבוהים ועצים עגולים בגדלים שונים, גם על הגבעות */
     for(let i = 0; i < 150; i++){
       const a = rnd() * 6.2832, r = 11 + rnd() * (R - 15), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
@@ -268,8 +315,14 @@ H.world = (function(){
       const k = .8 + rnd() * .9, round = rnd() < .35, lc = [th.leaf[0] * (.85 + .3 * rnd()), th.leaf[1] * (.85 + .3 * rnd()), th.leaf[2] * (.85 + .3 * rnd())];
       blob(x + .25, z + .2, 1.0 * k);
       mesh.cyl(x, y - .1, z, .16 * k, .9 * k, 5, [.5, .34, .2]);
-      if(round){ mesh.ball(x, y + 1.5 * k, z, .95 * k, lc, 4, 7); mesh.ball(x + .35 * k, y + 1.9 * k, z + .2 * k, .6 * k, lc, 3, 6); }
-      else { mesh.cone(x, y + .6 * k, z, 1.0 * k, 1.6 * k, 7, lc); mesh.cone(x, y + 1.5 * k, z, .78 * k, 1.4 * k, 7, lc); mesh.cone(x, y + 2.3 * k, z, .5 * k, 1.2 * k, 7, lc); }
+      const tt = [.85 + .3 * rnd(), .85 + .3 * rnd(), .85 + .3 * rnd()], tn = [th.leaf[0] / .30 * .9, th.leaf[1] / .65 * .9, th.leaf[2] / .30 * .9];
+      const tinted = [Math.min(1.4, tt[0] * (.7 + tn[0] * .3)), Math.min(1.4, tt[1] * (.7 + tn[1] * .3)), Math.min(1.4, tt[2] * (.7 + tn[2] * .3))];
+      mesh.model(round ? 'roundtree' : 'pine', x, y - .1, z, k * .9, rnd() * 6.2832, tinted);
+    }
+    for(let i = 0; i < 16; i++){                  /* פטריות */
+      const a = rnd() * 6.2832, r = 8 + rnd() * (R - 12), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
+      if(y < .1 || near(x, z, 2)) continue;
+      blob(x, z, .6); mesh.model('mushroom', x, y, z, .55 + rnd() * .6, rnd() * 6.2832);
     }
     for(let i = 0; i < 26; i++){
       const a = rnd() * 6.2832, r = 6 + rnd() * (R - 10), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
@@ -303,6 +356,7 @@ H.world = (function(){
       mesh.cyl(x, -.9, z, rad, 1.4, 10, [.94, .86, .62]); mesh.cyl(x, .35, z, rad * .86, .35, 10, g);
       for(let k = 0; k < 3; k++){ const aa = rnd() * 6.2832, rr2 = rnd() * rad * .5; mesh.cone(x + Math.cos(aa) * rr2, .6, z + Math.sin(aa) * rr2, .9, 2.4 + rnd(), 6, th.leaf); }
     }
+    S0.blades = blades;
     return {mesh: mesh.upload(), plants, portals};
   }
   /* מים: טבעות עם צבע שמשתנה מהחוף לעומק, וקצף לבן בגבול האי. הגלים נעים בשכבת הצבע. */
@@ -521,9 +575,11 @@ H.world = (function(){
       if(it.type === 'gem'){ tint.set([.35, .9, 1]); drawBuf(S0.gem, M.model(it.x, y + .8 + bob, it.z, .55, .55, .55, S.t * 1.6), tint, progL); }
       else if(it.type === 'letter'){ const sh = it.shake > 0 ? Math.sin(S.t * 60) * .1 : 0; tint.set([1, .82, .25]);
         drawBuf(S0.cube, M.model(it.x + sh, y + .7 + bob, it.z, .9, .9, .9, S.t * .8), tint, progL); }
-      else if(it.type === 'chest'){ tint.set([.62, .4, .2]); drawBuf(S0.cube, M.model(it.x, y + .4, it.z, 1.1, .8, .8, 0), tint, progL);
-        tint.set([1, .8, .2]); drawBuf(S0.cube, M.model(it.x, y + .95 + bob * .5, it.z, 1.15, .22, .85, 0), tint, progL); }
+      else if(it.type === 'chest'){ tint.set([1, 1, 1]); drawBuf(S0.mod.chest, M.model(it.x, y, it.z, 1.4, 1.4, 1.4, S.t * .3), tint, progL); }
     });
+    /* גבישים מעל השערים (בצבע המשחק) ולהבי הטחנה שמסתובבים */
+    S.portals.forEach(q => { tint.set(q.col); drawBuf(S0.mod.crystal, M.model(q.x, q.y + 4.35 + Math.sin(S.t * 2 + q.x) * .12, q.z, 1.1, 1.1, 1.1, S.t * 1.2), tint, progL); });
+    tint.set([1, 1, 1]); (S0.blades || []).forEach(b => drawBuf(S0.mod.blades, M.modelZ(b.x, b.y, b.z, 1, b.ry, S.t * .8), tint, progL));
     /* צל */
     tint.set([th.ground[0] * .55, th.ground[1] * .55, th.ground[2] * .55]);
     drawBuf(S0.disc, M.model(S.av.x, hgt(S.av.x, S.av.z) + .03, S.av.z, .7, 1, .55, 0), tint, progL);
