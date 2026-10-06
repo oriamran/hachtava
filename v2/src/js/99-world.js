@@ -21,7 +21,7 @@ H.WORLD_THEMES = {
 
 H.world = (function(){
   const R = H.WORLD_R;
-  let gl = null, cv = null, progL = null, progS = null, running = false, last = 0;
+  let gl = null, cv = null, progL = null, progS = null, progB = null, running = false, last = 0;
   let mode = 'explore', S = null, cam = {yaw: .7, pitch: .55, dist: 9}, lastPos = null, qual = 1;
   const keys = {}, stick = {x: 0, y: 0, id: null};
   const texCache = {}, ptr = new Map();
@@ -49,9 +49,29 @@ H.world = (function(){
     t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const hash = s => { let h = 2166136261; for(let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const hgt = (x, z) => { const r = Math.hypot(x, z);
+  /* גבעות בין השערים, כיכר ושטחי שערים שטוחים, וירידה אל המים בקצה האי */
+  const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  let HILLS = [], PADS = [];
+  function prepareTerrain(){
+    const n = H.GAMES.length, rnd = rngOf(4242); PADS = []; HILLS = [];
+    for(let i = 0; i < n; i++){
+      const a = i / n * 6.2832 + .3;
+      PADS.push({x: Math.cos(a) * 16, z: Math.sin(a) * 16});
+      const m = a + 3.1416 / n, r = 14 + rnd() * 3;
+      HILLS.push({x: Math.cos(m) * r, z: Math.sin(m) * r, h: 2.4 + rnd() * 2.6, s: 2.8 + rnd() * 1.8});
+    }
+  }
+  const hgt = (x, z) => {
+    const r = Math.hypot(x, z);
+    let h = .28 * Math.sin(x * .31) * Math.cos(z * .27) + .14 * Math.sin(x * .7 + z * .55);
+    let hill = 0;
+    for(let i = 0; i < HILLS.length; i++){ const q = HILLS[i], d2 = ((x - q.x) * (x - q.x) + (z - q.z) * (z - q.z)) / (q.s * q.s); if(d2 < 12) hill += q.h * Math.exp(-d2); }
+    let flat = smooth(8, 12, r);
+    for(let i = 0; i < PADS.length; i++){ const d = Math.hypot(x - PADS[i].x, z - PADS[i].z); if(d < 6) flat = Math.min(flat, smooth(2.4, 5.8, d)); }
+    h += hill * flat;
     const e = Math.max(0, (r - (R - 7)) / 7);
-    return .35 * Math.sin(x * .31) * Math.cos(z * .27) + .18 * Math.sin(x * .7 + z * .55) - e * e * 2.2; };
+    return h - e * e * 2.4;
+  };
 
   /* ---------- בניית רשת ---------- */
   function Mesh(rnd){ this.p = []; this.n = []; this.c = []; this.rnd = rnd || Math.random; }
@@ -114,9 +134,13 @@ H.world = (function(){
     if(!gl) return false;
     try{
       progL = compile(
-        'attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 vp;uniform mat4 m;uniform vec3 tint;uniform vec3 cam;varying vec3 vc;varying float vd;' +
-        'void main(){vec4 w=m*vec4(p,1.);gl_Position=vp*w;vec3 nn=normalize((m*vec4(n,0.)).xyz);float l=max(dot(nn,normalize(vec3(.5,1.,.35))),0.);vc=c*(.58+.5*l)*tint;vd=length(w.xyz-cam);}',
-        'precision mediump float;varying vec3 vc;varying float vd;uniform vec3 fog;void main(){float f=clamp((vd-26.)/48.,0.,1.);gl_FragColor=vec4(mix(vc,fog,f),1.);}');
+        'attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 vp;uniform mat4 m;uniform vec3 tint;uniform vec3 cam;uniform float t;uniform float wv;varying vec3 vc;varying float vd;' +
+        'void main(){vec4 w=m*vec4(p,1.);w.y+=wv*(sin(w.x*.33+t*1.1)+sin(w.z*.41+t*.8))*.5;gl_Position=vp*w;vec3 nn=normalize((m*vec4(n,0.)).xyz);' +
+        'float l=max(dot(nn,normalize(vec3(.55,.8,.3))),0.);float hemi=.5+.5*nn.y;float ao=.82+.18*clamp((w.y+1.)/5.,0.,1.);' +
+        'vc=c*(.30+.34*hemi+.62*l)*ao*tint;vd=length(w.xyz-cam);}',
+        'precision mediump float;varying vec3 vc;varying float vd;uniform vec3 fog;void main(){float f=clamp((vd-18.)/92.,0.,1.);f=f*f*(3.-2.*f);gl_FragColor=vec4(mix(vc,fog,f),1.);}');
+      progB = compile('attribute vec2 q;varying float y;void main(){y=q.y;gl_Position=vec4(q,.999,1.);}',
+        'precision mediump float;varying float y;uniform vec3 hz;uniform vec3 zn;uniform float hy;void main(){float u=clamp((y-hy)/max(.05,1.-hy),0.,1.);u=pow(u,.7);gl_FragColor=vec4(mix(hz,zn,u),1.);}');
       progS = compile(
         'attribute vec2 q;uniform mat4 vp;uniform vec3 ctr;uniform vec2 sz;uniform vec3 rt;uniform vec3 up;varying vec2 uv;' +
         'void main(){uv=vec2(q.x*.5+.5,.5-q.y*.5);vec3 w=ctr+rt*q.x*sz.x+up*q.y*sz.y;gl_Position=vp*vec4(w,1.);}',
@@ -171,26 +195,44 @@ H.world = (function(){
     return out.slice(0, 40);
   }
   function build(){
-    const th = theme(), rnd = rngOf(1234), mesh = new Mesh(rnd);
-    /* קרקע */
-    const g = th.ground;
-    for(let gx = -R - 2; gx <= R + 1; gx++) for(let gz = -R - 2; gz <= R + 1; gz++){
-      if(Math.hypot(gx + .5, gz + .5) > R + 1.5) continue;
-      const a = [gx, hgt(gx, gz), gz], b = [gx+1, hgt(gx+1, gz), gz], c = [gx+1, hgt(gx+1, gz+1), gz+1], d = [gx, hgt(gx, gz+1), gz+1];
-      const avg = (a[1] + b[1] + c[1] + d[1]) / 4, sand = Math.hypot(gx + .5, gz + .5) > R - 6.2 || avg < -.25;   /* חול רק בחוף */
-      const col = sand ? [.94, .86, .62] : [g[0] * (.92 + .16 * rnd()), g[1] * (.92 + .16 * rnd()), g[2] * (.92 + .16 * rnd())];
+    const th = theme(), rnd = rngOf(1234), mesh = new Mesh(rnd), STEP = .75;
+    const g = th.ground, rock = [.60, .58, .56];
+    const mix3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+    const blob = (x, z, r) => {            /* צל עגול על הקרקע */
+      const y = hgt(x, z) + .05, c = [g[0] * .55, g[1] * .55, g[2] * .55];
+      for(let i = 0; i < 8; i++){ const a = i / 8 * 6.2832, b = (i + 1) / 8 * 6.2832;
+        mesh.tri([x, y, z], [x + Math.cos(a) * r, hgt(x + Math.cos(a) * r, z + Math.sin(a) * r) + .05, z + Math.sin(a) * r], [x + Math.cos(b) * r, hgt(x + Math.cos(b) * r, z + Math.sin(b) * r) + .05, z + Math.sin(b) * r], c); }
+    };
+    /* קרקע: דשא, חול בחוף, סלע בפסגות */
+    const N = Math.ceil((2 * R + 4) / STEP);
+    for(let i = 0; i < N; i++) for(let j = 0; j < N; j++){
+      const gx = -R - 2 + i * STEP, gz = -R - 2 + j * STEP;
+      if(Math.hypot(gx + STEP / 2, gz + STEP / 2) > R + 1.5) continue;
+      const a = [gx, hgt(gx, gz), gz], b = [gx + STEP, hgt(gx + STEP, gz), gz], c = [gx + STEP, hgt(gx + STEP, gz + STEP), gz + STEP], d = [gx, hgt(gx, gz + STEP), gz + STEP];
+      const avg = (a[1] + b[1] + c[1] + d[1]) / 4, rr = Math.hypot(gx + STEP / 2, gz + STEP / 2);
+      const jit = .92 + .16 * rnd();
+      let col = [g[0] * jit * (1 + Math.max(0, avg) * .05), g[1] * jit * (1 + Math.max(0, avg) * .045), g[2] * jit];
+      if(avg > 2.3) col = mix3(col, rock, clamp((avg - 2.3) / 1.2, 0, 1));
+      if(rr > R - 6.2 || avg < -.25) col = [.94 * jit, .86 * jit, .62 * jit];
+      else if(rr > R - 7.4) col = mix3(col, [.94, .86, .62], .5);
       mesh.tri(a, b, c, col); mesh.tri(a, c, d, col);
     }
-    /* כיכר במרכז */
-    mesh.cyl(0, hgt(0, 0) - .1, 0, 2.2, .35, 14, [.82, .82, .86]);
-    mesh.cyl(0, hgt(0, 0) + .25, 0, 1.7, .1, 14, [.95, .92, .8]);
+    /* כיכר ומגדל המילים במרכז: ציון דרך שרואים מרחוק */
+    const cy = hgt(0, 0);
+    mesh.cyl(0, cy - .1, 0, 2.4, .4, 16, [.82, .82, .86]);
+    mesh.cyl(0, cy + .3, 0, 1.9, .1, 16, [.95, .92, .8]);
+    mesh.cyl(0, cy + .4, 0, 1.0, 2.6, 8, [.88, .85, .95]);
+    mesh.cyl(0, cy + 2.9, 0, .74, 2.0, 8, [.78, .74, .92]);
+    mesh.cyl(0, cy + 4.8, 0, .5, 1.5, 8, [.68, .62, .9]);
+    mesh.ball(0, cy + 6.9, 0, .7, [1, .82, .25], 4, 8);
     /* גן: צמח לכל מילה */
     const pl = plantsOf(), plants = [];
     pl.forEach((w, i) => {
-      const ang = i * 2.399, rad = 3.6 + Math.sqrt(i) * 1.45, x = Math.cos(ang) * rad, z = Math.sin(ang) * rad, y = hgt(x, z);
+      const ang = i * 2.399, rad = 3.9 + Math.sqrt(i) * 1.4, x = Math.cos(ang) * rad, z = Math.sin(ang) * rad, y = hgt(x, z);
       const st = H.stage(w), mastered = H.isEarned(w);
       const hue = hash(H.sk(w)) % 5, blossoms = [[1,.45,.62],[1,.78,.2],[.7,.5,1],[.4,.8,1],[1,.55,.3]][hue];
-      mesh.ball(x, y + .08, z, .32, [.45, .32, .2], 3, 6);                                   /* תלולית */
+      blob(x, z, st >= 3 ? 1.1 : .6);
+      mesh.ball(x, y + .08, z, .32, [.45, .32, .2], 3, 6);
       if(st >= 1) mesh.cone(x, y + .15, z, .12, .55, 5, [.35, .75, .3]);
       if(st >= 2){ mesh.ball(x - .22, y + .42, z, .14, [.3, .7, .3], 3, 5); mesh.ball(x + .22, y + .48, z, .14, [.3, .7, .3], 3, 5); }
       if(st >= 3){ mesh.cyl(x, y + .1, z, .1, .9, 5, [.5, .34, .2]); mesh.ball(x, y + 1.15, z, .55, th.leaf, 3, 6); }
@@ -200,45 +242,89 @@ H.world = (function(){
       }
       plants.push({w, x, z, y, st});
     });
-    /* שערים למשחקים: טבעת סביב האי, כל משחק בצבע משלו */
+    /* שערים למשחקים */
     const portals = [];
     if(mode === 'explore'){
       const cols = [[1,.45,.55],[1,.7,.25],[.35,.8,.95],[.55,.85,.4],[.75,.55,1],[1,.6,.8],[.4,.9,.8]];
       const n = H.GAMES.length;
-      H.GAMES.forEach((g, i) => {
+      H.GAMES.forEach((gm, i) => {
         const a = i / n * 6.2832 + .3, x = Math.cos(a) * 16, z = Math.sin(a) * 16, y = hgt(x, z), col = cols[i % cols.length];
         const tx = -Math.sin(a), tz = Math.cos(a);
-        mesh.cyl(x, y - .05, z, 1.7, .3, 12, [.85, .85, .9]);
-        mesh.cyl(x, y + .22, z, 1.35, .06, 12, col);
-        mesh.cyl(x + tx * 1.05, y, z + tz * 1.05, .2, 2.3, 6, [.95, .93, .85]);
-        mesh.cyl(x - tx * 1.05, y, z - tz * 1.05, .2, 2.3, 6, [.95, .93, .85]);
-        mesh.ball(x + tx * 1.05, y + 2.4, z + tz * 1.05, .3, col, 3, 6);
-        mesh.ball(x - tx * 1.05, y + 2.4, z - tz * 1.05, .3, col, 3, 6);
-        portals.push({g, x, z, y});
+        mesh.cyl(x, y - .05, z, 1.8, .34, 12, [.85, .85, .9]);
+        mesh.cyl(x, y + .26, z, 1.4, .06, 12, col);
+        for(const sgn of [1, -1]){
+          mesh.cyl(x + tx * 1.05 * sgn, y, z + tz * 1.05 * sgn, .22, 2.4, 6, [.95, .93, .85]);
+          mesh.cyl(x + tx * 1.05 * sgn, y + 2.4, z + tz * 1.05 * sgn, .3, .18, 6, col);
+          mesh.ball(x + tx * 1.05 * sgn, y + 2.75, z + tz * 1.05 * sgn, .3, col, 3, 6);
+        }
+        portals.push({g: gm, x, z, y});
       });
     }
-    /* עצים, סלעים ופרחים */
-    const near = (x, z, d) => plants.some(p => Math.hypot(p.x - x, p.z - z) < d) || Math.hypot(x, z) < 3 || portals.some(q => Math.hypot(q.x - x, q.z - z) < 3.2);
-    for(let i = 0; i < 90; i++){
-      const a = rnd() * 6.2832, r = 12.5 + rnd() * (R - 17), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
-      if(y < .08 || near(x, z, 2)) continue;
-      mesh.cyl(x, y, z, .16, .8, 5, [.5, .34, .2]);
-      mesh.cone(x, y + .6, z, .95, 1.5, 7, th.leaf); mesh.cone(x, y + 1.5, z, .7, 1.2, 7, [th.leaf[0]*1.1, th.leaf[1]*1.1, th.leaf[2]*1.1]);
+    const near = (x, z, d) => plants.some(p => Math.hypot(p.x - x, p.z - z) < d) || Math.hypot(x, z) < 3.2 || portals.some(q => Math.hypot(q.x - x, q.z - z) < 3.4);
+    /* יער: אורנים גבוהים ועצים עגולים בגדלים שונים, גם על הגבעות */
+    for(let i = 0; i < 150; i++){
+      const a = rnd() * 6.2832, r = 11 + rnd() * (R - 15), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
+      if(y < .1 || near(x, z, 2.2)) continue;
+      const k = .8 + rnd() * .9, round = rnd() < .35, lc = [th.leaf[0] * (.85 + .3 * rnd()), th.leaf[1] * (.85 + .3 * rnd()), th.leaf[2] * (.85 + .3 * rnd())];
+      blob(x + .25, z + .2, 1.0 * k);
+      mesh.cyl(x, y - .1, z, .16 * k, .9 * k, 5, [.5, .34, .2]);
+      if(round){ mesh.ball(x, y + 1.5 * k, z, .95 * k, lc, 4, 7); mesh.ball(x + .35 * k, y + 1.9 * k, z + .2 * k, .6 * k, lc, 3, 6); }
+      else { mesh.cone(x, y + .6 * k, z, 1.0 * k, 1.6 * k, 7, lc); mesh.cone(x, y + 1.5 * k, z, .78 * k, 1.4 * k, 7, lc); mesh.cone(x, y + 2.3 * k, z, .5 * k, 1.2 * k, 7, lc); }
     }
-    for(let i = 0; i < 18; i++){
+    for(let i = 0; i < 26; i++){
       const a = rnd() * 6.2832, r = 6 + rnd() * (R - 10), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
-      if(y < .05 || near(x, z, 1.5)) continue;
-      mesh.ball(x, y + .1, z, .3 + rnd() * .35, [.62, .62, .66], 3, 5);
+      if(y < .05 || near(x, z, 1.6)) continue;
+      const rr = .3 + rnd() * .6; blob(x, z, rr * 1.1);
+      mesh.ball(x, y + rr * .35, z, rr, [.62 + .1 * rnd(), .62, .66], 3, 5);
     }
-    for(let i = 0; i < 70; i++){
+    for(let i = 0; i < 40; i++){      /* שיחים */
+      const a = rnd() * 6.2832, r = 5 + rnd() * (R - 9), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
+      if(y < .08 || near(x, z, 1.4)) continue;
+      mesh.ball(x, y + .25, z, .42 + rnd() * .25, [th.leaf[0] * 1.1, th.leaf[1] * 1.15, th.leaf[2] * 1.05], 3, 6);
+    }
+    for(let i = 0; i < 110; i++){
       const a = rnd() * 6.2832, r = 3 + rnd() * (R - 6), x = Math.cos(a) * r, z = Math.sin(a) * r, y = hgt(x, z);
       if(y < .08 || near(x, z, 1.1)) continue;
       mesh.cyl(x, y, z, .025, .28, 4, [.3, .65, .3]);
       mesh.ball(x, y + .33, z, .09, [[1,.5,.6],[1,.85,.3],[.8,.6,1],[1,1,1]][i % 4], 2, 4);
     }
+    /* עומק: הרים רחוקים באובך, ואיים קטנים בתוך המים */
+    const haze = th.sky, mt = [haze[0] * .55 + .2, haze[1] * .55 + .22, haze[2] * .5 + .3];
+    for(let i = 0; i < 26; i++){
+      const a = i / 26 * 6.2832 + rnd() * .2, r = 84 + rnd() * 26, hh = 20 + rnd() * 24;
+      mesh.cone(Math.cos(a) * r, -1, Math.sin(a) * r, 15 + rnd() * 12, hh, 6, [mt[0] * (.85 + .3 * rnd()), mt[1] * (.85 + .3 * rnd()), mt[2] * (.9 + .2 * rnd())]);
+    }
+    for(let i = 0; i < 18; i++){
+      const a = i / 18 * 6.2832 + rnd() * .3, r = 62 + rnd() * 14, hh = 7 + rnd() * 9;
+      mesh.cone(Math.cos(a) * r, -1, Math.sin(a) * r, 8 + rnd() * 7, hh, 6, [mt[0] * .8, mt[1] * .88, mt[2] * .85]);
+    }
+    for(let i = 0; i < 6; i++){
+      const a = i / 6 * 6.2832 + .5 + rnd() * .5, r = 40 + rnd() * 18, x = Math.cos(a) * r, z = Math.sin(a) * r, rad = 4 + rnd() * 3.5;
+      mesh.cyl(x, -.9, z, rad, 1.4, 10, [.94, .86, .62]); mesh.cyl(x, .35, z, rad * .86, .35, 10, g);
+      for(let k = 0; k < 3; k++){ const aa = rnd() * 6.2832, rr2 = rnd() * rad * .5; mesh.cone(x + Math.cos(aa) * rr2, .6, z + Math.sin(aa) * rr2, .9, 2.4 + rnd(), 6, th.leaf); }
+    }
     return {mesh: mesh.upload(), plants, portals};
   }
-
+  /* מים: טבעות עם צבע שמשתנה מהחוף לעומק, וקצף לבן בגבול האי. הגלים נעים בשכבת הצבע. */
+  function buildWater(){
+    const th = theme(), m = new Mesh(() => .5), seg = 56, radii = [];
+    for(let r = 0; r <= 40; r += 2) radii.push(r);
+    for(let r = 48; r <= 150; r += 10) radii.push(r);
+    const shallow = [th.water[0] * .75 + .22, th.water[1] * .75 + .24, th.water[2] * .75 + .2], deep = th.water;
+    const y = -.5;
+    for(let k = 0; k < radii.length - 1; k++){
+      const r0 = radii[k], r1 = radii[k + 1], rm = (r0 + r1) / 2;
+      let col = [0, 0, 0]; const t = clamp((rm - (R - 6)) / 22, 0, 1);
+      col = [shallow[0] + (deep[0] - shallow[0]) * t, shallow[1] + (deep[1] - shallow[1]) * t, shallow[2] + (deep[2] - shallow[2]) * t];
+      if(Math.abs(rm - (R - 2.6)) < 1.1) col = [.95, .98, 1];                              /* קצף */
+      for(let i = 0; i < seg; i++){
+        const a = i / seg * 6.2832, b = (i + 1) / seg * 6.2832, c = col.slice();
+        if((i + k) % 2) { c[0] *= .96; c[1] *= .97; }
+        m.quad([Math.cos(a) * r0, y, Math.sin(a) * r0], [Math.cos(b) * r0, y, Math.sin(b) * r0], [Math.cos(b) * r1, y, Math.sin(b) * r1], [Math.cos(a) * r1, y, Math.sin(a) * r1], c);
+      }
+    }
+    return m.upload();
+  }
   /* ---------- מצב הסצנה ---------- */
   function daily(){
     const W = H.state.world || (H.state.world = {d: '', gems: 0, chest: false});
@@ -260,14 +346,15 @@ H.world = (function(){
     /* בטלפון עומד המסך צר וגבוה, אז המצלמה רחוקה יותר כדי שיראו את האי */
     const portrait = cv.clientWidth / Math.max(1, cv.clientHeight) < .75;
     cam.dist = portrait ? 14 : 10.5; cam.pitch = portrait ? .72 : .6;
+    prepareTerrain();
     const b = build();
-    S = {mesh: b.mesh, plants: b.plants, portals: b.portals, near: null, th: theme(),
+    S = {mesh: b.mesh, water: buildWater(), plants: b.plants, portals: b.portals, near: null, th: theme(),
          av: {x: keep && lastPos ? lastPos.x : 0, z: keep && lastPos ? lastPos.z : 5, tx: 0, tz: 5, moving: false, ph: 0, face: 1},
          pet: {x: (keep && lastPos ? lastPos.x : 0) + 1.4, z: (keep && lastPos ? lastPos.z : 5) + .6}, items: m === 'explore' ? spawnExplore() : [], wild: [], clouds: [], label: null, t: 0,
          need: [], idx: 0, miss: 0, lastWrong: -9, onDone: null};
     const rnd = rngOf(77);
     for(let i = 0; i < 7; i++) S.wild.push({e: ['🦋','🐝','🦋','🐞','🦋','🐦','🦋'][i], a: rnd() * 6.2832, r: 4 + rnd() * 12, sp: .15 + rnd() * .25, h: 1.2 + rnd() * 1.4, ph: rnd() * 6});
-    for(let i = 0; i < 6; i++) S.clouds.push({x: (rnd() - .5) * 60, z: (rnd() - .5) * 60, y: 13 + rnd() * 4, s: 4 + rnd() * 3});
+    for(let i = 0; i < 12; i++) S.clouds.push({x: (rnd() - .5) * 150, z: (rnd() - .5) * 150, y: 16 + rnd() * 16, s: 5 + rnd() * 7});
     renderHud(); renderPrompt();
     if(!running){ running = true; last = performance.now(); requestAnimationFrame(frame); }
     return true;
@@ -379,8 +466,15 @@ H.world = (function(){
   /* ---------- ציור ---------- */
   function camera(){
     const av = S.av, cp = Math.cos(cam.pitch), ey = Math.sin(cam.pitch) * cam.dist + 1.2;
-    const eye = [av.x + Math.sin(cam.yaw) * cp * cam.dist, ey, av.z + Math.cos(cam.yaw) * cp * cam.dist];
-    const asp = cv.width / cv.height, proj = M.persp(1.0, asp, .3, 120), look = M.look(eye, [av.x, 1, av.z]);
+    const gy = hgt(av.x, av.z);
+    const eye = [av.x + Math.sin(cam.yaw) * cp * cam.dist, gy + ey, av.z + Math.cos(cam.yaw) * cp * cam.dist];
+    eye[1] = Math.max(eye[1], hgt(eye[0], eye[2]) + 1.4);                    /* המצלמה לא נכנסת לגבעה */
+    /* גבעה בין המצלמה לדמות: מעלים את המצלמה עד שהדמות נראית */
+    { const ty = gy + 1; let lift = 0;
+      for(let k = 1; k <= 5; k++){ const t = k / 5, px = av.x + (eye[0] - av.x) * t, pz = av.z + (eye[2] - av.z) * t, py = ty + (eye[1] - ty) * t;
+        lift = Math.max(lift, (hgt(px, pz) + .9 - py) / t); }
+      if(lift > 0) eye[1] += lift; }
+    const asp = cv.width / cv.height, proj = M.persp(1.0, asp, .3, 260), look = M.look(eye, [av.x, gy + 1, av.z]);
     return {eye, vp: M.mul(proj, look.m), right: look.right, up: look.up, fwd: look.fwd, asp};
   }
   function drawBuf(buf, mat, tint, prog){
@@ -402,11 +496,23 @@ H.world = (function(){
     gl.viewport(0, 0, cv.width, cv.height);
     const th = S.th; gl.clearColor(th.sky[0], th.sky[1], th.sky[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     const c = camera(); S.cam = c;
+    /* שמיים: מעבר צבע מהאופק אל הרום, במקום שהאופק באמת מופיע */
+    {
+      const e = Math.asin(clamp(c.fwd[1], -1, 1)), hy = clamp(Math.tan(-e) / Math.tan(.5), -1, 1.4);
+      gl.useProgram(progB); gl.disable(gl.DEPTH_TEST);
+      gl.uniform3fv(gl.getUniformLocation(progB, 'hz'), th.sky);
+      gl.uniform3f(gl.getUniformLocation(progB, 'zn'), th.sky[0] * .55, th.sky[1] * .74, Math.min(1, th.sky[2] * 1.05));
+      gl.uniform1f(gl.getUniformLocation(progB, 'hy'), hy);
+      const ql0 = gl.getAttribLocation(progB, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(ql0); gl.vertexAttribPointer(ql0, 2, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 6); gl.enable(gl.DEPTH_TEST);
+    }
     gl.useProgram(progL);
     gl.uniformMatrix4fv(gl.getUniformLocation(progL, 'vp'), false, c.vp); gl.uniform3fv(gl.getUniformLocation(progL, 'cam'), c.eye); gl.uniform3fv(gl.getUniformLocation(progL, 'fog'), th.sky);
     /* מים */
-    const wcol = new Float32Array([th.water[0] * (.95 + .05 * Math.sin(S.t * 1.3)), th.water[1], th.water[2]]);
-    drawBuf(S0.disc, M.model(0, -.5, 0, 140, 1, 140, 0), wcol, progL);
+    gl.uniform1f(gl.getUniformLocation(progL, 't'), S.t);
+    gl.uniform1f(gl.getUniformLocation(progL, 'wv'), .16);
+    drawBuf(S.water, ID, new Float32Array(th.tint), progL);
+    gl.uniform1f(gl.getUniformLocation(progL, 'wv'), 0);
     drawBuf(S.mesh, ID, new Float32Array(th.tint), progL);
     /* פריטים תלת־ממדיים */
     const tint = new Float32Array(3);
@@ -429,6 +535,7 @@ H.world = (function(){
     const ql = gl.getAttribLocation(progS, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(ql); gl.vertexAttribPointer(ql, 2, gl.FLOAT, false, 0, 0);
     const list = [], push = (d, f) => list.push({d, f});
     const dist = (x, y, z) => Math.hypot(x - c.eye[0], y - c.eye[1], z - c.eye[2]);
+    { const sx = c.eye[0] + 120, sy = c.eye[1] + 95, sz = c.eye[2] - 130; push(dist(sx, sy, sz) + 400, () => sprite(c, emojiTex(H.state.bg === 'night' || H.state.bg === 'space' ? '🌙' : '☀️'), sx, sy, sz, 34, 34)); }
     S.clouds.forEach(cl => push(dist(cl.x, cl.y, cl.z), () => sprite(c, emojiTex('☁️'), cl.x + Math.sin(S.t * .05 + cl.z) * 3, cl.y, cl.z, cl.s * 2, cl.s * 2)));
     S.wild.forEach(wd => { const x = Math.cos(wd.a) * wd.r, z = Math.sin(wd.a) * wd.r, y = hgt(x, z) + wd.h + Math.sin(S.t * 3 + wd.ph) * .15;
       push(dist(x, y, z), () => sprite(c, emojiTex(wd.e), x, y, z, .8, .8)); });
@@ -462,9 +569,19 @@ H.world = (function(){
     const r = cv.getBoundingClientRect(), nx = (clientX - r.left) / r.width * 2 - 1, ny = 1 - (clientY - r.top) / r.height * 2;
     const c = S.cam, t = Math.tan(.5), d = [0, 0, 0];
     for(let i = 0; i < 3; i++) d[i] = c.fwd[i] + c.right[i] * nx * t * c.asp + c.up[i] * ny * t;
-    if(d[1] >= -.01) return null;
-    const k = (.15 - c.eye[1]) / d[1];
-    return [c.eye[0] + d[0] * k, c.eye[2] + d[2] * k];
+    const l = Math.hypot(d[0], d[1], d[2]); d[0] /= l; d[1] /= l; d[2] /= l;
+    let t0 = 0, prev = 0;
+    for(let k = 0; k < 220; k++){                                   /* צועדים לאורך הקרן עד שפוגעים בקרקע */
+      t0 += .5; const x = c.eye[0] + d[0] * t0, y = c.eye[1] + d[1] * t0, z = c.eye[2] + d[2] * t0;
+      if(y <= hgt(x, z)){
+        let lo = prev, hi = t0;
+        for(let j = 0; j < 7; j++){ const mid = (lo + hi) / 2; if(c.eye[1] + d[1] * mid <= hgt(c.eye[0] + d[0] * mid, c.eye[2] + d[2] * mid)) hi = mid; else lo = mid; }
+        return [c.eye[0] + d[0] * hi, c.eye[2] + d[2] * hi];
+      }
+      prev = t0;
+      if(t0 > 110) break;
+    }
+    return null;
   }
   function bind(){
     if(bind.done) return; bind.done = true;
@@ -509,7 +626,7 @@ H.world = (function(){
   return {
     supported(){ return initGL(); },
     open(m, keep){ if(!initGL()) return false; bind(); document.body.classList.add('inworld'); return begin(m || 'explore', keep); },
-    hunt, end, state: () => S, mode: () => mode, refresh(){ renderHud(); }
+    hunt, end, state: () => S, cam: () => cam, mode: () => mode, refresh(){ renderHud(); }
   };
 })();
 
