@@ -6,7 +6,7 @@
    - משחקי הלמידה בתוך העולמות (ציד אותיות, בונים מילה) לא נספרים.
    - תשובה נכונה = חצי דקה בבנק, סיבוב מושלם +2 דקות, אתגר היום +5 דקות.
      תקרה של 30 דקות ביום. הבנק מתאפס בכל יום.
-   - את הזמן הבסיסי אפשר לשנות רק אחרי שהושלם אתגר היום (הגדרה ראשונה חופשית).
+   - הקטנת זמן והגבלה ראשונה תמיד אפשריות. הגדלת זמן או הסרת הגבלה: רק אחרי שהושלם אתגר היום.
      הוספת זמן חד־פעמית (10/15/30 דקות) תמיד אפשרית אחרי הקוד.
    ========================================================== */
 H.LIM_CAP = 1800;                 /* תקרת זמן שמרוויחים ביום, בשניות */
@@ -163,17 +163,19 @@ H.askPin = function(onOk, opts){
 /* ---------- אזור זמן מסך במסך ההורים ---------- */
 H.renderTimeBox = function(){
   const box = H.$('timebox'); if(!box) return;
-  const L = H.lim(), canBase = !L.set || H.challengeDone();
-  const sel = (id, v) => '<select id="' + id + '"' + (canBase ? '' : ' disabled') + '>' + H.LIM_CHOICES.map(m => '<option value="' + m + '"' + (m === v ? ' selected' : '') + '>' + (m ? m + ' דקות ביום' : 'בלי הגבלה') + '</option>').join('') + '</select>';
+  const L = H.lim(), done = H.challengeDone();
+  /* להקטין את הזמן או להגביל מי שלא הוגבל אפשר תמיד. להגדיל או להסיר הגבלה: רק אחרי אתגר היום. */
+  const loosens = (cur, m) => cur !== 0 && (m === 0 || m > cur);
+  const sel = (id, v) => '<select id="' + id + '">' + H.LIM_CHOICES.map(m => '<option value="' + m + '"' + (m === v ? ' selected' : '') + (!done && loosens(v, m) ? ' disabled' : '') + '>' + (m ? m + ' דקות ביום' : 'בלי הגבלה') + '</option>').join('') + '</select>';
   const u = (w) => { const b = base(L, w); return b ? ' · היום ' + Math.round(used(L, w) / 60) + ' מתוך ' + (b / 60) + ' דק׳' : ''; };
   box.innerHTML = '<label class="lbl">⏱️ זמן מסך</label>' +
     '<label class="lbl">🏝️ האי שלי' + H.esc(u('i')) + sel('limI', L.i) + '</label>' +
     '<label class="lbl">🧱 עולם הבנייה' + H.esc(u('b')) + sel('limB', L.b) + '</label>' +
-    (canBase ? '' : '<p class="note">את הזמן הבסיסי אפשר לשנות רק אחרי שהילד משלים את אתגר היום.</p>') +
+    ((!done && (L.i || L.b)) ? '<p class="note">אפשר להקטין זמן בכל עת. להגדיל או להסיר הגבלה אפשר רק אחרי שהילד משלים את אתגר היום.</p>' : '') +
     '<p class="note">בנק זמן להיום: ' + H.esc(H.limMin(L.bank)) + ' (הילד מרוויח מלמידה, עד חצי שעה ביום)</p>' +
     '<div class="row">' + H.LIM_ADD.map(m => '<button class="mini" data-add="' + m + '">➕ ' + m + ' דקות</button>').join('') + '<button class="mini" id="pinchange">🔑 שנה קוד</button></div>';
   const apply = () => { L.i = Number(H.$('limI').value); L.b = Number(H.$('limB').value); L.set = true; H.save(); H.renderTimeBox(); H.toast('נשמר', 'good'); };
-  if(canBase){ H.$('limI').onchange = apply; H.$('limB').onchange = apply; }
+  H.$('limI').onchange = apply; H.$('limB').onchange = apply;
   box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { H.limAdd(Number(b.dataset.add)); H.renderTimeBox(); });
   H.$('pinchange').onclick = () => H.askPin(() => H.renderTimeBox(), {change: true, force: true});
 };

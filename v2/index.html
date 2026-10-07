@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HZnVd1xSFS9WWncU5JKhCsc4fQDpu2ay8dqoePJIATQ=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-Eb8rLNdSUbdTVBNcg1QlBV5F7fCDlj1Iv6EfhA1607E=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4vhm4R7eEGH0V1E8s7d4xUmEGh4lCdtS/soa5rx+kHY=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -859,6 +859,8 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
 .betanote{background:#fff7e0;border:2px solid #ffd77a;border-radius:16px;padding:10px 14px;margin:10px auto;max-width:560px;font-size:14px;line-height:1.55;color:#5a3c00;text-align:center}
 .betanote button{margin-top:6px}
 
+.nkv.dis{opacity:.4}
+
 </style>
 </head>
 <body>
@@ -1248,7 +1250,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
           <li>במסך ההורים, תחת <b>זמן מסך</b>, קובעים כמה דקות ביום לכל עולם (או בלי הגבלה).</li>
           <li>הילד מרוויח זמן מלמידה: תשובה נכונה = חצי דקה, סיבוב מושלם = 2 דקות, אתגר היום = 5 דקות. עד חצי שעה ביום. הבנק משותף לשני העולמות ומתאפס כל יום.</li>
           <li>משחקי הלמידה בתוך העולמות לא נספרים בזמן המסך.</li>
-          <li>את הזמן הבסיסי אפשר לשנות רק אחרי שהילד השלים את אתגר היום (ההגדרה הראשונה חופשית).</li>
+          <li>הגבלה אפשר להקטין ולקבוע בכל עת. להגדיל אותה או להסיר אותה אפשר רק אחרי שהילד השלים את אתגר היום.</li>
           <li>צריך עוד דקות עכשיו? ב<b>➕ 10/15/30 דקות</b> אפשר להוסיף בכל עת, אחרי הקוד.</li>
         </ul>
       </details>
@@ -1437,7 +1439,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 18:27 ea45b91';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 18:33 0bd7825';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -4193,14 +4195,14 @@ H.renderNikud = function(){
     H.save(); H.syncStats(); H.renderNikud();
   };
 
-  /* ו: שורוק וחולם מלא הם שני הצירופים הנפוצים. בלעדיהם ההורה לא מוצא איך לנקד "מזוזה" או "יום" */
-  if(cur.base === 'ו'){
-    const rowV = H.el('div', 'nkrow');
-    const sh = cur.dagesh && !cur.vowel, hm = cur.vowel === 'ֹ' && !cur.dagesh;
-    const b1 = H.el('button', 'nkv' + (sh ? ' on' : ''), 'וּ<small>שורוק</small>');
-    b1.onclick = () => set(o => { if(sh){ o.dagesh = false; } else { o.dagesh = true; o.vowel = ''; } });
-    const b2 = H.el('button', 'nkv' + (hm ? ' on' : ''), 'וֹ<small>חולם מלא</small>');
-    b2.onclick = () => set(o => { if(hm){ o.vowel = ''; } else { o.vowel = 'ֹ'; o.dagesh = false; } });
+  /* שורוק וחולם מלא: תמיד מוצגים, כדי שיהיה ברור שהם קיימים. פעילים רק כשהאות שנבחרה היא ו. */
+  {
+    const isV = cur.base === 'ו', rowV = H.el('div', 'nkrow');
+    const sh = isV && cur.dagesh && !cur.vowel, hm = isV && cur.vowel === 'ֹ' && !cur.dagesh;
+    const b1 = H.el('button', 'nkv' + (sh ? ' on' : '') + (isV ? '' : ' dis'), 'וּ<small>שורוק</small>');
+    b1.onclick = () => { if(!isV) return H.toast('שורוק שייך לאות ו. בחר את האות ו במילה'); set(o => { if(sh){ o.dagesh = false; } else { o.dagesh = true; o.vowel = ''; } }); };
+    const b2 = H.el('button', 'nkv' + (hm ? ' on' : '') + (isV ? '' : ' dis'), 'וֹ<small>חולם מלא</small>');
+    b2.onclick = () => { if(!isV) return H.toast('חולם מלא שייך לאות ו. בחר את האות ו במילה'); set(o => { if(hm){ o.vowel = ''; } else { o.vowel = 'ֹ'; o.dagesh = false; } }); };
     rowV.appendChild(b1); rowV.appendChild(b2); pb.appendChild(rowV);
   }
   const row1 = H.el('div', 'nkrow');
@@ -7876,7 +7878,7 @@ H.game({
    - משחקי הלמידה בתוך העולמות (ציד אותיות, בונים מילה) לא נספרים.
    - תשובה נכונה = חצי דקה בבנק, סיבוב מושלם +2 דקות, אתגר היום +5 דקות.
      תקרה של 30 דקות ביום. הבנק מתאפס בכל יום.
-   - את הזמן הבסיסי אפשר לשנות רק אחרי שהושלם אתגר היום (הגדרה ראשונה חופשית).
+   - הקטנת זמן והגבלה ראשונה תמיד אפשריות. הגדלת זמן או הסרת הגבלה: רק אחרי שהושלם אתגר היום.
      הוספת זמן חד־פעמית (10/15/30 דקות) תמיד אפשרית אחרי הקוד.
    ========================================================== */
 H.LIM_CAP = 1800;                 /* תקרת זמן שמרוויחים ביום, בשניות */
@@ -8033,17 +8035,19 @@ H.askPin = function(onOk, opts){
 /* ---------- אזור זמן מסך במסך ההורים ---------- */
 H.renderTimeBox = function(){
   const box = H.$('timebox'); if(!box) return;
-  const L = H.lim(), canBase = !L.set || H.challengeDone();
-  const sel = (id, v) => '<select id="' + id + '"' + (canBase ? '' : ' disabled') + '>' + H.LIM_CHOICES.map(m => '<option value="' + m + '"' + (m === v ? ' selected' : '') + '>' + (m ? m + ' דקות ביום' : 'בלי הגבלה') + '</option>').join('') + '</select>';
+  const L = H.lim(), done = H.challengeDone();
+  /* להקטין את הזמן או להגביל מי שלא הוגבל אפשר תמיד. להגדיל או להסיר הגבלה: רק אחרי אתגר היום. */
+  const loosens = (cur, m) => cur !== 0 && (m === 0 || m > cur);
+  const sel = (id, v) => '<select id="' + id + '">' + H.LIM_CHOICES.map(m => '<option value="' + m + '"' + (m === v ? ' selected' : '') + (!done && loosens(v, m) ? ' disabled' : '') + '>' + (m ? m + ' דקות ביום' : 'בלי הגבלה') + '</option>').join('') + '</select>';
   const u = (w) => { const b = base(L, w); return b ? ' · היום ' + Math.round(used(L, w) / 60) + ' מתוך ' + (b / 60) + ' דק׳' : ''; };
   box.innerHTML = '<label class="lbl">⏱️ זמן מסך</label>' +
     '<label class="lbl">🏝️ האי שלי' + H.esc(u('i')) + sel('limI', L.i) + '</label>' +
     '<label class="lbl">🧱 עולם הבנייה' + H.esc(u('b')) + sel('limB', L.b) + '</label>' +
-    (canBase ? '' : '<p class="note">את הזמן הבסיסי אפשר לשנות רק אחרי שהילד משלים את אתגר היום.</p>') +
+    ((!done && (L.i || L.b)) ? '<p class="note">אפשר להקטין זמן בכל עת. להגדיל או להסיר הגבלה אפשר רק אחרי שהילד משלים את אתגר היום.</p>' : '') +
     '<p class="note">בנק זמן להיום: ' + H.esc(H.limMin(L.bank)) + ' (הילד מרוויח מלמידה, עד חצי שעה ביום)</p>' +
     '<div class="row">' + H.LIM_ADD.map(m => '<button class="mini" data-add="' + m + '">➕ ' + m + ' דקות</button>').join('') + '<button class="mini" id="pinchange">🔑 שנה קוד</button></div>';
   const apply = () => { L.i = Number(H.$('limI').value); L.b = Number(H.$('limB').value); L.set = true; H.save(); H.renderTimeBox(); H.toast('נשמר', 'good'); };
-  if(canBase){ H.$('limI').onchange = apply; H.$('limB').onchange = apply; }
+  H.$('limI').onchange = apply; H.$('limB').onchange = apply;
   box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { H.limAdd(Number(b.dataset.add)); H.renderTimeBox(); });
   H.$('pinchange').onclick = () => H.askPin(() => H.renderTimeBox(), {change: true, force: true});
 };
