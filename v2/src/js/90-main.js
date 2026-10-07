@@ -10,10 +10,9 @@ H.refresh = function(){
 H.boot = function(){
   H.load();
   if(H.loadAcc) H.loadAcc();
-  try{ if(localStorage.getItem('hachtava_script') === 'dfus'){
-    document.body.classList.add('dfus');
-    H.$('ktbtn').textContent = 'דפוס 🔤';
-  } }catch(e){}
+  let sc = 'ktav'; try{ if(localStorage.getItem('hachtava_script') === 'dfus') sc = 'dfus'; }catch(e){}
+  H.setScript(sc);
+  try{ if(document.fonts && document.fonts.load) document.fonts.load('30px KtavYad'); }catch(e){}   /* טוענים את גופן הכתב מראש */
   H.initVoice();
   H.refresh();
   if(H.needsOnboard()) H.startOnboard();
@@ -29,7 +28,8 @@ H.boot = function(){
   H.$('buildhint').onclick = () => H.byId('build').hint();
   H.$('writebtn').onclick  = () => H.byId('write').check();
   H.$('writeclear').onclick= () => { H.sfx.tap(); H.padClear(); };
-  H.$('ktbtn').onclick     = H.toggleScript;
+  H.$('ktbtn').onclick     = () => { H.sfx.tap(); H.setScript('ktav'); };
+  H.$('dfbtn').onclick     = () => { H.sfx.tap(); H.setScript('dfus'); };
   document.querySelectorAll('[data-go]').forEach(b =>
     b.onclick = () => { H.sfx.tap(); H.show(b.dataset.go); });
   /* בלי קול עברי הכפתור הזה חסר תועלת, אז הוא הופך ל"הצג שוב" */

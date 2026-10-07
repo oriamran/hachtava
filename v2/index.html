@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oRCaqbl0+aKrV/tnWrSSz11yiLZBznX0+l2xKtHUKxU=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-ZTHYQXRrml1z707UAAIYkOuMukK3BvPOQ64P1wO9bto=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oEo+QnA9UEQO1F5UJU8aholrjQ35U7Neodzm6fS4KDc=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-LeU1E2TR2nwVcAPN7WKcqJZyl9/A+jQ9scaqkfFKD2U=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -24,17 +24,23 @@
   font-display:block;
 }
 /* כל מקום שמוצגת בו מילה מההכתבה */
-.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,.lib-w,.nkword,.nkpreview,.nkletter,.nkv,#wordsIn{
+.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,.lib-w,.nkword,.nkpreview,.nkletter,.nkv,#wordsIn,
+.introword,.flashword,.planwords span,.seg b,.wh-word span,.searchlist span.done,.plancard .planwords span{
   font-family:'KtavYad','Arial Hebrew',sans-serif;
 }
 body.dfus .front,body.dfus .tile,body.dfus .bigword,body.dfus .misword,
 body.dfus .bt,body.dfus .bubble,body.dfus .falling,body.dfus .stk-w,body.dfus .peek,
-body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus .lib-w,body.dfus .nkword,body.dfus .nkpreview,body.dfus .nkletter,body.dfus .nkv,body.dfus #wordsIn{
+body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus .lib-w,body.dfus .nkword,body.dfus .nkpreview,body.dfus .nkletter,body.dfus .nkv,body.dfus #wordsIn,
+body.dfus .introword,body.dfus .flashword,body.dfus .planwords span,body.dfus .seg b,body.dfus .wh-word span,body.dfus .searchlist span.done{
   font-family:"Arial Hebrew","Heebo",Arial,sans-serif;
 }
 body:not(.dfus) .front{font-size:23px}
 body:not(.dfus) .tile{font-size:34px}
 body:not(.dfus) .misword{font-size:44px}
+
+body:not(.dfus) .introword,body:not(.dfus) .flashword{font-size:62px}
+body:not(.dfus) .planwords span{font-size:24px}
+body:not(.dfus) .seg b{font-size:40px}
 
 /* ==========================================================
    ארץ המילים — עולם בהיר לכיתה א׳–ב׳.
@@ -762,6 +768,11 @@ body.inworld .hud,body.inworld #backbtn{display:none!important}
 .vxp-b small{font-size:10px;color:var(--ink2);display:block;min-height:12px}
 .vxp-b.lock{opacity:.6}
 
+/* בורר כתב / דפוס */
+.seg2{display:inline-flex;gap:0;border-radius:999px;overflow:hidden;box-shadow:var(--drop);background:#fff}
+.seg2 .mini{box-shadow:none;border-radius:0;background:#fff;color:var(--ink2);padding:10px 16px}
+.seg2 .mini.on{background:linear-gradient(135deg,var(--sun),var(--sunDeep));color:#fff}
+
 </style>
 </head>
 <body>
@@ -826,7 +837,9 @@ body.inworld .hud,body.inworld #backbtn{display:none!important}
       <p class="lv-hint" id="lvhint"></p>
       <div class="lv-toggles">
         <button class="mini" id="tgNikud" onclick="H.cycleNikud()"></button>
-        <button class="mini" id="ktbtn">כתב ✏️</button>
+        <span class="seg2" role="group" aria-label="סוג כתב">
+          <button class="mini on" id="ktbtn">✏️ כתב</button><button class="mini" id="dfbtn">🔤 דפוס</button>
+        </span>
       </div>
     </div>
 
@@ -3693,10 +3706,18 @@ H.resetWords = function(){
   p.topic = H.DEFAULT_TOPIC; p.list = H.DEFAULT_WORDS.slice();
   H.syncStats(); H.save(); H.openSettings();
 };
-H.toggleScript = function(){
-  const dfus = document.body.classList.toggle('dfus');
-  H.$('ktbtn').textContent = dfus ? 'דפוס 🔤' : 'כתב ✏️';
+/* שתי אפשרויות ברורות: כתב או דפוס. הכפתור הפעיל מודגש. הבחירה נשמרת במכשיר. */
+H.setScript = function(mode){
+  const dfus = mode === 'dfus';
+  document.body.classList.toggle('dfus', dfus);
+  const k = H.$('ktbtn'), d = H.$('dfbtn');
+  if(k) k.classList.toggle('on', !dfus);
+  if(d) d.classList.toggle('on', dfus);
   try{ localStorage.setItem('hachtava_script', dfus ? 'dfus' : 'ktav'); }catch(e){}
+};
+H.scriptNow = () => document.body.classList.contains('dfus') ? 'dfus' : 'ktav';
+H.toggleScript = function(){
+  H.setScript(H.scriptNow() === 'dfus' ? 'ktav' : 'dfus');
 };
 
 /* ===== 86-report.js ===== */
@@ -4187,10 +4208,9 @@ H.refresh = function(){
 H.boot = function(){
   H.load();
   if(H.loadAcc) H.loadAcc();
-  try{ if(localStorage.getItem('hachtava_script') === 'dfus'){
-    document.body.classList.add('dfus');
-    H.$('ktbtn').textContent = 'דפוס 🔤';
-  } }catch(e){}
+  let sc = 'ktav'; try{ if(localStorage.getItem('hachtava_script') === 'dfus') sc = 'dfus'; }catch(e){}
+  H.setScript(sc);
+  try{ if(document.fonts && document.fonts.load) document.fonts.load('30px KtavYad'); }catch(e){}   /* טוענים את גופן הכתב מראש */
   H.initVoice();
   H.refresh();
   if(H.needsOnboard()) H.startOnboard();
@@ -4206,7 +4226,8 @@ H.boot = function(){
   H.$('buildhint').onclick = () => H.byId('build').hint();
   H.$('writebtn').onclick  = () => H.byId('write').check();
   H.$('writeclear').onclick= () => { H.sfx.tap(); H.padClear(); };
-  H.$('ktbtn').onclick     = H.toggleScript;
+  H.$('ktbtn').onclick     = () => { H.sfx.tap(); H.setScript('ktav'); };
+  H.$('dfbtn').onclick     = () => { H.sfx.tap(); H.setScript('dfus'); };
   document.querySelectorAll('[data-go]').forEach(b =>
     b.onclick = () => { H.sfx.tap(); H.show(b.dataset.go); });
   /* בלי קול עברי הכפתור הזה חסר תועלת, אז הוא הופך ל"הצג שוב" */
@@ -5517,14 +5538,15 @@ H.world = (function(){
     return texCache[key] = t;
   }
   const emojiTex = e => texOf('e' + e, 256, 256, (x, w, h) => { x.font = '190px serif'; x.fillText(e, w/2, h/2 + 12); });
-  const letterTex = ch => texOf('l' + ch, 256, 256, (x, w, h) => {
+  const fontFam = () => H.scriptNow && H.scriptNow() === 'ktav' ? '"KtavYad","Arial Hebrew",Arial,sans-serif' : '"Arial Hebrew",Arial,sans-serif';
+  const letterTex = ch => texOf('l' + H.scriptNow() + ch, 256, 256, (x, w, h) => {
     x.fillStyle = '#fff'; x.beginPath(); x.arc(128, 128, 116, 0, 6.2832); x.fill();
     x.fillStyle = '#7c5cd6'; x.beginPath(); x.arc(128, 128, 100, 0, 6.2832); x.fill();
-    x.fillStyle = '#fff'; x.font = 'bold 156px "Arial Hebrew",Arial,sans-serif'; x.fillText(ch, 128, 140); });
-  const labelTex = t => texOf('t' + t, 512, 128, (x, w, h) => {
+    x.fillStyle = '#fff'; x.font = (H.scriptNow() === 'ktav' ? '' : 'bold ') + '156px ' + fontFam(); x.fillText(ch, 128, 140); });
+  const labelTex = t => texOf('t' + H.scriptNow() + t, 512, 128, (x, w, h) => {
     x.fillStyle = 'rgba(255,255,255,.95)'; x.beginPath();
     if(x.roundRect) x.roundRect(8, 12, w - 16, h - 24, 44); else x.rect(8, 12, w - 16, h - 24);
-    x.fill(); x.fillStyle = '#2b2250'; x.font = 'bold 68px "Arial Hebrew",Arial,sans-serif'; x.fillText(t, w/2, h/2 + 4); });
+    x.fill(); x.fillStyle = '#2b2250'; x.font = (H.scriptNow() === 'ktav' ? '' : 'bold ') + '72px ' + fontFam(); x.fillText(t, w/2, h/2 + 4); });
   const avatarTex = () => {
     const a = (H.AVATARS.find(v => v.id === H.state.avatar) || H.AVATARS[0]).e;
     const hat = (H.HATS.find(v => v.id === H.state.hat) || {}).e || '';

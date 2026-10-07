@@ -4,14 +4,20 @@
   font-display:block;
 }
 /* כל מקום שמוצגת בו מילה מההכתבה */
-.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,.lib-w,.nkword,.nkpreview,.nkletter,.nkv,#wordsIn{
+.front,.tile,.bigword,.misword,.bt,.bubble,.falling,.stk-w,.peek,.rrow .rw,.lt,.letcell .lw,.peek-word,.lib-w,.nkword,.nkpreview,.nkletter,.nkv,#wordsIn,
+.introword,.flashword,.planwords span,.seg b,.wh-word span,.searchlist span.done,.plancard .planwords span{
   font-family:'KtavYad','Arial Hebrew',sans-serif;
 }
 body.dfus .front,body.dfus .tile,body.dfus .bigword,body.dfus .misword,
 body.dfus .bt,body.dfus .bubble,body.dfus .falling,body.dfus .stk-w,body.dfus .peek,
-body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus .lib-w,body.dfus .nkword,body.dfus .nkpreview,body.dfus .nkletter,body.dfus .nkv,body.dfus #wordsIn{
+body.dfus .rrow .rw,body.dfus .lt,body.dfus .letcell .lw,body.dfus .peek-word,body.dfus .lib-w,body.dfus .nkword,body.dfus .nkpreview,body.dfus .nkletter,body.dfus .nkv,body.dfus #wordsIn,
+body.dfus .introword,body.dfus .flashword,body.dfus .planwords span,body.dfus .seg b,body.dfus .wh-word span,body.dfus .searchlist span.done{
   font-family:"Arial Hebrew","Heebo",Arial,sans-serif;
 }
 body:not(.dfus) .front{font-size:23px}
 body:not(.dfus) .tile{font-size:34px}
 body:not(.dfus) .misword{font-size:44px}
+
+body:not(.dfus) .introword,body:not(.dfus) .flashword{font-size:62px}
+body:not(.dfus) .planwords span{font-size:24px}
+body:not(.dfus) .seg b{font-size:40px}

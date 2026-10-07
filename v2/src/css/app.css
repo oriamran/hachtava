@@ -723,3 +723,8 @@ body.inworld .hud,body.inworld #backbtn{display:none!important}
 .vxp-b img{width:40px;height:40px;image-rendering:pixelated;display:block;margin:0 auto 2px}
 .vxp-b small{font-size:10px;color:var(--ink2);display:block;min-height:12px}
 .vxp-b.lock{opacity:.6}
+
+/* בורר כתב / דפוס */
+.seg2{display:inline-flex;gap:0;border-radius:999px;overflow:hidden;box-shadow:var(--drop);background:#fff}
+.seg2 .mini{box-shadow:none;border-radius:0;background:#fff;color:var(--ink2);padding:10px 16px}
+.seg2 .mini.on{background:linear-gradient(135deg,var(--sun),var(--sunDeep));color:#fff}

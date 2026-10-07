@@ -243,14 +243,15 @@ H.world = (function(){
     return texCache[key] = t;
   }
   const emojiTex = e => texOf('e' + e, 256, 256, (x, w, h) => { x.font = '190px serif'; x.fillText(e, w/2, h/2 + 12); });
-  const letterTex = ch => texOf('l' + ch, 256, 256, (x, w, h) => {
+  const fontFam = () => H.scriptNow && H.scriptNow() === 'ktav' ? '"KtavYad","Arial Hebrew",Arial,sans-serif' : '"Arial Hebrew",Arial,sans-serif';
+  const letterTex = ch => texOf('l' + H.scriptNow() + ch, 256, 256, (x, w, h) => {
     x.fillStyle = '#fff'; x.beginPath(); x.arc(128, 128, 116, 0, 6.2832); x.fill();
     x.fillStyle = '#7c5cd6'; x.beginPath(); x.arc(128, 128, 100, 0, 6.2832); x.fill();
-    x.fillStyle = '#fff'; x.font = 'bold 156px "Arial Hebrew",Arial,sans-serif'; x.fillText(ch, 128, 140); });
-  const labelTex = t => texOf('t' + t, 512, 128, (x, w, h) => {
+    x.fillStyle = '#fff'; x.font = (H.scriptNow() === 'ktav' ? '' : 'bold ') + '156px ' + fontFam(); x.fillText(ch, 128, 140); });
+  const labelTex = t => texOf('t' + H.scriptNow() + t, 512, 128, (x, w, h) => {
     x.fillStyle = 'rgba(255,255,255,.95)'; x.beginPath();
     if(x.roundRect) x.roundRect(8, 12, w - 16, h - 24, 44); else x.rect(8, 12, w - 16, h - 24);
-    x.fill(); x.fillStyle = '#2b2250'; x.font = 'bold 68px "Arial Hebrew",Arial,sans-serif'; x.fillText(t, w/2, h/2 + 4); });
+    x.fill(); x.fillStyle = '#2b2250'; x.font = (H.scriptNow() === 'ktav' ? '' : 'bold ') + '72px ' + fontFam(); x.fillText(t, w/2, h/2 + 4); });
   const avatarTex = () => {
     const a = (H.AVATARS.find(v => v.id === H.state.avatar) || H.AVATARS[0]).e;
     const hat = (H.HATS.find(v => v.id === H.state.hat) || {}).e || '';

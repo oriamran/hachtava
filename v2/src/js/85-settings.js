@@ -74,8 +74,16 @@ H.resetWords = function(){
   p.topic = H.DEFAULT_TOPIC; p.list = H.DEFAULT_WORDS.slice();
   H.syncStats(); H.save(); H.openSettings();
 };
-H.toggleScript = function(){
-  const dfus = document.body.classList.toggle('dfus');
-  H.$('ktbtn').textContent = dfus ? 'דפוס 🔤' : 'כתב ✏️';
+/* שתי אפשרויות ברורות: כתב או דפוס. הכפתור הפעיל מודגש. הבחירה נשמרת במכשיר. */
+H.setScript = function(mode){
+  const dfus = mode === 'dfus';
+  document.body.classList.toggle('dfus', dfus);
+  const k = H.$('ktbtn'), d = H.$('dfbtn');
+  if(k) k.classList.toggle('on', !dfus);
+  if(d) d.classList.toggle('on', dfus);
   try{ localStorage.setItem('hachtava_script', dfus ? 'dfus' : 'ktav'); }catch(e){}
+};
+H.scriptNow = () => document.body.classList.contains('dfus') ? 'dfus' : 'ktav';
+H.toggleScript = function(){
+  H.setScript(H.scriptNow() === 'dfus' ? 'ktav' : 'dfus');
 };
