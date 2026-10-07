@@ -135,6 +135,7 @@ H.variants = function(word, n){
       c[i] = H.homophone(c[i]);
     } else if(mode === 0){                            /* תנועה אחרת */
       const o = H.parseCluster(c[i]);
+      if(o.base === 'ו' && (o.dagesh || o.vowel === '\u05b9')) continue;      /* שורוק וחולם מלא הם אותיות קריאה, לא מחליפים להם תנועה */
       o.vowel = H.VOW[Math.floor(Math.random()*H.VOW.length)];
       c[i] = H.buildCluster(o);
     } else if(mode === 1){                            /* אות חסרה */

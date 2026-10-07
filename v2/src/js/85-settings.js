@@ -5,7 +5,8 @@ H.NIKPAD = [
   ["ֹ","חולם"],["ֻ","קבוץ"],["ּ","דגש"],
   ["ׁ","שין"],["ׂ","שין שמאלית"],
   ["ֱ","חטף סגול"],["ֲ","חטף פתח"],["ֳ","חטף קמץ"],
-  ["ֺ","חולם חסר"],["ׇ","קמץ קטן"],["ֿ","רפה"]
+  ["ֺ","חולם חסר"],["ׇ","קמץ קטן"],["ֿ","רפה"],
+  ["וּ","שורוק", 1],["וֹ","חולם מלא", 1]            /* אות שלמה: ו עם דגש, ו עם חולם */
 ];
 H.renderPacks = function(){
   const box = H.$('packlist'); box.innerHTML = '';
@@ -38,8 +39,8 @@ H.openSettings = function(){
   H.$('prizeIn').value = p.prize || '';
   H.$('wordsIn').value = p.list.join('\n');
   const pad = H.$('nikpad'); pad.innerHTML = '';
-  H.NIKPAD.forEach(([m, n]) => {
-    const b = H.el('button', 'nikbtn', 'א' + m + '<small>' + n + '</small>');
+  H.NIKPAD.forEach(([m, n, whole]) => {
+    const b = H.el('button', 'nikbtn', (whole ? '' : 'א') + m + '<small>' + n + '</small>');
     b.onclick = () => {
       const ta = H.$('wordsIn'), i = ta.selectionStart;
       ta.value = ta.value.slice(0, i) + m + ta.value.slice(ta.selectionEnd);

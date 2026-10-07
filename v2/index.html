@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hTMZBXJ4X3qjkvc5OLvKI7tEmmUWHdWialqzkZyMPtw=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-Eb8rLNdSUbdTVBNcg1QlBV5F7fCDlj1Iv6EfhA1607E=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HZnVd1xSFS9WWncU5JKhCsc4fQDpu2ay8dqoePJIATQ=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-Eb8rLNdSUbdTVBNcg1QlBV5F7fCDlj1Iv6EfhA1607E=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1437,7 +1437,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 18:26 e492781';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 18:27 ea45b91';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -2361,6 +2361,7 @@ H.variants = function(word, n){
       c[i] = H.homophone(c[i]);
     } else if(mode === 0){                            /* תנועה אחרת */
       const o = H.parseCluster(c[i]);
+      if(o.base === 'ו' && (o.dagesh || o.vowel === '\u05b9')) continue;      /* שורוק וחולם מלא הם אותיות קריאה, לא מחליפים להם תנועה */
       o.vowel = H.VOW[Math.floor(Math.random()*H.VOW.length)];
       c[i] = H.buildCluster(o);
     } else if(mode === 1){                            /* אות חסרה */
@@ -3850,7 +3851,8 @@ H.NIKPAD = [
   ["ֹ","חולם"],["ֻ","קבוץ"],["ּ","דגש"],
   ["ׁ","שין"],["ׂ","שין שמאלית"],
   ["ֱ","חטף סגול"],["ֲ","חטף פתח"],["ֳ","חטף קמץ"],
-  ["ֺ","חולם חסר"],["ׇ","קמץ קטן"],["ֿ","רפה"]
+  ["ֺ","חולם חסר"],["ׇ","קמץ קטן"],["ֿ","רפה"],
+  ["וּ","שורוק", 1],["וֹ","חולם מלא", 1]            /* אות שלמה: ו עם דגש, ו עם חולם */
 ];
 H.renderPacks = function(){
   const box = H.$('packlist'); box.innerHTML = '';
@@ -3883,8 +3885,8 @@ H.openSettings = function(){
   H.$('prizeIn').value = p.prize || '';
   H.$('wordsIn').value = p.list.join('\n');
   const pad = H.$('nikpad'); pad.innerHTML = '';
-  H.NIKPAD.forEach(([m, n]) => {
-    const b = H.el('button', 'nikbtn', 'א' + m + '<small>' + n + '</small>');
+  H.NIKPAD.forEach(([m, n, whole]) => {
+    const b = H.el('button', 'nikbtn', (whole ? '' : 'א') + m + '<small>' + n + '</small>');
     b.onclick = () => {
       const ta = H.$('wordsIn'), i = ta.selectionStart;
       ta.value = ta.value.slice(0, i) + m + ta.value.slice(ta.selectionEnd);
@@ -4191,6 +4193,16 @@ H.renderNikud = function(){
     H.save(); H.syncStats(); H.renderNikud();
   };
 
+  /* ו: שורוק וחולם מלא הם שני הצירופים הנפוצים. בלעדיהם ההורה לא מוצא איך לנקד "מזוזה" או "יום" */
+  if(cur.base === 'ו'){
+    const rowV = H.el('div', 'nkrow');
+    const sh = cur.dagesh && !cur.vowel, hm = cur.vowel === 'ֹ' && !cur.dagesh;
+    const b1 = H.el('button', 'nkv' + (sh ? ' on' : ''), 'וּ<small>שורוק</small>');
+    b1.onclick = () => set(o => { if(sh){ o.dagesh = false; } else { o.dagesh = true; o.vowel = ''; } });
+    const b2 = H.el('button', 'nkv' + (hm ? ' on' : ''), 'וֹ<small>חולם מלא</small>');
+    b2.onclick = () => set(o => { if(hm){ o.vowel = ''; } else { o.vowel = 'ֹ'; o.dagesh = false; } });
+    rowV.appendChild(b1); rowV.appendChild(b2); pb.appendChild(rowV);
+  }
   const row1 = H.el('div', 'nkrow');
   H.VOWELS.forEach(([m, name]) => {
     const on = cur.vowel === m;

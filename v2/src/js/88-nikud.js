@@ -89,6 +89,16 @@ H.renderNikud = function(){
     H.save(); H.syncStats(); H.renderNikud();
   };
 
+  /* ו: שורוק וחולם מלא הם שני הצירופים הנפוצים. בלעדיהם ההורה לא מוצא איך לנקד "מזוזה" או "יום" */
+  if(cur.base === 'ו'){
+    const rowV = H.el('div', 'nkrow');
+    const sh = cur.dagesh && !cur.vowel, hm = cur.vowel === 'ֹ' && !cur.dagesh;
+    const b1 = H.el('button', 'nkv' + (sh ? ' on' : ''), 'וּ<small>שורוק</small>');
+    b1.onclick = () => set(o => { if(sh){ o.dagesh = false; } else { o.dagesh = true; o.vowel = ''; } });
+    const b2 = H.el('button', 'nkv' + (hm ? ' on' : ''), 'וֹ<small>חולם מלא</small>');
+    b2.onclick = () => set(o => { if(hm){ o.vowel = ''; } else { o.vowel = 'ֹ'; o.dagesh = false; } });
+    rowV.appendChild(b1); rowV.appendChild(b2); pb.appendChild(rowV);
+  }
   const row1 = H.el('div', 'nkrow');
   H.VOWELS.forEach(([m, name]) => {
     const on = cur.vowel === m;
