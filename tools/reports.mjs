@@ -22,7 +22,7 @@ if(flag('--img') >= 0){
 }
 if(flag('--done') >= 0 || flag('--delete') >= 0){
   const del = flag('--delete') >= 0, id = val(del ? '--delete' : '--done'), key = 'r:' + id;
-  if(del){ wr('kv', 'key', 'delete', key); console.log('נמחק', id); }
+  if(del){ wr('kv', 'key', 'delete', key); try{ wr('kv', 'key', 'delete', 'ri:' + id); }catch(e){} console.log('נמחק', id); }
   else { const r = JSON.parse(wr('kv', 'key', 'get', key)); r.status = 'done'; execFileSync('npx', ['wrangler', 'kv', 'key', 'put', key, JSON.stringify(r), '--namespace-id', NS, '--remote', '--ttl', String(60 * 86400)], {cwd}); console.log('סומן כמטופל', id); }
   process.exit(0);
 }
