@@ -7,24 +7,26 @@ H.VOWELS = [
   ['ְ','שווא'], ['ַ','פתח'],  ['ָ','קמץ'],
   ['ֵ','צירה'], ['ֶ','סגול'], ['ִ','חיריק'],
   ['ֹ','חולם'],  ['ֻ','קבוץ'],
-  ['ֱ','חטף סגול'], ['ֲ','חטף פתח'], ['ֳ','חטף קמץ']
+  ['ֱ','חטף סגול'], ['ֲ','חטף פתח'], ['ֳ','חטף קמץ'],
+  ['ֺ','חולם חסר'], ['ׇ','קמץ קטן']
 ];
-H.DAGESH = 'ּ'; H.SHIN = 'ׁ'; H.SIN = 'ׂ';
+H.DAGESH = 'ּ'; H.SHIN = 'ׁ'; H.SIN = 'ׂ'; H.RAFE = 'ֿ';
 H.isVowel = c => H.VOWELS.some(v => v[0] === c);
 
 /* פירוק אשכול לחלקיו, ובנייה מחדש בסדר קבוע: אות, דגש, נקודה, תנועה */
 H.parseCluster = function(cl){
-  const o = {base: cl[0], dagesh:false, shin:false, sin:false, vowel:''};
+  const o = {base: cl[0], dagesh:false, shin:false, sin:false, rafe:false, vowel:''};
   for(const c of cl.slice(1)){
     if(c === H.DAGESH) o.dagesh = true;
     else if(c === H.SHIN) o.shin = true;
     else if(c === H.SIN) o.sin = true;
+    else if(c === H.RAFE) o.rafe = true;
     else if(H.isVowel(c)) o.vowel = c;
   }
   return o;
 };
 H.buildCluster = o =>
-  o.base + (o.dagesh ? H.DAGESH : '') + (o.shin ? H.SHIN : '') + (o.sin ? H.SIN : '') + (o.vowel || '');
+  o.base + (o.dagesh ? H.DAGESH : '') + (o.shin ? H.SHIN : '') + (o.sin ? H.SIN : '') + (o.vowel || '') + (o.rafe ? H.RAFE : '');
 
 H.nk = {word:0, letter:-1};
 
@@ -99,7 +101,8 @@ H.renderNikud = function(){
   const row2 = H.el('div', 'nkrow');
   [[H.DAGESH, 'דגש', 'dagesh'],
    [H.SHIN,   'שׁין', 'shin'],
-   [H.SIN,    'שׂין', 'sin']].forEach(([m, name, key]) => {
+   [H.SIN,    'שׂין', 'sin'],
+   [H.RAFE,   'רפה', 'rafe']].forEach(([m, name, key]) => {
     const b = H.el('button', 'nkv mod' + (cur[key] ? ' on' : ''), cur.base + m + '<small>' + name + '</small>');
     b.onclick = () => set(o => {
       o[key] = !o[key];
@@ -109,7 +112,7 @@ H.renderNikud = function(){
     row2.appendChild(b);
   });
   const clr = H.el('button', 'nkv clr', '✖<small>נקה</small>');
-  clr.onclick = () => set(o => { o.vowel=''; o.dagesh=false; o.shin=false; o.sin=false; });
+  clr.onclick = () => set(o => { o.vowel=''; o.dagesh=false; o.shin=false; o.sin=false; o.rafe=false; });
   row2.appendChild(clr);
   pb.appendChild(row2);
 

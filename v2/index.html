@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oEo+QnA9UEQO1F5UJU8aholrjQ35U7Neodzm6fS4KDc=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-tzi+orB6AjyjNkK/qA7Ug0RsobGqtxDfBPv6PfoLzLc=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-D4cUHqJCuYOpmIgGmezCJjWa0TR7zc987DMNeZMDj94=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-tzi+orB6AjyjNkK/qA7Ug0RsobGqtxDfBPv6PfoLzLc=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1175,6 +1175,8 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <label class="check"><input type="checkbox" id="peekIn"> הצג את המילה לרגע לפני כל שאלה</label>
     <label class="lbl">שם ההכתבה<input id="topicIn" placeholder="חגי תשרי"></label>
     <label class="lbl">הפרס על אלבום מלא<input id="prizeIn" placeholder="חטיף MARS"></label>
+    <!-- צילום וסריקה: מוסתר בכוונה (לא רוצים שילדים יצלמו, והקריאה מצילום כבויה). הקוד נשאר, אפשר להחזיר ע"י הסרת hidden. -->
+    <div id="photosec" hidden>
     <label class="lbl">צילום דף ההכתבה</label>
     <p class="note" id="photohint" style="text-align:start">צלם את הדף והוא יישאר על המסך בזמן שאתה מקליד.</p>
     <div class="row">
@@ -1192,6 +1194,8 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
       <b>🚀 רוצה לסרוק בלי הגבלה?</b>
       <p>מנוי פותח סריקות ללא הגבלה, כמה ילדים, חבילות מילים ללא הגבלה, והיסטוריית התקדמות מלאה.</p>
       <p class="upgrade-contact">כתוב לי ואפתח לך: <b id="contactline"></b></p>
+    </div>
+
     </div>
 
     <label class="lbl">מילים — אחת בכל שורה</label>
@@ -3638,7 +3642,9 @@ H.NIKPAD = [
   ["ְ","שווא"],["ַ","פתח"],["ָ","קמץ"],
   ["ֵ","צירה"],["ֶ","סגול"],["ִ","חיריק"],
   ["ֹ","חולם"],["ֻ","קבוץ"],["ּ","דגש"],
-  ["ׁ","שין"],["ׂ","שין שמאלית"]
+  ["ׁ","שין"],["ׂ","שין שמאלית"],
+  ["ֱ","חטף סגול"],["ֲ","חטף פתח"],["ֳ","חטף קמץ"],
+  ["ֺ","חולם חסר"],["ׇ","קמץ קטן"],["ֿ","רפה"]
 ];
 H.renderPacks = function(){
   const box = H.$('packlist'); box.innerHTML = '';
@@ -3896,24 +3902,26 @@ H.VOWELS = [
   ['ְ','שווא'], ['ַ','פתח'],  ['ָ','קמץ'],
   ['ֵ','צירה'], ['ֶ','סגול'], ['ִ','חיריק'],
   ['ֹ','חולם'],  ['ֻ','קבוץ'],
-  ['ֱ','חטף סגול'], ['ֲ','חטף פתח'], ['ֳ','חטף קמץ']
+  ['ֱ','חטף סגול'], ['ֲ','חטף פתח'], ['ֳ','חטף קמץ'],
+  ['ֺ','חולם חסר'], ['ׇ','קמץ קטן']
 ];
-H.DAGESH = 'ּ'; H.SHIN = 'ׁ'; H.SIN = 'ׂ';
+H.DAGESH = 'ּ'; H.SHIN = 'ׁ'; H.SIN = 'ׂ'; H.RAFE = 'ֿ';
 H.isVowel = c => H.VOWELS.some(v => v[0] === c);
 
 /* פירוק אשכול לחלקיו, ובנייה מחדש בסדר קבוע: אות, דגש, נקודה, תנועה */
 H.parseCluster = function(cl){
-  const o = {base: cl[0], dagesh:false, shin:false, sin:false, vowel:''};
+  const o = {base: cl[0], dagesh:false, shin:false, sin:false, rafe:false, vowel:''};
   for(const c of cl.slice(1)){
     if(c === H.DAGESH) o.dagesh = true;
     else if(c === H.SHIN) o.shin = true;
     else if(c === H.SIN) o.sin = true;
+    else if(c === H.RAFE) o.rafe = true;
     else if(H.isVowel(c)) o.vowel = c;
   }
   return o;
 };
 H.buildCluster = o =>
-  o.base + (o.dagesh ? H.DAGESH : '') + (o.shin ? H.SHIN : '') + (o.sin ? H.SIN : '') + (o.vowel || '');
+  o.base + (o.dagesh ? H.DAGESH : '') + (o.shin ? H.SHIN : '') + (o.sin ? H.SIN : '') + (o.vowel || '') + (o.rafe ? H.RAFE : '');
 
 H.nk = {word:0, letter:-1};
 
@@ -3988,7 +3996,8 @@ H.renderNikud = function(){
   const row2 = H.el('div', 'nkrow');
   [[H.DAGESH, 'דגש', 'dagesh'],
    [H.SHIN,   'שׁין', 'shin'],
-   [H.SIN,    'שׂין', 'sin']].forEach(([m, name, key]) => {
+   [H.SIN,    'שׂין', 'sin'],
+   [H.RAFE,   'רפה', 'rafe']].forEach(([m, name, key]) => {
     const b = H.el('button', 'nkv mod' + (cur[key] ? ' on' : ''), cur.base + m + '<small>' + name + '</small>');
     b.onclick = () => set(o => {
       o[key] = !o[key];
@@ -3998,7 +4007,7 @@ H.renderNikud = function(){
     row2.appendChild(b);
   });
   const clr = H.el('button', 'nkv clr', '✖<small>נקה</small>');
-  clr.onclick = () => set(o => { o.vowel=''; o.dagesh=false; o.shin=false; o.sin=false; });
+  clr.onclick = () => set(o => { o.vowel=''; o.dagesh=false; o.shin=false; o.sin=false; o.rafe=false; });
   row2.appendChild(clr);
   pb.appendChild(row2);
 
