@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vps4U+J+7FS0bKfYIbGlHbI/vCvuAm+I/0/Jo7JziVw=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-/V1lIzZLgeiJ7pGaVY8wBCrG2O9yjJwXx9xNkErtSj8=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZeM4OjxP8s1KL07l9rysFmQCT8QHu9Bqn553W1B1moE=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-/V1lIzZLgeiJ7pGaVY8wBCrG2O9yjJwXx9xNkErtSj8=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1300,7 +1300,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 17:41 a4790f4';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 17:48 8c520e6';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -2085,10 +2085,18 @@ H.run = null;             /* הסיבוב הנוכחי */
 
 /* סבב בלי מילים נגמר מיד עם "0 מתוך 0" ושלושה כוכבים. לכן לא מתחילים אותו. */
 H.hasWords = () => H.words().some(w => String(w).trim());
+/* אין מילים בנושא הנוכחי: עוברים לנושא אחר שיש בו מילים. רק אם אין בכלל, מציעים נושא מהמאגר.
+   (פעם זה שלח את הילד למסך ההורים, וזה לא המקום שלו.) */
 H.needWords = function(){
   if(H.hasWords()) return false;
-  H.toast('אין מילים ברשימה. הוסף מילים כדי לשחק');
-  H.openSettings();
+  const other = H.state.packs.find(p => p.list.some(w => String(w).trim()));
+  if(other){
+    H.state.pack = other.id; H.syncStats(); H.save(); H.refresh();
+    H.toast('עברנו לנושא: ' + (other.topic || 'הכתבה'));
+    return false;
+  }
+  H.toast('אין מילים עדיין. בחר נושא מהמאגר');
+  H.openLibrary();
   return true;
 };
 H.startRound = function(gameId, station, words, extra){
@@ -4259,6 +4267,9 @@ H.refresh = function(){
 H.boot = function(){
   H.load();
   if(H.loadAcc) H.loadAcc();
+  /* חבילות ריקות שנשארו מלחיצות על "➕ חבילה": מנקים, אבל תמיד נשארת לפחות אחת */
+  { const full = H.state.packs.filter(p => p.list.some(w => String(w).trim()));
+    if(full.length && full.length < H.state.packs.length){ H.state.packs = full; if(!full.some(p => p.id === H.state.pack)) H.state.pack = full[0].id; H.save(); } }
   let sc = 'ktav'; try{ if(localStorage.getItem('hachtava_script') === 'dfus') sc = 'dfus'; }catch(e){}
   H.setScript(sc);
   try{ if(document.fonts && document.fonts.load) document.fonts.load('30px KtavYad'); }catch(e){}   /* טוענים את גופן הכתב מראש */
@@ -6242,7 +6253,7 @@ H.world = (function(){
     gl.uniformMatrix4fv(gl.getUniformLocation(progS, 'vp'), false, c.vp);
     gl.uniform3fv(gl.getUniformLocation(progS, 'rt'), c.right); gl.uniform3fv(gl.getUniformLocation(progS, 'up'), c.up);
     const ql = gl.getAttribLocation(progS, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(ql); gl.vertexAttribPointer(ql, 2, gl.FLOAT, false, 0, 0);
-    const list = [], push = (d, f) => list.push({d, f});
+    const list = [], labels = [], push = (d, f) => list.push({d, f});
     const dist = (x, y, z) => Math.hypot(x - c.eye[0], y - c.eye[1], z - c.eye[2]);
     { const sx = c.eye[0] + 120, sy = c.eye[1] + 95, sz = c.eye[2] - 130; push(dist(sx, sy, sz) + 400, () => sprite(c, emojiTex(H.state.bg === 'night' || H.state.bg === 'space' ? '🌙' : '☀️'), sx, sy, sz, 34, 34)); }
     S.clouds.forEach(cl => push(dist(cl.x, cl.y, cl.z), () => sprite(c, emojiTex('☁️'), cl.x + Math.sin(S.t * .05 + cl.z) * 3, cl.y, cl.z, cl.s * 2, cl.s * 2)));
@@ -6252,7 +6263,7 @@ H.world = (function(){
       if(S.label && S.label.p === p) push(dist(p.x, y, p.z) - 3, () => sprite(c, labelTex(H.disp(p.w)), p.x, y, p.z, 2.6, .65)); });
     S.portals.forEach(q => { const d0 = dist(q.x, q.y + 3.3, q.z);
       push(d0, () => sprite(c, emojiTex(q.g.e), q.x, q.y + 3.4 + Math.sin(S.t * 2 + q.x) * .12, q.z, 1.5, 1.5));
-      if(d0 > 7 && d0 < 22) push(d0 - 1, () => sprite(c, labelTex(q.g.name), q.x, q.y + 4.5, q.z, 2.6, .65)); });
+      if(d0 < 46) labels.push({d: d0, f: () => { const k = clamp(d0 / 11, .8, 2.6), t = q === S.near ? 0 : 1; if(t) sprite(c, labelTex(q.g.name), q.x, q.y + 4.7 + k * .12, q.z, 2.6 * k, .65 * k); }}); });
     S.items.forEach(it => { const y = hgt(it.x, it.z) + 1.9 + Math.sin(S.t * 2 + it.ph) * .12;
       if(it.type === 'letter') push(dist(it.x, y, it.z) - 1, () => sprite(c, letterTex(it.ch), it.x, y, it.z, 1.15, 1.15));
       if(it.type === 'chest') push(dist(it.x, y, it.z), () => sprite(c, emojiTex('🎁'), it.x, hgt(it.x, it.z) + 1.9, it.z, 1, 1)); });
@@ -6261,6 +6272,8 @@ H.world = (function(){
     const pet = (H.PETS.find(p => p.id === H.state.pet) || {}).e;
     if(pet) push(dist(S.pet.x, 0, S.pet.z), () => sprite(c, emojiTex(pet), S.pet.x, hgt(S.pet.x, S.pet.z) + .5 + (av.moving ? Math.abs(Math.sin(av.ph + 1)) * .15 : 0), S.pet.z, .9, .9));
     list.sort((a, b) => b.d - a.d).forEach(o => o.f());
+    /* שמות המשחקים מעל השערים: תמיד קריאים, גם מרחוק ומאחורי גבעה */
+    gl.disable(gl.DEPTH_TEST); labels.sort((a, b) => b.d - a.d).forEach(o => o.f()); gl.enable(gl.DEPTH_TEST);
   }
   function frame(ts){
     if(!running) return;

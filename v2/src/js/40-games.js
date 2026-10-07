@@ -10,10 +10,18 @@ H.run = null;             /* הסיבוב הנוכחי */
 
 /* סבב בלי מילים נגמר מיד עם "0 מתוך 0" ושלושה כוכבים. לכן לא מתחילים אותו. */
 H.hasWords = () => H.words().some(w => String(w).trim());
+/* אין מילים בנושא הנוכחי: עוברים לנושא אחר שיש בו מילים. רק אם אין בכלל, מציעים נושא מהמאגר.
+   (פעם זה שלח את הילד למסך ההורים, וזה לא המקום שלו.) */
 H.needWords = function(){
   if(H.hasWords()) return false;
-  H.toast('אין מילים ברשימה. הוסף מילים כדי לשחק');
-  H.openSettings();
+  const other = H.state.packs.find(p => p.list.some(w => String(w).trim()));
+  if(other){
+    H.state.pack = other.id; H.syncStats(); H.save(); H.refresh();
+    H.toast('עברנו לנושא: ' + (other.topic || 'הכתבה'));
+    return false;
+  }
+  H.toast('אין מילים עדיין. בחר נושא מהמאגר');
+  H.openLibrary();
   return true;
 };
 H.startRound = function(gameId, station, words, extra){

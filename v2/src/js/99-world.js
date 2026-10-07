@@ -627,7 +627,7 @@ H.world = (function(){
     gl.uniformMatrix4fv(gl.getUniformLocation(progS, 'vp'), false, c.vp);
     gl.uniform3fv(gl.getUniformLocation(progS, 'rt'), c.right); gl.uniform3fv(gl.getUniformLocation(progS, 'up'), c.up);
     const ql = gl.getAttribLocation(progS, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(ql); gl.vertexAttribPointer(ql, 2, gl.FLOAT, false, 0, 0);
-    const list = [], push = (d, f) => list.push({d, f});
+    const list = [], labels = [], push = (d, f) => list.push({d, f});
     const dist = (x, y, z) => Math.hypot(x - c.eye[0], y - c.eye[1], z - c.eye[2]);
     { const sx = c.eye[0] + 120, sy = c.eye[1] + 95, sz = c.eye[2] - 130; push(dist(sx, sy, sz) + 400, () => sprite(c, emojiTex(H.state.bg === 'night' || H.state.bg === 'space' ? '🌙' : '☀️'), sx, sy, sz, 34, 34)); }
     S.clouds.forEach(cl => push(dist(cl.x, cl.y, cl.z), () => sprite(c, emojiTex('☁️'), cl.x + Math.sin(S.t * .05 + cl.z) * 3, cl.y, cl.z, cl.s * 2, cl.s * 2)));
@@ -637,7 +637,7 @@ H.world = (function(){
       if(S.label && S.label.p === p) push(dist(p.x, y, p.z) - 3, () => sprite(c, labelTex(H.disp(p.w)), p.x, y, p.z, 2.6, .65)); });
     S.portals.forEach(q => { const d0 = dist(q.x, q.y + 3.3, q.z);
       push(d0, () => sprite(c, emojiTex(q.g.e), q.x, q.y + 3.4 + Math.sin(S.t * 2 + q.x) * .12, q.z, 1.5, 1.5));
-      if(d0 > 7 && d0 < 22) push(d0 - 1, () => sprite(c, labelTex(q.g.name), q.x, q.y + 4.5, q.z, 2.6, .65)); });
+      if(d0 < 46) labels.push({d: d0, f: () => { const k = clamp(d0 / 11, .8, 2.6), t = q === S.near ? 0 : 1; if(t) sprite(c, labelTex(q.g.name), q.x, q.y + 4.7 + k * .12, q.z, 2.6 * k, .65 * k); }}); });
     S.items.forEach(it => { const y = hgt(it.x, it.z) + 1.9 + Math.sin(S.t * 2 + it.ph) * .12;
       if(it.type === 'letter') push(dist(it.x, y, it.z) - 1, () => sprite(c, letterTex(it.ch), it.x, y, it.z, 1.15, 1.15));
       if(it.type === 'chest') push(dist(it.x, y, it.z), () => sprite(c, emojiTex('🎁'), it.x, hgt(it.x, it.z) + 1.9, it.z, 1, 1)); });
@@ -646,6 +646,8 @@ H.world = (function(){
     const pet = (H.PETS.find(p => p.id === H.state.pet) || {}).e;
     if(pet) push(dist(S.pet.x, 0, S.pet.z), () => sprite(c, emojiTex(pet), S.pet.x, hgt(S.pet.x, S.pet.z) + .5 + (av.moving ? Math.abs(Math.sin(av.ph + 1)) * .15 : 0), S.pet.z, .9, .9));
     list.sort((a, b) => b.d - a.d).forEach(o => o.f());
+    /* שמות המשחקים מעל השערים: תמיד קריאים, גם מרחוק ומאחורי גבעה */
+    gl.disable(gl.DEPTH_TEST); labels.sort((a, b) => b.d - a.d).forEach(o => o.f()); gl.enable(gl.DEPTH_TEST);
   }
   function frame(ts){
     if(!running) return;

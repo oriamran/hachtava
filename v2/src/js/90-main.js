@@ -10,6 +10,9 @@ H.refresh = function(){
 H.boot = function(){
   H.load();
   if(H.loadAcc) H.loadAcc();
+  /* חבילות ריקות שנשארו מלחיצות על "➕ חבילה": מנקים, אבל תמיד נשארת לפחות אחת */
+  { const full = H.state.packs.filter(p => p.list.some(w => String(w).trim()));
+    if(full.length && full.length < H.state.packs.length){ H.state.packs = full; if(!full.some(p => p.id === H.state.pack)) H.state.pack = full[0].id; H.save(); } }
   let sc = 'ktav'; try{ if(localStorage.getItem('hachtava_script') === 'dfus') sc = 'dfus'; }catch(e){}
   H.setScript(sc);
   try{ if(document.fonts && document.fonts.load) document.fonts.load('30px KtavYad'); }catch(e){}   /* טוענים את גופן הכתב מראש */
