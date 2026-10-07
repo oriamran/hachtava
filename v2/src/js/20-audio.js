@@ -63,6 +63,7 @@ H.PEEK_MS = 2400;
 H.peek = function(word){
   const box = H.$('peek');
   if(!box) return;
+  if(H.state.hideWord && H.useAudio) return;      /* מצב "הסתר את המילה": רק שמיעה */
   clearTimeout(H.peekT);
   box.textContent = word;
   box.classList.add('on');

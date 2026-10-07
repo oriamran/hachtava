@@ -32,6 +32,7 @@ export function sanitizeState(raw: unknown): Obj | null {
   s.name        = str(raw.name, 30);
   s.onboarded   = raw.onboarded === true;
   s.peekAlways  = raw.peekAlways === true;
+  s.hideWord    = raw.hideWord === true;
   s.avatar      = str(raw.avatar, 20, "fox");
   s.hat         = str(raw.hat, 20, "none");
   s.ring        = str(raw.ring, 20, "sun");
@@ -82,7 +83,8 @@ export function sanitizeState(raw: unknown): Obj | null {
   /* עולם הבנייה: שינויים בבסיס64 (מוגבל בגודל) ושורת בלוקים קצרה */
   const bd = isObj(raw.build) ? raw.build : {};
   s.build = { e: (typeof bd.e === "string" && /^[A-Za-z0-9+/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : "",
-              hot: Array.isArray(bd.hot) ? bd.hot.filter((n): n is number => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [] };
+              hot: Array.isArray(bd.hot) ? bd.hot.filter((n): n is number => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [],
+              l: (typeof bd.l === "string" ? bd.l.replace(/[^\u05d0-\u05ea]/g, "") : "").slice(0, 30) };
   const u = isObj(raw.usage) ? raw.usage : {};
   const games: Obj = {};
   if (isObj(u.games)) for (const g of Object.keys(u.games).slice(0, 20)) {

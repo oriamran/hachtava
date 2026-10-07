@@ -101,7 +101,7 @@ H.PETS = [
 ];
 
 H.blank = () => ({
-  name: '', onboarded: false, peekAlways: false,
+  name: '', onboarded: false, peekAlways: false, hideWord: false,
   level: 'a2', nikud: 'auto', tour: false,
   usage: {first: 0, last: 0, visits: 0, activeSec: 0, games: {}, hist: {}},
   avatar: 'fox', hat: 'none', ring: 'sun', bg: 'day', pet: 'none',

@@ -98,7 +98,9 @@ console.log("voxel build state");
 const vb = sanitizeState({ build: { e: "AAECAw==", hot: [1, 2, "x", 999, 20] } });
 ok("edits string and hot bar kept, bad ids dropped", vb.build.e === "AAECAw==" && JSON.stringify(vb.build.hot) === "[1,2,20]", JSON.stringify(vb.build));
 ok("non-base64 edits dropped", sanitizeState({ build: { e: "<script>" } }).build.e === "");
-ok("oversized edits are truncated", sanitizeState({ build: { e: "A".repeat(90000) } }).build.e.length === 36000);
+ok("oversized edits are truncated", sanitizeState({ build: { e: "A".repeat(150000) } }).build.e.length === 100000);
+ok("learned letters kept, junk dropped", sanitizeState({ build: { l: "אב<x>ת1" } }).build.l === "אבת");
+ok("hideWord flag is boolean only", sanitizeState({ hideWord: true }).hideWord === true && sanitizeState({ hideWord: "yes" }).hideWord === false);
 
 console.log("problem reports");
 const rp = sanitizeReport({ text: "  המשחק נתקע  ", kind: "weird", contact: true, email: "a@b.co", ctx: { screen: "voxel", game: "blocks", errs: ["x".repeat(900), 5, "ok"], extra: { fps: 30, bad: { z: 1 }, note: "n" }, snap: "s".repeat(9000), ua: "u".repeat(999) } });

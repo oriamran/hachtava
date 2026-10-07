@@ -25,12 +25,18 @@ H.show = function(id){
   H.paint();
 };
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
-H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','world','voxel','end']);
+H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','letters','world','voxel','end']);
 /* חזרה לאי אחרי משחק שנפתח משער */
 H.returnToWorld = function(){
   speechSynthesis.cancel();
   H.show('world');
   if(!H.world.open('explore', true)){ H.home(); }
+};
+/* חזרה לעולם הבנייה אחרי משחק שנפתח משם */
+H.returnToVoxel = function(){
+  speechSynthesis.cancel();
+  H.show('voxel');
+  if(!H.vox.open('free')){ H.home(); }
 };
 H.goBack = function(){
   if(H.screen === 'world' && H.world.mode() === 'explore') return H.home();     /* יציאה מהאי */
@@ -50,6 +56,7 @@ H.goBack = function(){
     if(o === 'play') H.renderPlay();
     if(o === 'plan') H.renderPlan();
     if(o === 'world') return H.returnToWorld();
+    if(o === 'voxel') return H.returnToVoxel();
     return H.show(o);
   }
   H.home();

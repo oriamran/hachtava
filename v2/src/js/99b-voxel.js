@@ -98,7 +98,7 @@ H.vox = (function(){
     for(let li = 0; li < H.VOX_LETTERS.length; li++){
       const ti = LET0 + li, ox = (ti % COLS) * TS, oy = Math.floor(ti / COLS) * TS;
       x.fillStyle = '#9a6a30'; x.fillRect(ox, oy, TS, TS); x.fillStyle = '#f3e3b0'; x.fillRect(ox + 2, oy + 2, TS - 4, TS - 4);
-      x.fillStyle = '#4a2f9c'; x.font = 'bold 26px "Arial Hebrew",Arial,sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(H.VOX_LETTERS[li], ox + TS / 2, oy + TS / 2 + 2);
+      x.fillStyle = '#4a2f9c'; x.font = H.scriptNow() === 'dfus' ? 'bold 26px "Arial Hebrew",Arial,sans-serif' : '40px KtavYad,"Arial Hebrew",Arial,sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(H.VOX_LETTERS[li], ox + TS / 2, oy + TS / 2 + 2);
     }
     return c;
   }
@@ -322,11 +322,18 @@ H.vox = (function(){
     }catch(e){ console.warn(e); gl = null; return false; }
     gl.enable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     S0.quad = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, 1,1, -1,-1, 1,1, -1,1]), gl.STATIC_DRAW);
-    atlas = makeAtlas();
+    atlas = makeAtlas(); atlasScript = H.scriptNow();
     atlasTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return true;
+  }
+  /* אותיות הבלוקים בכתב או בדפוס, לפי ההגדרה של האפליקציה */
+  let atlasScript = '', fontsDone = false;
+  function refreshAtlas(){
+    if(!gl || atlasScript === H.scriptNow()) return;
+    atlas = makeAtlas(); atlasScript = H.scriptNow(); for(const k in tileUrl) delete tileUrl[k];
+    gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas);
   }
   const theme = () => H.WORLD_THEMES[H.state.bg] || H.WORLD_THEMES.day;
   /* שעה ביום: 0 חצות, .25 זריחה, .5 צהריים, .75 שקיעה. מחזור מלא בעשר דקות. */
@@ -455,9 +462,10 @@ H.vox = (function(){
   /* אותיות שנפתחו: כל אות שמופיעה במילה שנלמדה (באלבום) */
   let unl = null, unlKey = '';
   function unlocked(){
-    const key = H.state.album.length + ':' + H.state.packs.length;
+    const key = H.state.album.length + ':' + H.state.packs.length + ':' + H.letterSet();
     if(unl && key === unlKey) return unl;
     const set = new Set(); H.state.album.forEach(w => { for(const c of String(w)) if(H.VOX_LETTERS.includes(c)) set.add(c); });
+    for(const c of H.letterSet()) set.add(c);
     unlKey = key; return unl = set;
   }
 
@@ -652,16 +660,118 @@ H.vox = (function(){
     challenge = {word, letters, onDone, done: false};
     /* סרגל קצר: האותיות של המילה */
     const uniq = [...new Set(letters)];
-    S.hot = uniq.map(c => LET0 + H.VOX_LETTERS.indexOf(c)).concat(S.hot.filter(id => id < LET0)).slice(0, 9); S.sel = 0; editMode = 'build';
+    S.hot = (H.state.hideWord ? H.shuffle(uniq) : uniq).map(c => LET0 + H.VOX_LETTERS.indexOf(c)).concat(S.hot.filter(id => id < LET0)).slice(0, 9); S.sel = 0; editMode = 'build';
     renderBar(); renderTop();
   }
+
+
+  /* ---------- אבני למידה: משימות קטנות בעולם (מילים, אותיות, זיכרון) ---------- */
+  const STONES = 6;
+  function spawnStones(){
+    const r = rngOf(4141 + Math.floor(Date.now() / 864e5)), out = [], cx = NX / 2, cz = NZ / 2;
+    for(let k = 0; k < STONES; k++){
+      for(let tries = 0; tries < 80; tries++){
+        const a = r() * 6.2832, d = 12 + r() * 48, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, xi = Math.floor(x), zi = Math.floor(z);
+        if(xi < 3 || zi < 3 || xi >= NX - 3 || zi >= NZ - 3) continue;
+        const y = topY[zi * NX + xi] + 1;
+        if(get(xi, y - 1, zi) !== 1 || !(get(xi, y, zi) === AIR || PLANT(get(xi, y, zi)))) continue;
+        out.push({x: xi + .5, y, z: zi + .5, done: false}); break;
+      }
+    }
+    return out;
+  }
+  function stoneAtTap(o, d, maxT){
+    let best = null, bt = maxT;
+    S.stones.forEach(st => { if(st.done) return;
+      const ox = o[0] - st.x, oy = o[1] - (st.y + 1), oz = o[2] - st.z, b = ox * d[0] + oy * d[1] + oz * d[2], c = ox * ox + oy * oy + oz * oz - 1.1, disc = b * b - c;
+      if(disc < 0) return; const t = -b - Math.sqrt(disc); if(t > 0 && t < bt){ bt = t; best = st; } });
+    return best;
+  }
+  function checkStones(){
+    if(S.quiz || mode !== 'free' || performance.now() < (S.quizCool || 0)) return;
+    const st = S.stones.find(s => !s.done && Math.hypot(s.x - S.p.x, s.z - S.p.z) < 1.7 && Math.abs(s.y - S.p.y) < 2.5);
+    if(st) openQuiz(st);
+  }
+  const wordPool = () => { const ws = H.words().map(w => String(w).trim()).filter(Boolean); return ws.length ? ws : ['שלום']; };
+  function openQuiz(st){
+    if(S.quiz) return; S.quiz = st; flush();
+    const box = H.$('vxquiz'), w = wordPool()[Math.floor(Math.random() * wordPool().length)], shown = H.disp(w);
+    const types = ['hear', 'memory', 'missing', 'hear'], type = types[Math.floor(Math.random() * types.length)];
+    let q = '', head = '', opts = [], right = '', delay = 0;
+    if(type === 'missing'){
+      const cl = H.clusters(shown), idxs = cl.map((c, i) => c !== ' ' ? i : -1).filter(i => i >= 0), i = idxs[Math.floor(Math.random() * idxs.length)], ans = cl[i];
+      const norm = c => H.nikudOn() ? c : H.strip(c), a = norm(ans), set = new Set([a]);
+      const hh = H.homophone(ans); if(hh) set.add(norm(hh));
+      for(let g = 0; set.size < 3 && g < 40; g++) set.add(norm(H.randTile(H.nikudOn())));
+      opts = H.shuffle([...set].slice(0, 3)); right = a;
+      q = '📚 איזו אות חסרה?'; head = '<div class="vxq-word">' + cl.map((c, j) => j === i ? '<span class="gap">▢</span>' : H.esc(c)).join('') + '</div>';
+    } else {
+      right = shown; opts = H.shuffle([shown].concat(H.variants(w, 2).map(H.disp))).slice(0, 3);
+      if(type === 'memory'){ q = '🧠 זכור את המילה'; head = '<div class="vxq-word">' + H.esc(shown) + '</div><div class="vxq-sub">נעלמת עוד רגע...</div>'; delay = 3200; }
+      else { q = '👂 שמע ובחר את הכתיב הנכון'; head = '<button class="vxq-ear" id="vxqsay">🔊</button>'; }
+    }
+    const showOpts = () => {
+      box.innerHTML = '<div class="vxq-card"><div class="vxq-q">' + (type === 'memory' ? '🧠 איזו מילה ראית?' : q) + '</div>' + (type === 'memory' ? '' : head) + '<div class="vxq-opts" id="vxqo"></div><div class="vxq-fb" id="vxqfb"></div><button class="mini" id="vxqx">✕ סגור</button></div>';
+      let locked = false;
+      opts.forEach(o => { const b = H.el('button', 'vxq-opt', o);
+        b.onclick = () => { if(locked) return; locked = true; const ok = o === right;
+          if(ok){ b.classList.add('right'); H.sfx.good(); } else { b.classList.add('wrongpick'); H.sfx.bad(); [...H.$('vxqo').children].forEach(x => { if(x.textContent === right) x.classList.add('right'); }); }
+          H.$('vxqfb').textContent = ok ? '🎉 נכון! +3 🪙' : 'זו התשובה הנכונה 👆';
+          if(!ok && type !== 'missing') H.speak(w);
+          setTimeout(() => closeQuiz(ok, st), ok ? 1000 : 1900); };
+        H.$('vxqo').appendChild(b); });
+      H.$('vxqx').onclick = () => closeQuiz(null, st);
+      const say = H.$('vxqsay'); if(say) say.onclick = () => H.speak(w);
+    };
+    box.style.display = '';
+    if(delay){
+      box.innerHTML = '<div class="vxq-card"><div class="vxq-q">' + q + '</div>' + head + '</div>';
+      H.speak(w);
+      S.quizT = setTimeout(showOpts, delay);
+    } else { showOpts(); if(type === 'hear') setTimeout(() => H.speak(w), 250); }
+  }
+  function closeQuiz(ok, st){
+    clearTimeout(S.quizT); H.$('vxquiz').style.display = 'none'; S.quiz = null; S.quizCool = performance.now() + 2500;
+    if(ok === true){
+      st.done = true; H.state.coins += 3; H.save(); H.paint();
+      if(S.stones.every(s => s.done)){
+        const lock = H.lockedLetters(), pick = lock[Math.floor(Math.random() * lock.length)];
+        H.state.coins += 20; if(pick) H.learnLetter(pick); H.save(); H.paint();
+        H.toast(pick ? '🎁 סיימת את כל האבנים! +20 🪙 ונפתחה האות ' + pick : '🎁 סיימת את כל האבנים! +20 🪙', 'level'); H.confetti && H.confetti(50);
+        S.stones = spawnStones();
+      }
+    } else if(ok === false) H.toast('נסה שוב את האבן הזאת 📚');
+    renderBar(); renderTop();
+  }
+
+  /* ---------- מדריך: מה אפשר לעשות כאן ואיך פותחים כל דבר ---------- */
+  function openHelp(){
+    const pal = H.$('vxpal'); pal.style.display = '';
+    const lockedL = H.lockedLetters().length, own = id => H.owns('blk_' + id);
+    const row = (e, t, d) => '<div class="vxh-row"><span class="vxh-e">' + e + '</span><div><b>' + t + '</b><small>' + d + '</small></div></div>';
+    const paid = H.VOX_BLOCKS.filter(b => b.cost).map(b => b.n + ' ' + b.cost + '🪙' + (own(b.k) ? ' ✔' : '')).join(' · ');
+    pal.innerHTML = '<div class="vxp-h"><b>📖 מה אפשר לעשות בעולם הבנייה</b><button class="mini" id="vxpclose">✕</button></div>' +
+      row('🔨', 'לבנות ולשבור', 'לחץ על הקרקע או על בלוק כדי להניח בלוק. כפתור הפטיש מחליף לשבירה ⛏️ וחוזר. ↶ בטל מבטל את הפעולה האחרונה.') +
+      row('🧱', 'בלוקים', 'לחץ על ⋯ בסרגל התחתון לראות את כולם. רוב הבלוקים חינם. בלוקים מיוחדים נקנים במטבעות: ' + paid + '. את המטבעות מרוויחים במשחקים ובאבני הלמידה.') +
+      row('🔤', 'בלוקי אותיות', 'נפתחים כשמשחקים ב"אותיות" בכפתור 🎓 שלמטה, או כשלומדים מילה עם האות. עוד ' + lockedL + ' אותיות נעולות מתוך 22.') +
+      row('🏗️', 'תבניות בנייה', 'בלחיצה על ⋯ בוחרים בית, מגדל או גשר ולוחצים על הקרקע. הכפתור ↻ מסובב אותה.') +
+      row('📚', 'אבני למידה', 'בעולם מפוזרות ' + STONES + ' אבני למידה 📚, ' + (S && S.stones ? S.stones.filter(s => s.done).length : 0) + '/' + STONES + ' נפתרו. גש אליהן ופתור: מילה, אות חסרה או זיכרון. על כל פתרון 3 🪙, ובסוף בונוס ואות חדשה.') +
+      row('🐑', 'חיות', 'לחץ על חיה כדי לשמוע את שמה בניקוד ולראות אותו.') +
+      row('🔭', 'לראות את כל העולם', 'כפתור הטלסקופ מרחיק את המצלמה. אפשר גם לצבוט עם שתי אצבעות.') +
+      row('🌗', 'זמן ביום', 'מחליף בין צהריים, שקיעה, לילה וזריחה. בלילה מנורות 💡 מאירות.') +
+      row('⬆', 'קפיצה ותנועה', 'הג׳ויסטיק מזיז, החץ קופץ. גרור על המסך כדי לסובב את המצלמה.') +
+      '<div class="row" style="margin-top:10px"><button class="go" id="vxlearn">🎓 משחק אותיות: פתח אותיות חדשות</button></div>';
+    H.$('vxpclose').onclick = () => { pal.style.display = 'none'; };
+    H.$('vxlearn').onclick = () => { pal.style.display = 'none'; learnLetters(); };
+  }
+  function learnLetters(){ flush(); running = false; H.startRound('letters', undefined, undefined, {origin: 'voxel'}); }
 
   /* ---------- ממשק ---------- */
   function renderTop(){
     const box = H.$('vxhud'); if(!box) return;
     let mid = '';
-    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + H.esc(c) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה של אותיות לפי הסדר, מימין לשמאל או מלמעלה למטה</div>';
-    else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + '</div>';
+    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + (H.state.hideWord ? '▢' : H.esc(c)) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה של אותיות לפי הסדר, מימין לשמאל או מלמעלה למטה</div>';
+    else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + (S.stones && S.stones.length && mode === 'free' ? ' · 📚 ' + S.stones.filter(s => s.done).length + '/' + S.stones.length : '') + '</div>';
     box.innerHTML = '<div class="wh-top"><button class="wh-exit" id="vxexit">✕ יציאה</button><span class="wh-coins">🪙 ' + H.state.coins + '</span><button class="wh-bug" id="vxbug" aria-label="דווח על בעיה">🐞</button>' +
       '<button class="wh-topic" id="vxundo">↶ בטל</button></div>' + mid;
     H.$('vxexit').onclick = () => { H.sfx.tap(); flush(); H.goBack(); };
@@ -690,15 +800,16 @@ H.vox = (function(){
     const pal = H.$('vxpal'); pal.style.display = ''; let html = '<div class="vxp-h"><b>בלוקים</b><button class="mini" id="vxpclose">✕</button></div><div class="vxp-grid">';
     H.VOX_BLOCKS.forEach(b => { const o = owned(b.id);
       html += '<button class="vxp-b' + (o ? '' : ' lock') + '" data-id="' + b.id + '"><img src="' + slotImg(b.id) + '" alt=""><small>' + H.esc(b.n) + (o ? '' : '<br>🪙 ' + b.cost) + '</small></button>'; });
-    html += '</div><div class="vxp-h"><b>🏗️ תבניות (נבנו ב-Blender)</b><small>לחץ והנח בלחיצה על הקרקע</small></div><div class="vxp-grid tpl">' + Object.values(TPL).map(t => '<button class="vxp-b tplb" data-tpl="' + t.id + '"><img src="' + t.png + '" alt=""><small>' + H.esc(t.n) + '</small></button>').join('') + '</div><div class="vxp-h"><b>אותיות</b><small>נפתחות כשלומדים מילה</small></div><div class="vxp-grid">';
+    html += '</div><div class="vxp-h"><b>🏗️ תבניות (נבנו ב-Blender)</b><small>לחץ והנח בלחיצה על הקרקע</small></div><div class="vxp-grid tpl">' + Object.values(TPL).map(t => '<button class="vxp-b tplb" data-tpl="' + t.id + '"><img src="' + t.png + '" alt=""><small>' + H.esc(t.n) + '</small></button>').join('') + '</div><div class="vxp-h"><b>אותיות</b><small>נעולות? שחק ב״אותיות״</small></div><div class="row"><button class="mini" id="vxlearn2">🎓 למד אותיות כדי לפתוח</button></div><div class="vxp-grid">';
     for(let i = 0; i < H.VOX_LETTERS.length; i++){ const ch = H.VOX_LETTERS[i], o = letterOpen(ch);
       html += '<button class="vxp-b' + (o ? '' : ' lock') + '" data-id="' + (LET0 + i) + '"><img src="' + slotImg(LET0 + i) + '" alt=""><small>' + (o ? '' : '🔒') + '</small></button>'; }
     pal.innerHTML = html + '</div>';
     H.$('vxpclose').onclick = () => { pal.style.display = 'none'; };
+    H.$('vxlearn2').onclick = () => { pal.style.display = 'none'; learnLetters(); };
     pal.querySelectorAll('.tplb').forEach(b => b.onclick = () => pickStamp(b.dataset.tpl));
     pal.querySelectorAll('.vxp-b:not(.tplb)').forEach(b => b.onclick = () => {
       const id = Number(b.dataset.id);
-      if(!owned(id)){ if(id < LET0) buyBlock(id); else H.toast('האות הזאת נעולה. למד מילה עם האות 🔒'); openPalette(); return; }
+      if(!owned(id)){ if(id < LET0) buyBlock(id); else H.toast('האות הזאת נעולה 🔒 שחק ב״אותיות״ כדי לפתוח'); openPalette(); return; }
       S.hot[S.sel] = id; editMode = 'build'; pal.style.display = 'none'; renderBar(); renderTop(); save(); });
   }
   function flush(){ if(dirtyT){ dirtyT = 0; save(); } }
@@ -755,6 +866,8 @@ H.vox = (function(){
     const ql = gl.getAttribLocation(progS, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(ql); gl.vertexAttribPointer(ql, 2, gl.FLOAT, false, 0, 0);
     const p = S.p, bob = S.p.ground && (Math.abs(stick.x) + Math.abs(stick.y) > .1 || keys.w || keys.s || keys.a || keys.d) ? Math.abs(Math.sin(p.walk)) * .12 : 0;
     sprite(avatarTex(), p.x, p.y + 1.0 + bob, p.z, 2.0, 2.0);
+    { const tt = performance.now() / 1000; S.stones.forEach(st => { if(st.done) return; const by = st.y + 1.3 + Math.sin(tt * 2 + st.x) * .15;
+      sprite(emojiTex('📚'), st.x, by, st.z, 1.5, 1.5); sprite(emojiTex('✨'), st.x + Math.sin(tt * 3) * .5, by + .5 + Math.sin(tt * 2.2) * .2, st.z, .6, .6); }); }
     S.mobs.forEach(m => { if(m.heart > 0) sprite(emojiTex('❤️'), m.x, m.y + H.MOBS[m.kind].h + .4 + (1.6 - m.heart) * .6, m.z, .7, .7); });
     if(S.label && performance.now() < S.label.until){ const m = S.label.m; sprite(labelTex(S.label.text), m.x, m.y + H.MOBS[m.kind].h + 1.1, m.z, 2.4, .6); }
     const pet = (H.PETS.find(v => v.id === H.state.pet) || {}).e; if(pet) sprite(emojiTex(pet), S.pet.x, S.pet.y + .5, S.pet.z, 1.0, 1.0);
@@ -773,7 +886,7 @@ H.vox = (function(){
     S.acc = (S.acc || 0) + dt; S.nf = (S.nf || 0) + 1;
     if(S.nf >= 60){ const a = S.acc / S.nf; if(a > .042 && (S.qual || 1) > .7) S.qual = (S.qual || 1) - .1; S.acc = 0; S.nf = 0; }
     S.tod = (S.tod + dt / 600) % 1; if(S.mobs) updateMobs(dt);
-    try{ physics(dt); draw(); if(dirtyT && performance.now() - dirtyT > 2500){ dirtyT = 0; save(); } }catch(e){ console.warn(e); running = false; return; }
+    try{ physics(dt); checkStones(); draw(); if(dirtyT && performance.now() - dirtyT > 2500){ dirtyT = 0; save(); } }catch(e){ console.warn(e); running = false; return; }
     requestAnimationFrame(frame);
   }
 
@@ -793,7 +906,7 @@ H.vox = (function(){
       if(tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap.moved = true;
       if(tap && tap.moved){ cam.yaw -= dx * .008; cam.pitch = clamp(cam.pitch + dy * .005, -.2, 1.3); } });
     const up = e => { ptr.delete(e.pointerId); pinch = 0;
-      if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY), hit = ray(r.o, r.d, 60, true), m = S.mobs && mobAtTap(r.o, r.d, hit ? hit.t : 60); if(m) tapMob(m); else act(hit); }
+      if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY), hit = ray(r.o, r.d, 60, true), m = S.mobs && mobAtTap(r.o, r.d, hit ? hit.t : 60), sn = S.stones && stoneAtTap(r.o, r.d, hit ? hit.t : 60); if(sn){ if(Math.hypot(sn.x - S.p.x, sn.z - S.p.z) < 7) openQuiz(sn); else H.toast('📚 גש לאבן הלמידה כדי לפתוח אותה'); } else if(m) tapMob(m); else act(hit); }
       tap = null; };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * (cam.dist > 16 ? .06 : .01), 3, 70); }, {passive: false});
@@ -816,6 +929,7 @@ H.vox = (function(){
     H.$('vxzoom').addEventListener('click', () => { H.sfx.tap();
       if(cam.dist > 20){ cam.dist = S.zoomBack || 8; cam.pitch = S.pitchBack || .45; H.toast('🔭 חזרה לדמות'); }
       else { S.zoomBack = cam.dist; S.pitchBack = cam.pitch; cam.dist = 90; cam.pitch = 1.1; H.toast('🔭 רואים את כל העולם · לחץ שוב לחזור'); } });
+    H.$('vxhelp').addEventListener('click', () => { H.sfx.tap(); openHelp(); });
     H.$('vxrot').addEventListener('click', () => { S.rot = ((S.rot || 0) + 1) % 4; H.sfx.tap(); H.toast('↻ סיבוב'); });
   }
 
@@ -823,14 +937,15 @@ H.vox = (function(){
   function open(m){
     if(!initGL()) return false;
     bind(); mode = m || 'free'; challenge = null;
+    refreshAtlas(); if(!fontsDone && document.fonts && document.fonts.load) document.fonts.load('40px KtavYad').then(() => { fontsDone = true; atlasScript = ''; refreshAtlas(); if(S) renderBar(); }).catch(() => {});
     if(!blocks){ decodeEdits((H.state.build && H.state.build.e) || ''); generate(); remeshAll(); }
     const b = H.state.build || (H.state.build = {e: '', hot: []});
     const hot = (b.hot && b.hot.length ? b.hot : [1, 2, 3, 7, 8, 15, 11, 18, 9]).filter(id => id > 0).slice(0, 9);
-    S = {p: {x: S0.spawn.x, y: S0.spawn.y, z: S0.spawn.z, vy: 0, ground: false, face: 1, walk: 0}, pet: {x: S0.spawn.x + 1.5, y: S0.spawn.y, z: S0.spawn.z + 1}, hot, sel: 0, jump: false, cam: null, qual: 1, tod: .5, day: null, mobs: [], label: null};
+    S = {p: {x: S0.spawn.x, y: S0.spawn.y, z: S0.spawn.z, vy: 0, ground: false, face: 1, walk: 0}, pet: {x: S0.spawn.x + 1.5, y: S0.spawn.y, z: S0.spawn.z + 1}, hot, sel: 0, jump: false, cam: null, qual: 1, tod: .5, day: null, mobs: [], label: null, stones: [], quiz: null};
     if(S.p.y < 1) S.p.y = 20;
     for(let k = 0; k < 40 && collides(S.p.x, S.p.y, S.p.z); k++) S.p.y += 1;      /* אם נולדנו בתוך בלוק, עולים החוצה */
     cam.dist = cv.clientWidth / Math.max(1, cv.clientHeight) < .75 ? 9 : 7.5;
-    S.mobs = spawnMobs();
+    S.mobs = spawnMobs(); S.stones = mode === 'free' ? spawnStones() : [];
     renderBar(); renderTop(); H.$('vxpal').style.display = 'none';
     if(!running){ running = true; last = performance.now(); requestAnimationFrame(frame); }
     return true;

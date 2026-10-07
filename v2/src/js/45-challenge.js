@@ -11,7 +11,7 @@ H.challengeGame = function(){
   let h = 0;
   for(let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0;
   const ws = H.words().map(H.disp);
-  const pool = H.GAMES.filter(g => !g.adult && (!g.canPlay || g.canPlay(ws)));
+  const pool = H.GAMES.filter(g => !g.adult && !g.letters && (!g.canPlay || g.canPlay(ws)));
   return pool[h % pool.length];
 };
 H.startChallenge = function(){

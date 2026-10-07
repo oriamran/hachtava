@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zou1XahkFqp6zK8qcc4XUhYEstLjy+VT8x9MvvX42k4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5EOdSxn/vDgTs7TW/L7PNHGyG3SrKYzBbejWZAlCsKc=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VnVYeExKqi6K7BYSNtVNCqVwhwBJROd0OSsykal4e1w=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-WEr9mf9neuv7LDwKkWUC7NuXYA941/gVQCCNPjg8IvU=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -796,6 +796,38 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
 /* כיוון טקסט: סימני פיסוק וסוגריים בתוך עברית לא מתהפכים בתוך כפתורים, הודעות ותוויות */
 .toast,.wh-sub,.wg-t,.wg-d,.vxp-b small,.vxp-h,button{unicode-bidi:plaintext}
 
+/* ---------- משחק אותיות ---------- */
+.lt-card{background:#fff;border-radius:22px;padding:18px;margin:10px auto;max-width:360px;text-align:center;box-shadow:0 5px 0 var(--cardEdge);display:flex;flex-direction:column;gap:8px;align-items:center}
+.lt-big{font-size:120px;line-height:1.1;font-weight:800;color:var(--ink)}
+.lt-name{font-size:28px;font-weight:800;color:var(--ink2)}
+.lt-ex{font-size:30px;font-weight:700}
+.lt-ex span{font-size:46px}
+.lt-emoji{font-size:84px;line-height:1.1}
+.lt-word{font-size:40px;font-weight:800}
+.lt-ear{font-size:64px;width:110px;height:110px;border-radius:50%;background:#f1edff;padding:0;min-height:0}
+.lt-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:360px;margin:12px auto}
+.lt-opt{font-size:64px;font-weight:800;height:104px;border-radius:20px;background:#fff;color:var(--ink);padding:0;box-shadow:0 5px 0 var(--cardEdge)}
+.lt-opt.right{background:linear-gradient(135deg,#8ff0cd,var(--mint));color:#05463f}
+.lt-opt.wrongpick{background:#ffd3de;color:#8c1236}
+
+/* ---------- עולם הבנייה: מדריך ואבני למידה ---------- */
+.vxh-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #eee8ff}
+.vxh-e{font-size:26px;width:34px;text-align:center}
+.vxh-row b{display:block;font-size:15px}
+.vxh-row small{display:block;font-size:13px;color:var(--ink2);line-height:1.45;margin-top:2px}
+.vxquiz{position:absolute;inset:0;background:rgba(30,24,60,.55);z-index:8;display:flex;align-items:center;justify-content:center;padding:16px}
+.vxq-card{background:#fff;border-radius:24px;padding:18px;width:min(420px,100%);text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;box-shadow:var(--drop)}
+.vxq-q{font-size:20px;font-weight:800}
+.vxq-word{font-size:46px;font-weight:800}
+.vxq-word .gap{color:var(--sun)}
+.vxq-sub{font-size:13px;color:var(--ink2)}
+.vxq-ear{font-size:54px;width:96px;height:96px;border-radius:50%;background:#f1edff;padding:0;min-height:0}
+.vxq-opts{display:flex;flex-direction:column;gap:10px;width:100%}
+.vxq-opt{font-size:34px;font-weight:800;padding:12px;border-radius:18px;background:#f6f3ff;color:var(--ink);box-shadow:0 4px 0 var(--cardEdge)}
+.vxq-opt.right{background:linear-gradient(135deg,#8ff0cd,var(--mint));color:#05463f}
+.vxq-opt.wrongpick{background:#ffd3de;color:#8c1236}
+.vxq-fb{min-height:20px;font-weight:700}
+
 </style>
 </head>
 <body>
@@ -995,6 +1027,12 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <div id="flashfb" class="fb"></div>
   </section>
 
+  <!-- ============ אותיות ============ -->
+  <section class="screen" id="s-letters">
+    <p class="sub" id="ltq"></p>
+    <div id="ltbody"></div>
+  </section>
+
   <!-- ============ שמע ובחר ============ -->
   <section class="screen" id="s-pick">
     <p class="sub">איזו כתיבה נכונה?</p>
@@ -1116,6 +1154,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <div class="vxbtns"><button id="vxhelp" class="vxbtn" aria-label="מדריך">❓</button><button id="vxzoom" class="vxbtn" aria-label="תצוגה מרחוק">🔭</button><button id="vxtime" class="vxbtn">🌗</button><button id="vxrot" class="vxbtn" style="display:none">↻</button><button id="vxjump" class="vxbtn">⬆</button><button id="vxmode" class="vxbtn">🔨</button></div>
     <div id="vxstick" class="wstick"><i id="vxknob"></i></div>
     <div id="vxpal" class="vxpal" style="display:none"></div>
+    <div id="vxquiz" class="vxquiz" style="display:none"></div>
   </section>
 
   <!-- ============ בחירת נושא למשחק ============ -->
@@ -1205,6 +1244,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <div id="packlist" class="packlist"></div>
     <label class="lbl">שם הילד<input id="nameIn" placeholder="לא חובה"></label>
     <label class="check"><input type="checkbox" id="peekIn"> הצג את המילה לרגע לפני כל שאלה</label>
+    <label class="check"><input type="checkbox" id="hideIn"> הסתר את המילה (לילדים גדולים): רק שמיעה, והאותיות מתגלות כשמוצאים אותן</label>
     <label class="lbl">שם ההכתבה<input id="topicIn" placeholder="חגי תשרי"></label>
     <label class="lbl">הפרס על אלבום מלא<input id="prizeIn" placeholder="חטיף MARS"></label>
     <!-- צילום וסריקה: מוסתר בכוונה (לא רוצים שילדים יצלמו, והקריאה מצילום כבויה). הקוד נשאר, אפשר להחזיר ע"י הסרת hidden. -->
@@ -1303,7 +1343,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 17:58 e9bd3bf';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 18:04 92ccf2e';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -1387,7 +1427,7 @@ H.PETS = [
 ];
 
 H.blank = () => ({
-  name: '', onboarded: false, peekAlways: false,
+  name: '', onboarded: false, peekAlways: false, hideWord: false,
   level: 'a2', nikud: 'auto', tour: false,
   usage: {first: 0, last: 0, visits: 0, activeSec: 0, games: {}, hist: {}},
   avatar: 'fox', hat: 'none', ring: 'sun', bg: 'day', pet: 'none',
@@ -1647,7 +1687,7 @@ H.cleanState = function(raw){
   const keys = (o, n) => isO(o) ? Object.keys(o).filter(k => !H.BAD_KEYS[k]).slice(0, n) : [];
   const s = base;
 
-  s.name = T(raw.name, 30); s.onboarded = raw.onboarded === true; s.peekAlways = raw.peekAlways === true;
+  s.name = T(raw.name, 30); s.onboarded = raw.onboarded === true; s.peekAlways = raw.peekAlways === true; s.hideWord = raw.hideWord === true;
   s.avatar = T(raw.avatar, 20, 'fox'); s.hat = T(raw.hat, 20, 'none'); s.ring = T(raw.ring, 20, 'sun');
   s.bg = T(raw.bg, 20, 'day'); s.pet = T(raw.pet, 20, 'none');
   s.owned = L(raw.owned, 100, 20);
@@ -1685,7 +1725,7 @@ H.cleanState = function(raw){
   const wd = isO(raw.world) ? raw.world : {};
   s.world = {d: T(wd.d, 12), gems: num(wd.gems, 0, 50), chest: wd.chest === true};
   const bd = isO(raw.build) ? raw.build : {};
-  s.build = {e: (typeof bd.e === 'string' && /^[A-Za-z0-9+\/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : '', hot: Array.isArray(bd.hot) ? bd.hot.filter(n => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : []};
+  s.build = {e: (typeof bd.e === 'string' && /^[A-Za-z0-9+\/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : '', hot: Array.isArray(bd.hot) ? bd.hot.filter(n => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [], l: (typeof bd.l === 'string' ? bd.l.replace(/[^\u05d0-\u05ea]/g, '') : '').slice(0, 30)};
   s.stars = {};
   keys(raw.stars, 100).forEach(k => { s.stars[H.cleanText(k, 6)] = num(raw.stars[k], 0, 3); });
   s.log = {};
@@ -1881,6 +1921,7 @@ H.PEEK_MS = 2400;
 H.peek = function(word){
   const box = H.$('peek');
   if(!box) return;
+  if(H.state.hideWord && H.useAudio) return;      /* מצב "הסתר את המילה": רק שמיעה */
   clearTimeout(H.peekT);
   box.textContent = word;
   box.classList.add('on');
@@ -1925,12 +1966,18 @@ H.show = function(id){
   H.paint();
 };
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
-H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','world','voxel','end']);
+H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','letters','world','voxel','end']);
 /* חזרה לאי אחרי משחק שנפתח משער */
 H.returnToWorld = function(){
   speechSynthesis.cancel();
   H.show('world');
   if(!H.world.open('explore', true)){ H.home(); }
+};
+/* חזרה לעולם הבנייה אחרי משחק שנפתח משם */
+H.returnToVoxel = function(){
+  speechSynthesis.cancel();
+  H.show('voxel');
+  if(!H.vox.open('free')){ H.home(); }
 };
 H.goBack = function(){
   if(H.screen === 'world' && H.world.mode() === 'explore') return H.home();     /* יציאה מהאי */
@@ -1950,6 +1997,7 @@ H.goBack = function(){
     if(o === 'play') H.renderPlay();
     if(o === 'plan') H.renderPlan();
     if(o === 'world') return H.returnToWorld();
+    if(o === 'voxel') return H.returnToVoxel();
     return H.show(o);
   }
   H.home();
@@ -2103,8 +2151,8 @@ H.needWords = function(){
   return true;
 };
 H.startRound = function(gameId, station, words, extra){
-  if(!(words && words.length) && H.needWords()) return;
   const g = H.byId(gameId);
+  if(!g.letters && !(words && words.length) && H.needWords()) return;
   /* מאיפה באנו, כדי שכפתור החזרה יחזיר לרשימת המשחקים או למפה ולא תמיד לבית */
   const origin = (extra && extra.origin) || (['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home');
   H.run = Object.assign({
@@ -2242,7 +2290,7 @@ H.challengeGame = function(){
   let h = 0;
   for(let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0;
   const ws = H.words().map(H.disp);
-  const pool = H.GAMES.filter(g => !g.adult && (!g.canPlay || g.canPlay(ws)));
+  const pool = H.GAMES.filter(g => !g.adult && !g.letters && (!g.canPlay || g.canPlay(ws)));
   return pool[h % pool.length];
 };
 H.startChallenge = function(){
@@ -2490,7 +2538,7 @@ H.game({
     r.need = H.clusters(w).filter(c => c !== ' ');
     r.at = 0; r.bubbles = []; r.miss = 0;
     H.$('bubtarget').innerHTML = r.need.map((c, i) =>
-      '<span class="bt' + (i === 0 ? ' now' : '') + '">' + c + '</span>').join('');
+      '<span class="bt' + (i === 0 ? ' now' : '') + '">' + (H.state.hideWord ? '▢' : c) + '</span>').join('');
     const field = H.$('bubfield'); field.innerHTML = '';
     r.spawnAt = 0;
     setTimeout(() => H.say(w), 250);
@@ -2516,7 +2564,7 @@ H.game({
         /* _y = כמה עלתה מתחתית השדה. מתחילה מתחת לקצה ועולה. */
         b._y = -70;
         b._v = 0.9 + Math.random()*0.7;
-        b.onclick = () => this.pop(b);
+        b.onclick = e => { e.stopPropagation(); this.pop(b); };
         field.appendChild(b);
         r.bubbles.push(b);
       }
@@ -2534,13 +2582,17 @@ H.game({
   },
   pop(b){
     const r = H.run;
+    /* בועה שכבר נפוצצה (או לחיצה כפולה מהירה) לא נספרת שוב. אחרת מילה עם אות כפולה התקדמה בשתי אותיות בלחיצה אחת. */
+    const now = performance.now();
+    if(b._done || now - (r.lastPop || 0) < 220) return;
+    r.lastPop = now; b._done = true; b.style.pointerEvents = 'none';
     if(b.dataset.ch === r.need[r.at]){
       H.sfx.tap(); b.classList.add('pop');
       setTimeout(() => b.remove(), 180);
       r.bubbles = r.bubbles.filter(x => x !== b);
       r.at++;
       const marks = H.$('bubtarget').children;
-      if(marks[r.at-1]) marks[r.at-1].classList.add('got');
+      if(marks[r.at-1]){ marks[r.at-1].classList.remove('now'); marks[r.at-1].classList.add('got'); marks[r.at-1].textContent = r.need[r.at-1]; }
       if(marks[r.at])   marks[r.at].classList.add('now');
       if(r.at >= r.need.length){
         /* לחיצה שגויה אחת או שתיים לא פוסלות את המילה */
@@ -2549,7 +2601,7 @@ H.game({
       }
     } else {
       r.miss++; H.sfx.bad(); b.classList.add('shake');
-      setTimeout(() => b.classList.remove('shake'), 350);
+      setTimeout(() => { b.classList.remove('shake'); b._done = false; b.style.pointerEvents = ''; }, 350);
       if(r.miss >= 5){ H.wrong(); setTimeout(() => this.next(), 500); }
     }
   },
@@ -3722,7 +3774,7 @@ H.openSettings = function(){
   const p = H.pack();
   H.renderPacks();
   H.$('nameIn').value  = H.state.name || '';
-  H.$('peekIn').checked = !!H.state.peekAlways;
+  H.$('peekIn').checked = !!H.state.peekAlways; H.$('hideIn').checked = !!H.state.hideWord;
   H.$('topicIn').value = p.topic || '';
   H.$('prizeIn').value = p.prize || '';
   H.$('wordsIn').value = p.list.join('\n');
@@ -3750,7 +3802,7 @@ H.applySettings = function(){
   const list = H.readWordsIn();
   if(list.length < 2) return alert('צריך לפחות שתי מילים');
   H.state.name = H.cleanText(H.$('nameIn').value.trim(), 30);
-  H.state.peekAlways = H.$('peekIn').checked;
+  H.state.peekAlways = H.$('peekIn').checked; H.state.hideWord = H.$('hideIn').checked;
   const p = H.pack();
   p.topic = H.cleanText(H.$('topicIn').value.trim(), 80) || 'הכתבה';
   p.prize = H.cleanText(H.$('prizeIn').value.trim(), 80);
@@ -6511,7 +6563,7 @@ H.vox = (function(){
     for(let li = 0; li < H.VOX_LETTERS.length; li++){
       const ti = LET0 + li, ox = (ti % COLS) * TS, oy = Math.floor(ti / COLS) * TS;
       x.fillStyle = '#9a6a30'; x.fillRect(ox, oy, TS, TS); x.fillStyle = '#f3e3b0'; x.fillRect(ox + 2, oy + 2, TS - 4, TS - 4);
-      x.fillStyle = '#4a2f9c'; x.font = 'bold 26px "Arial Hebrew",Arial,sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(H.VOX_LETTERS[li], ox + TS / 2, oy + TS / 2 + 2);
+      x.fillStyle = '#4a2f9c'; x.font = H.scriptNow() === 'dfus' ? 'bold 26px "Arial Hebrew",Arial,sans-serif' : '40px KtavYad,"Arial Hebrew",Arial,sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(H.VOX_LETTERS[li], ox + TS / 2, oy + TS / 2 + 2);
     }
     return c;
   }
@@ -6735,11 +6787,18 @@ H.vox = (function(){
     }catch(e){ console.warn(e); gl = null; return false; }
     gl.enable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     S0.quad = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, 1,1, -1,-1, 1,1, -1,1]), gl.STATIC_DRAW);
-    atlas = makeAtlas();
+    atlas = makeAtlas(); atlasScript = H.scriptNow();
     atlasTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return true;
+  }
+  /* אותיות הבלוקים בכתב או בדפוס, לפי ההגדרה של האפליקציה */
+  let atlasScript = '', fontsDone = false;
+  function refreshAtlas(){
+    if(!gl || atlasScript === H.scriptNow()) return;
+    atlas = makeAtlas(); atlasScript = H.scriptNow(); for(const k in tileUrl) delete tileUrl[k];
+    gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas);
   }
   const theme = () => H.WORLD_THEMES[H.state.bg] || H.WORLD_THEMES.day;
   /* שעה ביום: 0 חצות, .25 זריחה, .5 צהריים, .75 שקיעה. מחזור מלא בעשר דקות. */
@@ -6868,9 +6927,10 @@ H.vox = (function(){
   /* אותיות שנפתחו: כל אות שמופיעה במילה שנלמדה (באלבום) */
   let unl = null, unlKey = '';
   function unlocked(){
-    const key = H.state.album.length + ':' + H.state.packs.length;
+    const key = H.state.album.length + ':' + H.state.packs.length + ':' + H.letterSet();
     if(unl && key === unlKey) return unl;
     const set = new Set(); H.state.album.forEach(w => { for(const c of String(w)) if(H.VOX_LETTERS.includes(c)) set.add(c); });
+    for(const c of H.letterSet()) set.add(c);
     unlKey = key; return unl = set;
   }
 
@@ -7065,16 +7125,118 @@ H.vox = (function(){
     challenge = {word, letters, onDone, done: false};
     /* סרגל קצר: האותיות של המילה */
     const uniq = [...new Set(letters)];
-    S.hot = uniq.map(c => LET0 + H.VOX_LETTERS.indexOf(c)).concat(S.hot.filter(id => id < LET0)).slice(0, 9); S.sel = 0; editMode = 'build';
+    S.hot = (H.state.hideWord ? H.shuffle(uniq) : uniq).map(c => LET0 + H.VOX_LETTERS.indexOf(c)).concat(S.hot.filter(id => id < LET0)).slice(0, 9); S.sel = 0; editMode = 'build';
     renderBar(); renderTop();
   }
+
+
+  /* ---------- אבני למידה: משימות קטנות בעולם (מילים, אותיות, זיכרון) ---------- */
+  const STONES = 6;
+  function spawnStones(){
+    const r = rngOf(4141 + Math.floor(Date.now() / 864e5)), out = [], cx = NX / 2, cz = NZ / 2;
+    for(let k = 0; k < STONES; k++){
+      for(let tries = 0; tries < 80; tries++){
+        const a = r() * 6.2832, d = 12 + r() * 48, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, xi = Math.floor(x), zi = Math.floor(z);
+        if(xi < 3 || zi < 3 || xi >= NX - 3 || zi >= NZ - 3) continue;
+        const y = topY[zi * NX + xi] + 1;
+        if(get(xi, y - 1, zi) !== 1 || !(get(xi, y, zi) === AIR || PLANT(get(xi, y, zi)))) continue;
+        out.push({x: xi + .5, y, z: zi + .5, done: false}); break;
+      }
+    }
+    return out;
+  }
+  function stoneAtTap(o, d, maxT){
+    let best = null, bt = maxT;
+    S.stones.forEach(st => { if(st.done) return;
+      const ox = o[0] - st.x, oy = o[1] - (st.y + 1), oz = o[2] - st.z, b = ox * d[0] + oy * d[1] + oz * d[2], c = ox * ox + oy * oy + oz * oz - 1.1, disc = b * b - c;
+      if(disc < 0) return; const t = -b - Math.sqrt(disc); if(t > 0 && t < bt){ bt = t; best = st; } });
+    return best;
+  }
+  function checkStones(){
+    if(S.quiz || mode !== 'free' || performance.now() < (S.quizCool || 0)) return;
+    const st = S.stones.find(s => !s.done && Math.hypot(s.x - S.p.x, s.z - S.p.z) < 1.7 && Math.abs(s.y - S.p.y) < 2.5);
+    if(st) openQuiz(st);
+  }
+  const wordPool = () => { const ws = H.words().map(w => String(w).trim()).filter(Boolean); return ws.length ? ws : ['שלום']; };
+  function openQuiz(st){
+    if(S.quiz) return; S.quiz = st; flush();
+    const box = H.$('vxquiz'), w = wordPool()[Math.floor(Math.random() * wordPool().length)], shown = H.disp(w);
+    const types = ['hear', 'memory', 'missing', 'hear'], type = types[Math.floor(Math.random() * types.length)];
+    let q = '', head = '', opts = [], right = '', delay = 0;
+    if(type === 'missing'){
+      const cl = H.clusters(shown), idxs = cl.map((c, i) => c !== ' ' ? i : -1).filter(i => i >= 0), i = idxs[Math.floor(Math.random() * idxs.length)], ans = cl[i];
+      const norm = c => H.nikudOn() ? c : H.strip(c), a = norm(ans), set = new Set([a]);
+      const hh = H.homophone(ans); if(hh) set.add(norm(hh));
+      for(let g = 0; set.size < 3 && g < 40; g++) set.add(norm(H.randTile(H.nikudOn())));
+      opts = H.shuffle([...set].slice(0, 3)); right = a;
+      q = '📚 איזו אות חסרה?'; head = '<div class="vxq-word">' + cl.map((c, j) => j === i ? '<span class="gap">▢</span>' : H.esc(c)).join('') + '</div>';
+    } else {
+      right = shown; opts = H.shuffle([shown].concat(H.variants(w, 2).map(H.disp))).slice(0, 3);
+      if(type === 'memory'){ q = '🧠 זכור את המילה'; head = '<div class="vxq-word">' + H.esc(shown) + '</div><div class="vxq-sub">נעלמת עוד רגע...</div>'; delay = 3200; }
+      else { q = '👂 שמע ובחר את הכתיב הנכון'; head = '<button class="vxq-ear" id="vxqsay">🔊</button>'; }
+    }
+    const showOpts = () => {
+      box.innerHTML = '<div class="vxq-card"><div class="vxq-q">' + (type === 'memory' ? '🧠 איזו מילה ראית?' : q) + '</div>' + (type === 'memory' ? '' : head) + '<div class="vxq-opts" id="vxqo"></div><div class="vxq-fb" id="vxqfb"></div><button class="mini" id="vxqx">✕ סגור</button></div>';
+      let locked = false;
+      opts.forEach(o => { const b = H.el('button', 'vxq-opt', o);
+        b.onclick = () => { if(locked) return; locked = true; const ok = o === right;
+          if(ok){ b.classList.add('right'); H.sfx.good(); } else { b.classList.add('wrongpick'); H.sfx.bad(); [...H.$('vxqo').children].forEach(x => { if(x.textContent === right) x.classList.add('right'); }); }
+          H.$('vxqfb').textContent = ok ? '🎉 נכון! +3 🪙' : 'זו התשובה הנכונה 👆';
+          if(!ok && type !== 'missing') H.speak(w);
+          setTimeout(() => closeQuiz(ok, st), ok ? 1000 : 1900); };
+        H.$('vxqo').appendChild(b); });
+      H.$('vxqx').onclick = () => closeQuiz(null, st);
+      const say = H.$('vxqsay'); if(say) say.onclick = () => H.speak(w);
+    };
+    box.style.display = '';
+    if(delay){
+      box.innerHTML = '<div class="vxq-card"><div class="vxq-q">' + q + '</div>' + head + '</div>';
+      H.speak(w);
+      S.quizT = setTimeout(showOpts, delay);
+    } else { showOpts(); if(type === 'hear') setTimeout(() => H.speak(w), 250); }
+  }
+  function closeQuiz(ok, st){
+    clearTimeout(S.quizT); H.$('vxquiz').style.display = 'none'; S.quiz = null; S.quizCool = performance.now() + 2500;
+    if(ok === true){
+      st.done = true; H.state.coins += 3; H.save(); H.paint();
+      if(S.stones.every(s => s.done)){
+        const lock = H.lockedLetters(), pick = lock[Math.floor(Math.random() * lock.length)];
+        H.state.coins += 20; if(pick) H.learnLetter(pick); H.save(); H.paint();
+        H.toast(pick ? '🎁 סיימת את כל האבנים! +20 🪙 ונפתחה האות ' + pick : '🎁 סיימת את כל האבנים! +20 🪙', 'level'); H.confetti && H.confetti(50);
+        S.stones = spawnStones();
+      }
+    } else if(ok === false) H.toast('נסה שוב את האבן הזאת 📚');
+    renderBar(); renderTop();
+  }
+
+  /* ---------- מדריך: מה אפשר לעשות כאן ואיך פותחים כל דבר ---------- */
+  function openHelp(){
+    const pal = H.$('vxpal'); pal.style.display = '';
+    const lockedL = H.lockedLetters().length, own = id => H.owns('blk_' + id);
+    const row = (e, t, d) => '<div class="vxh-row"><span class="vxh-e">' + e + '</span><div><b>' + t + '</b><small>' + d + '</small></div></div>';
+    const paid = H.VOX_BLOCKS.filter(b => b.cost).map(b => b.n + ' ' + b.cost + '🪙' + (own(b.k) ? ' ✔' : '')).join(' · ');
+    pal.innerHTML = '<div class="vxp-h"><b>📖 מה אפשר לעשות בעולם הבנייה</b><button class="mini" id="vxpclose">✕</button></div>' +
+      row('🔨', 'לבנות ולשבור', 'לחץ על הקרקע או על בלוק כדי להניח בלוק. כפתור הפטיש מחליף לשבירה ⛏️ וחוזר. ↶ בטל מבטל את הפעולה האחרונה.') +
+      row('🧱', 'בלוקים', 'לחץ על ⋯ בסרגל התחתון לראות את כולם. רוב הבלוקים חינם. בלוקים מיוחדים נקנים במטבעות: ' + paid + '. את המטבעות מרוויחים במשחקים ובאבני הלמידה.') +
+      row('🔤', 'בלוקי אותיות', 'נפתחים כשמשחקים ב"אותיות" בכפתור 🎓 שלמטה, או כשלומדים מילה עם האות. עוד ' + lockedL + ' אותיות נעולות מתוך 22.') +
+      row('🏗️', 'תבניות בנייה', 'בלחיצה על ⋯ בוחרים בית, מגדל או גשר ולוחצים על הקרקע. הכפתור ↻ מסובב אותה.') +
+      row('📚', 'אבני למידה', 'בעולם מפוזרות ' + STONES + ' אבני למידה 📚, ' + (S && S.stones ? S.stones.filter(s => s.done).length : 0) + '/' + STONES + ' נפתרו. גש אליהן ופתור: מילה, אות חסרה או זיכרון. על כל פתרון 3 🪙, ובסוף בונוס ואות חדשה.') +
+      row('🐑', 'חיות', 'לחץ על חיה כדי לשמוע את שמה בניקוד ולראות אותו.') +
+      row('🔭', 'לראות את כל העולם', 'כפתור הטלסקופ מרחיק את המצלמה. אפשר גם לצבוט עם שתי אצבעות.') +
+      row('🌗', 'זמן ביום', 'מחליף בין צהריים, שקיעה, לילה וזריחה. בלילה מנורות 💡 מאירות.') +
+      row('⬆', 'קפיצה ותנועה', 'הג׳ויסטיק מזיז, החץ קופץ. גרור על המסך כדי לסובב את המצלמה.') +
+      '<div class="row" style="margin-top:10px"><button class="go" id="vxlearn">🎓 משחק אותיות: פתח אותיות חדשות</button></div>';
+    H.$('vxpclose').onclick = () => { pal.style.display = 'none'; };
+    H.$('vxlearn').onclick = () => { pal.style.display = 'none'; learnLetters(); };
+  }
+  function learnLetters(){ flush(); running = false; H.startRound('letters', undefined, undefined, {origin: 'voxel'}); }
 
   /* ---------- ממשק ---------- */
   function renderTop(){
     const box = H.$('vxhud'); if(!box) return;
     let mid = '';
-    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + H.esc(c) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה של אותיות לפי הסדר, מימין לשמאל או מלמעלה למטה</div>';
-    else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + '</div>';
+    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + (H.state.hideWord ? '▢' : H.esc(c)) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה של אותיות לפי הסדר, מימין לשמאל או מלמעלה למטה</div>';
+    else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + (S.stones && S.stones.length && mode === 'free' ? ' · 📚 ' + S.stones.filter(s => s.done).length + '/' + S.stones.length : '') + '</div>';
     box.innerHTML = '<div class="wh-top"><button class="wh-exit" id="vxexit">✕ יציאה</button><span class="wh-coins">🪙 ' + H.state.coins + '</span><button class="wh-bug" id="vxbug" aria-label="דווח על בעיה">🐞</button>' +
       '<button class="wh-topic" id="vxundo">↶ בטל</button></div>' + mid;
     H.$('vxexit').onclick = () => { H.sfx.tap(); flush(); H.goBack(); };
@@ -7103,15 +7265,16 @@ H.vox = (function(){
     const pal = H.$('vxpal'); pal.style.display = ''; let html = '<div class="vxp-h"><b>בלוקים</b><button class="mini" id="vxpclose">✕</button></div><div class="vxp-grid">';
     H.VOX_BLOCKS.forEach(b => { const o = owned(b.id);
       html += '<button class="vxp-b' + (o ? '' : ' lock') + '" data-id="' + b.id + '"><img src="' + slotImg(b.id) + '" alt=""><small>' + H.esc(b.n) + (o ? '' : '<br>🪙 ' + b.cost) + '</small></button>'; });
-    html += '</div><div class="vxp-h"><b>🏗️ תבניות (נבנו ב-Blender)</b><small>לחץ והנח בלחיצה על הקרקע</small></div><div class="vxp-grid tpl">' + Object.values(TPL).map(t => '<button class="vxp-b tplb" data-tpl="' + t.id + '"><img src="' + t.png + '" alt=""><small>' + H.esc(t.n) + '</small></button>').join('') + '</div><div class="vxp-h"><b>אותיות</b><small>נפתחות כשלומדים מילה</small></div><div class="vxp-grid">';
+    html += '</div><div class="vxp-h"><b>🏗️ תבניות (נבנו ב-Blender)</b><small>לחץ והנח בלחיצה על הקרקע</small></div><div class="vxp-grid tpl">' + Object.values(TPL).map(t => '<button class="vxp-b tplb" data-tpl="' + t.id + '"><img src="' + t.png + '" alt=""><small>' + H.esc(t.n) + '</small></button>').join('') + '</div><div class="vxp-h"><b>אותיות</b><small>נעולות? שחק ב״אותיות״</small></div><div class="row"><button class="mini" id="vxlearn2">🎓 למד אותיות כדי לפתוח</button></div><div class="vxp-grid">';
     for(let i = 0; i < H.VOX_LETTERS.length; i++){ const ch = H.VOX_LETTERS[i], o = letterOpen(ch);
       html += '<button class="vxp-b' + (o ? '' : ' lock') + '" data-id="' + (LET0 + i) + '"><img src="' + slotImg(LET0 + i) + '" alt=""><small>' + (o ? '' : '🔒') + '</small></button>'; }
     pal.innerHTML = html + '</div>';
     H.$('vxpclose').onclick = () => { pal.style.display = 'none'; };
+    H.$('vxlearn2').onclick = () => { pal.style.display = 'none'; learnLetters(); };
     pal.querySelectorAll('.tplb').forEach(b => b.onclick = () => pickStamp(b.dataset.tpl));
     pal.querySelectorAll('.vxp-b:not(.tplb)').forEach(b => b.onclick = () => {
       const id = Number(b.dataset.id);
-      if(!owned(id)){ if(id < LET0) buyBlock(id); else H.toast('האות הזאת נעולה. למד מילה עם האות 🔒'); openPalette(); return; }
+      if(!owned(id)){ if(id < LET0) buyBlock(id); else H.toast('האות הזאת נעולה 🔒 שחק ב״אותיות״ כדי לפתוח'); openPalette(); return; }
       S.hot[S.sel] = id; editMode = 'build'; pal.style.display = 'none'; renderBar(); renderTop(); save(); });
   }
   function flush(){ if(dirtyT){ dirtyT = 0; save(); } }
@@ -7168,6 +7331,8 @@ H.vox = (function(){
     const ql = gl.getAttribLocation(progS, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(ql); gl.vertexAttribPointer(ql, 2, gl.FLOAT, false, 0, 0);
     const p = S.p, bob = S.p.ground && (Math.abs(stick.x) + Math.abs(stick.y) > .1 || keys.w || keys.s || keys.a || keys.d) ? Math.abs(Math.sin(p.walk)) * .12 : 0;
     sprite(avatarTex(), p.x, p.y + 1.0 + bob, p.z, 2.0, 2.0);
+    { const tt = performance.now() / 1000; S.stones.forEach(st => { if(st.done) return; const by = st.y + 1.3 + Math.sin(tt * 2 + st.x) * .15;
+      sprite(emojiTex('📚'), st.x, by, st.z, 1.5, 1.5); sprite(emojiTex('✨'), st.x + Math.sin(tt * 3) * .5, by + .5 + Math.sin(tt * 2.2) * .2, st.z, .6, .6); }); }
     S.mobs.forEach(m => { if(m.heart > 0) sprite(emojiTex('❤️'), m.x, m.y + H.MOBS[m.kind].h + .4 + (1.6 - m.heart) * .6, m.z, .7, .7); });
     if(S.label && performance.now() < S.label.until){ const m = S.label.m; sprite(labelTex(S.label.text), m.x, m.y + H.MOBS[m.kind].h + 1.1, m.z, 2.4, .6); }
     const pet = (H.PETS.find(v => v.id === H.state.pet) || {}).e; if(pet) sprite(emojiTex(pet), S.pet.x, S.pet.y + .5, S.pet.z, 1.0, 1.0);
@@ -7186,7 +7351,7 @@ H.vox = (function(){
     S.acc = (S.acc || 0) + dt; S.nf = (S.nf || 0) + 1;
     if(S.nf >= 60){ const a = S.acc / S.nf; if(a > .042 && (S.qual || 1) > .7) S.qual = (S.qual || 1) - .1; S.acc = 0; S.nf = 0; }
     S.tod = (S.tod + dt / 600) % 1; if(S.mobs) updateMobs(dt);
-    try{ physics(dt); draw(); if(dirtyT && performance.now() - dirtyT > 2500){ dirtyT = 0; save(); } }catch(e){ console.warn(e); running = false; return; }
+    try{ physics(dt); checkStones(); draw(); if(dirtyT && performance.now() - dirtyT > 2500){ dirtyT = 0; save(); } }catch(e){ console.warn(e); running = false; return; }
     requestAnimationFrame(frame);
   }
 
@@ -7206,7 +7371,7 @@ H.vox = (function(){
       if(tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap.moved = true;
       if(tap && tap.moved){ cam.yaw -= dx * .008; cam.pitch = clamp(cam.pitch + dy * .005, -.2, 1.3); } });
     const up = e => { ptr.delete(e.pointerId); pinch = 0;
-      if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY), hit = ray(r.o, r.d, 60, true), m = S.mobs && mobAtTap(r.o, r.d, hit ? hit.t : 60); if(m) tapMob(m); else act(hit); }
+      if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY), hit = ray(r.o, r.d, 60, true), m = S.mobs && mobAtTap(r.o, r.d, hit ? hit.t : 60), sn = S.stones && stoneAtTap(r.o, r.d, hit ? hit.t : 60); if(sn){ if(Math.hypot(sn.x - S.p.x, sn.z - S.p.z) < 7) openQuiz(sn); else H.toast('📚 גש לאבן הלמידה כדי לפתוח אותה'); } else if(m) tapMob(m); else act(hit); }
       tap = null; };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * (cam.dist > 16 ? .06 : .01), 3, 70); }, {passive: false});
@@ -7229,6 +7394,7 @@ H.vox = (function(){
     H.$('vxzoom').addEventListener('click', () => { H.sfx.tap();
       if(cam.dist > 20){ cam.dist = S.zoomBack || 8; cam.pitch = S.pitchBack || .45; H.toast('🔭 חזרה לדמות'); }
       else { S.zoomBack = cam.dist; S.pitchBack = cam.pitch; cam.dist = 90; cam.pitch = 1.1; H.toast('🔭 רואים את כל העולם · לחץ שוב לחזור'); } });
+    H.$('vxhelp').addEventListener('click', () => { H.sfx.tap(); openHelp(); });
     H.$('vxrot').addEventListener('click', () => { S.rot = ((S.rot || 0) + 1) % 4; H.sfx.tap(); H.toast('↻ סיבוב'); });
   }
 
@@ -7236,14 +7402,15 @@ H.vox = (function(){
   function open(m){
     if(!initGL()) return false;
     bind(); mode = m || 'free'; challenge = null;
+    refreshAtlas(); if(!fontsDone && document.fonts && document.fonts.load) document.fonts.load('40px KtavYad').then(() => { fontsDone = true; atlasScript = ''; refreshAtlas(); if(S) renderBar(); }).catch(() => {});
     if(!blocks){ decodeEdits((H.state.build && H.state.build.e) || ''); generate(); remeshAll(); }
     const b = H.state.build || (H.state.build = {e: '', hot: []});
     const hot = (b.hot && b.hot.length ? b.hot : [1, 2, 3, 7, 8, 15, 11, 18, 9]).filter(id => id > 0).slice(0, 9);
-    S = {p: {x: S0.spawn.x, y: S0.spawn.y, z: S0.spawn.z, vy: 0, ground: false, face: 1, walk: 0}, pet: {x: S0.spawn.x + 1.5, y: S0.spawn.y, z: S0.spawn.z + 1}, hot, sel: 0, jump: false, cam: null, qual: 1, tod: .5, day: null, mobs: [], label: null};
+    S = {p: {x: S0.spawn.x, y: S0.spawn.y, z: S0.spawn.z, vy: 0, ground: false, face: 1, walk: 0}, pet: {x: S0.spawn.x + 1.5, y: S0.spawn.y, z: S0.spawn.z + 1}, hot, sel: 0, jump: false, cam: null, qual: 1, tod: .5, day: null, mobs: [], label: null, stones: [], quiz: null};
     if(S.p.y < 1) S.p.y = 20;
     for(let k = 0; k < 40 && collides(S.p.x, S.p.y, S.p.z); k++) S.p.y += 1;      /* אם נולדנו בתוך בלוק, עולים החוצה */
     cam.dist = cv.clientWidth / Math.max(1, cv.clientHeight) < .75 ? 9 : 7.5;
-    S.mobs = spawnMobs();
+    S.mobs = spawnMobs(); S.stones = mode === 'free' ? spawnStones() : [];
     renderBar(); renderTop(); H.$('vxpal').style.display = 'none';
     if(!running){ running = true; last = performance.now(); requestAnimationFrame(frame); }
     return true;
@@ -7381,6 +7548,133 @@ H.markReport = async function(id, action){
   try{ await fetch(H.apiUrl() + '/admin/reports', {method: 'POST', headers: Object.assign({'Content-Type': 'application/json'}, H.authHeader()), body: JSON.stringify({id, action})}); }catch(e){}
   H.openReports();
 };
+
+/* ===== 99d-letters.js ===== */
+/* ==========================================================
+   אותיות: משחק שמלמד אות אחר אות ופותח אותה בעולם הבנייה.
+   לכל אות: כרטיס הכרות (שם האות ומילה שמתחילה בה), שאלה על המילה
+   ושאלה על השם. רק ארבע אותיות על המסך לכל היותר: בלי הסחות דעת.
+   אות נפתחת רק כששתי השאלות נענו נכון.
+   ========================================================== */
+/* שם האות (מנוקד, להקראה) · מילה לדוגמה (מנוקדת) · אימוג'י */
+H.LETTER_INFO = {
+  'א': ['אָלֶף', 'אַרְיֵה', '🦁'], 'ב': ['בֵּית', 'בָּלוֹן', '🎈'], 'ג': ['גִּימֶל', 'גָּמָל', '🐫'], 'ד': ['דָּלֶת', 'דָּג', '🐟'],
+  'ה': ['הֵא', 'הַר', '⛰️'], 'ו': ['וָו', 'וֶרֶד', '🌹'], 'ז': ['זַיִן', 'זֶבְּרָה', '🦓'], 'ח': ['חֵית', 'חָתוּל', '🐱'],
+  'ט': ['טֵית', 'טֶלֶפוֹן', '📞'], 'י': ['יוֹד', 'יָד', '✋'], 'כ': ['כָּף', 'כֶּלֶב', '🐶'], 'ל': ['לָמֶד', 'לֵב', '❤️'],
+  'מ': ['מֵם', 'מַיִם', '💧'], 'נ': ['נוּן', 'נָחָשׁ', '🐍'], 'ס': ['סָמֶךְ', 'סוּס', '🐴'], 'ע': ['עַיִן', 'עֵץ', '🌳'],
+  'פ': ['פֵּא', 'פִּיל', '🐘'], 'צ': ['צָדִי', 'צָב', '🐢'], 'ק': ['קוֹף', 'קוֹף', '🐒'], 'ר': ['רֵישׁ', 'רַכֶּבֶת', '🚆'],
+  'ש': ['שִׁין', 'שֶׁמֶשׁ', '☀️'], 'ת': ['תָּו', 'תַּפּוּחַ', '🍎']
+};
+H.LETTER_BASE = 'אבגדהוזחטיכלמנסעפצקרשת';
+/* אותיות שדומות למראה או לצליל: משמשות כמסיחים, כדי שהשאלה תהיה הוגנת אבל לא רנדומלית */
+H.LETTER_LOOKALIKE = {'ב': 'כ', 'כ': 'ב', 'ד': 'ר', 'ר': 'ד', 'ה': 'ח', 'ח': 'ה', 'ת': 'ח', 'ו': 'ז', 'ז': 'ו', 'ט': 'ס', 'ס': 'ט', 'מ': 'ס', 'ג': 'נ', 'נ': 'ג', 'ע': 'צ', 'צ': 'ע', 'ק': 'ר', 'פ': 'ס', 'י': 'ו', 'ל': 'ט', 'א': 'ע', 'ש': 'ת'};
+
+H.letterSet = function(){ const b = H.state.build || (H.state.build = {e: '', hot: [], l: ''}); return b.l || ''; };
+/* אות פתוחה אם נלמדה במשחק, או שהופיעה במילה שהילד שלט בה (האלבום) */
+H.letterLearned = function(ch){
+  const base = H.VOX_FINAL[ch] || ch;
+  return H.letterSet().includes(base);
+};
+H.learnLetter = function(ch){
+  const base = H.VOX_FINAL[ch] || ch, b = H.state.build || (H.state.build = {e: '', hot: [], l: ''});
+  if(!b.l) b.l = '';
+  if(!b.l.includes(base)) b.l += base;
+  H.save();
+};
+/* האם האות פתוחה בעולם הבנייה (כל דרך) */
+H.letterOpenAny = function(ch){
+  const base = H.VOX_FINAL[ch] || ch;
+  if(H.letterLearned(base)) return true;
+  return H.state.album.some(w => String(w).includes(base) || String(w).includes(ch));
+};
+H.lockedLetters = () => [...H.LETTER_BASE].filter(c => !H.letterOpenAny(c));
+
+/* אילו אותיות ללמוד עכשיו: קודם אלה שבמילים של הנושא הנוכחי, אחר כך לפי סדר האלפבית */
+H.letterQueue = function(n){
+  const locked = H.lockedLetters();
+  if(!locked.length) return H.shuffle([...H.LETTER_BASE]).slice(0, n);       /* הכול פתוח: חזרה */
+  const inTopic = new Set(); H.words().forEach(w => { for(const c of H.strip(String(w))) inTopic.add(H.VOX_FINAL[c] || c); });
+  const first = locked.filter(c => inTopic.has(c)), rest = locked.filter(c => !inTopic.has(c));
+  return first.concat(rest).slice(0, n);
+};
+H.letterOptions = function(ch, n){
+  const pool = [...H.LETTER_BASE].filter(c => c !== ch), out = [ch], la = H.LETTER_LOOKALIKE[ch];
+  if(la) out.push(la);
+  H.shuffle(pool).forEach(c => { if(out.length < n && !out.includes(c)) out.push(c); });
+  return H.shuffle(out);
+};
+
+H.game({
+  id: 'letters', e: '🔤', name: 'אותיות',
+  desc: 'למד אות ופתח אותה בעולם הבנייה',
+  letters: true,
+  start(){
+    const r = H.run, q = H.letterQueue(5);
+    r.queue = q.slice(); r.total = q.length; r.opened = [];
+    H.show('letters'); this.next();
+  },
+  next(){
+    const r = H.run;
+    if(!r.queue.length){
+      const n = r.opened.length;
+      if(n) H.toast('🔓 נפתחו: ' + r.opened.join(' ') + ' בעולם הבנייה', 'level');
+      return H.endRound();
+    }
+    r.letter = r.queue.shift(); r.step = 0; r.okA = false; r.okB = false;
+    this.intro();
+  },
+  /* כרטיס הכרות: שם האות ומילה שמתחילה בה */
+  intro(){
+    const ch = H.run.letter, info = H.LETTER_INFO[ch];
+    H.$('ltq').textContent = 'האות החדשה';
+    H.$('ltbody').innerHTML = '<div class="lt-card"><div class="lt-big">' + H.esc(ch) + '</div><div class="lt-name">' + H.esc(info[0]) + '</div>' +
+      '<div class="lt-ex"><span>' + info[2] + '</span> ' + H.esc(info[1]) + '</div><button class="go" id="ltgo">הבנתי ▶</button></div>';
+    H.$('ltgo').onclick = () => { H.sfx.tap(); this.askA(); };
+    setTimeout(() => H.speak(info[0] + '. ' + info[1]), 250);
+  },
+  /* שאלה א: באיזו אות מתחילה המילה (המילה מוצגת עם התמונה) */
+  askA(){
+    const ch = H.run.letter, info = H.LETTER_INFO[ch];
+    H.$('ltq').textContent = 'באיזו אות מתחילה המילה?';
+    this.options('<div class="lt-card"><div class="lt-emoji">' + info[2] + '</div><div class="lt-word">' + H.esc(info[1]) + '</div><button class="mini" id="ltsay">🔊</button></div>', ok => { H.run.okA = ok; this.askB(); });
+    H.$('ltsay').onclick = () => H.speak(info[1]);
+    setTimeout(() => H.speak(info[1]), 250);
+  },
+  /* שאלה ב: שומעים את שם האות ובוחרים אותה */
+  askB(){
+    const ch = H.run.letter, info = H.LETTER_INFO[ch];
+    H.$('ltq').textContent = 'איזו אות שמעת?';
+    this.options('<div class="lt-card"><button class="lt-ear" id="ltsay">🔊</button></div>', ok => { H.run.okB = ok; this.done(); });
+    H.$('ltsay').onclick = () => H.speak(info[0]);
+    setTimeout(() => H.speak(info[0]), 250);
+  },
+  options(head, cb){
+    const ch = H.run.letter, opts = H.letterOptions(ch, 3);
+    H.$('ltbody').innerHTML = head + '<div class="lt-opts" id="ltopts"></div><div class="fb" id="ltfb"></div>';
+    let locked = false;
+    opts.forEach(o => {
+      const b = H.el('button', 'lt-opt', o);
+      b.onclick = () => {
+        if(locked) return; locked = true;
+        const ok = o === ch;
+        if(ok){ b.classList.add('right'); H.sfx.good(); H.$('ltfb').innerHTML = '<span class="ok">🎉 נכון!</span>'; }
+        else { b.classList.add('wrongpick'); H.sfx.bad(); [...H.$('ltopts').children].forEach(x => { if(x.textContent === ch) x.classList.add('right'); }); H.$('ltfb').innerHTML = '<span class="no">זו האות הנכונה 👆</span>'; }
+        setTimeout(() => cb(ok), ok ? 800 : 1700);
+      };
+      H.$('ltopts').appendChild(b);
+    });
+  },
+  done(){
+    const r = H.run, ch = r.letter, ok = r.okA && r.okB;
+    if(ok){
+      r.right++;
+      if(!H.letterOpenAny(ch)){ H.learnLetter(ch); r.opened.push(ch); H.confetti && H.confetti(30); }
+      H.sfx.great && H.sfx.great();
+    } else r.wrong++;
+    this.next();
+  },
+  stop(){}
+});
 
 </script>
 </body>

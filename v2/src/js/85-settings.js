@@ -33,7 +33,7 @@ H.openSettings = function(){
   const p = H.pack();
   H.renderPacks();
   H.$('nameIn').value  = H.state.name || '';
-  H.$('peekIn').checked = !!H.state.peekAlways;
+  H.$('peekIn').checked = !!H.state.peekAlways; H.$('hideIn').checked = !!H.state.hideWord;
   H.$('topicIn').value = p.topic || '';
   H.$('prizeIn').value = p.prize || '';
   H.$('wordsIn').value = p.list.join('\n');
@@ -61,7 +61,7 @@ H.applySettings = function(){
   const list = H.readWordsIn();
   if(list.length < 2) return alert('צריך לפחות שתי מילים');
   H.state.name = H.cleanText(H.$('nameIn').value.trim(), 30);
-  H.state.peekAlways = H.$('peekIn').checked;
+  H.state.peekAlways = H.$('peekIn').checked; H.state.hideWord = H.$('hideIn').checked;
   const p = H.pack();
   p.topic = H.cleanText(H.$('topicIn').value.trim(), 80) || 'הכתבה';
   p.prize = H.cleanText(H.$('prizeIn').value.trim(), 80);

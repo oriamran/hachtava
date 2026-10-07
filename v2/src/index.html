@@ -216,6 +216,12 @@
     <div id="flashfb" class="fb"></div>
   </section>
 
+  <!-- ============ אותיות ============ -->
+  <section class="screen" id="s-letters">
+    <p class="sub" id="ltq"></p>
+    <div id="ltbody"></div>
+  </section>
+
   <!-- ============ שמע ובחר ============ -->
   <section class="screen" id="s-pick">
     <p class="sub">איזו כתיבה נכונה?</p>
@@ -337,6 +343,7 @@
     <div class="vxbtns"><button id="vxhelp" class="vxbtn" aria-label="מדריך">❓</button><button id="vxzoom" class="vxbtn" aria-label="תצוגה מרחוק">🔭</button><button id="vxtime" class="vxbtn">🌗</button><button id="vxrot" class="vxbtn" style="display:none">↻</button><button id="vxjump" class="vxbtn">⬆</button><button id="vxmode" class="vxbtn">🔨</button></div>
     <div id="vxstick" class="wstick"><i id="vxknob"></i></div>
     <div id="vxpal" class="vxpal" style="display:none"></div>
+    <div id="vxquiz" class="vxquiz" style="display:none"></div>
   </section>
 
   <!-- ============ בחירת נושא למשחק ============ -->
@@ -426,6 +433,7 @@
     <div id="packlist" class="packlist"></div>
     <label class="lbl">שם הילד<input id="nameIn" placeholder="לא חובה"></label>
     <label class="check"><input type="checkbox" id="peekIn"> הצג את המילה לרגע לפני כל שאלה</label>
+    <label class="check"><input type="checkbox" id="hideIn"> הסתר את המילה (לילדים גדולים): רק שמיעה, והאותיות מתגלות כשמוצאים אותן</label>
     <label class="lbl">שם ההכתבה<input id="topicIn" placeholder="חגי תשרי"></label>
     <label class="lbl">הפרס על אלבום מלא<input id="prizeIn" placeholder="חטיף MARS"></label>
     <!-- צילום וסריקה: מוסתר בכוונה (לא רוצים שילדים יצלמו, והקריאה מצילום כבויה). הקוד נשאר, אפשר להחזיר ע"י הסרת hidden. -->

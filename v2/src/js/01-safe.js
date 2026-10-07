@@ -26,7 +26,7 @@ H.cleanState = function(raw){
   const keys = (o, n) => isO(o) ? Object.keys(o).filter(k => !H.BAD_KEYS[k]).slice(0, n) : [];
   const s = base;
 
-  s.name = T(raw.name, 30); s.onboarded = raw.onboarded === true; s.peekAlways = raw.peekAlways === true;
+  s.name = T(raw.name, 30); s.onboarded = raw.onboarded === true; s.peekAlways = raw.peekAlways === true; s.hideWord = raw.hideWord === true;
   s.avatar = T(raw.avatar, 20, 'fox'); s.hat = T(raw.hat, 20, 'none'); s.ring = T(raw.ring, 20, 'sun');
   s.bg = T(raw.bg, 20, 'day'); s.pet = T(raw.pet, 20, 'none');
   s.owned = L(raw.owned, 100, 20);
@@ -64,7 +64,7 @@ H.cleanState = function(raw){
   const wd = isO(raw.world) ? raw.world : {};
   s.world = {d: T(wd.d, 12), gems: num(wd.gems, 0, 50), chest: wd.chest === true};
   const bd = isO(raw.build) ? raw.build : {};
-  s.build = {e: (typeof bd.e === 'string' && /^[A-Za-z0-9+\/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : '', hot: Array.isArray(bd.hot) ? bd.hot.filter(n => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : []};
+  s.build = {e: (typeof bd.e === 'string' && /^[A-Za-z0-9+\/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : '', hot: Array.isArray(bd.hot) ? bd.hot.filter(n => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [], l: (typeof bd.l === 'string' ? bd.l.replace(/[^\u05d0-\u05ea]/g, '') : '').slice(0, 30)};
   s.stars = {};
   keys(raw.stars, 100).forEach(k => { s.stars[H.cleanText(k, 6)] = num(raw.stars[k], 0, 3); });
   s.log = {};

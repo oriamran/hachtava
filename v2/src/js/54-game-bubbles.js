@@ -10,7 +10,7 @@ H.game({
     r.need = H.clusters(w).filter(c => c !== ' ');
     r.at = 0; r.bubbles = []; r.miss = 0;
     H.$('bubtarget').innerHTML = r.need.map((c, i) =>
-      '<span class="bt' + (i === 0 ? ' now' : '') + '">' + c + '</span>').join('');
+      '<span class="bt' + (i === 0 ? ' now' : '') + '">' + (H.state.hideWord ? '▢' : c) + '</span>').join('');
     const field = H.$('bubfield'); field.innerHTML = '';
     r.spawnAt = 0;
     setTimeout(() => H.say(w), 250);
@@ -36,7 +36,7 @@ H.game({
         /* _y = כמה עלתה מתחתית השדה. מתחילה מתחת לקצה ועולה. */
         b._y = -70;
         b._v = 0.9 + Math.random()*0.7;
-        b.onclick = () => this.pop(b);
+        b.onclick = e => { e.stopPropagation(); this.pop(b); };
         field.appendChild(b);
         r.bubbles.push(b);
       }
@@ -54,13 +54,17 @@ H.game({
   },
   pop(b){
     const r = H.run;
+    /* בועה שכבר נפוצצה (או לחיצה כפולה מהירה) לא נספרת שוב. אחרת מילה עם אות כפולה התקדמה בשתי אותיות בלחיצה אחת. */
+    const now = performance.now();
+    if(b._done || now - (r.lastPop || 0) < 220) return;
+    r.lastPop = now; b._done = true; b.style.pointerEvents = 'none';
     if(b.dataset.ch === r.need[r.at]){
       H.sfx.tap(); b.classList.add('pop');
       setTimeout(() => b.remove(), 180);
       r.bubbles = r.bubbles.filter(x => x !== b);
       r.at++;
       const marks = H.$('bubtarget').children;
-      if(marks[r.at-1]) marks[r.at-1].classList.add('got');
+      if(marks[r.at-1]){ marks[r.at-1].classList.remove('now'); marks[r.at-1].classList.add('got'); marks[r.at-1].textContent = r.need[r.at-1]; }
       if(marks[r.at])   marks[r.at].classList.add('now');
       if(r.at >= r.need.length){
         /* לחיצה שגויה אחת או שתיים לא פוסלות את המילה */
@@ -69,7 +73,7 @@ H.game({
       }
     } else {
       r.miss++; H.sfx.bad(); b.classList.add('shake');
-      setTimeout(() => b.classList.remove('shake'), 350);
+      setTimeout(() => { b.classList.remove('shake'); b._done = false; b.style.pointerEvents = ''; }, 350);
       if(r.miss >= 5){ H.wrong(); setTimeout(() => this.next(), 500); }
     }
   },

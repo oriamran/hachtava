@@ -25,8 +25,8 @@ H.needWords = function(){
   return true;
 };
 H.startRound = function(gameId, station, words, extra){
-  if(!(words && words.length) && H.needWords()) return;
   const g = H.byId(gameId);
+  if(!g.letters && !(words && words.length) && H.needWords()) return;
   /* מאיפה באנו, כדי שכפתור החזרה יחזיר לרשימת המשחקים או למפה ולא תמיד לבית */
   const origin = (extra && extra.origin) || (['play', 'map', 'plan'].includes(H.screen) ? H.screen : 'home');
   H.run = Object.assign({
