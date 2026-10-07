@@ -309,8 +309,8 @@ H.vox = (function(){
       progM = compile('attribute vec3 p;attribute vec2 t;attribute float s;attribute float b;uniform mat4 vp;uniform vec3 cam;varying vec2 uv;varying float sh;varying float bl;varying float vd;' +
         'void main(){gl_Position=vp*vec4(p,1.);uv=t;sh=s;bl=b;vd=length(p-cam);}',
         'precision mediump float;varying vec2 uv;varying float sh;varying float bl;varying float vd;uniform sampler2D tx;uniform vec3 fog;uniform float cut;uniform vec3 tint;uniform float amb;' +
-        'void main(){vec4 c=texture2D(tx,uv);if(c.a<cut)discard;float sky=sh*amb;float l=max(sky,bl);vec3 warm=mix(vec3(1.),vec3(1.2,.95,.7),clamp((bl-sky)*2.2,0.,1.));' +
-        'float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(c.rgb*l*tint*warm,fog,f),c.a);}');
+        'void main(){vec4 c=texture2D(tx,uv);if(c.a<cut)discard;float sky=sh*amb;float l=max(sky,bl);float dk=clamp((amb-.15)/.85,0.,1.);vec3 mn=mix(vec3(1.),mix(vec3(.55,.68,1.25),vec3(1.),dk),clamp(1.-(bl-sky)*2.2,0.,1.));vec3 warm=mix(vec3(1.),vec3(1.2,.95,.7),clamp((bl-sky)*2.2,0.,1.));' +
+        'float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(c.rgb*l*tint*warm*mn,fog,f),c.a);}');
       progE = compile('attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 vp;uniform mat4 m;uniform vec3 cam;varying vec3 vc;varying float vd;' +
         'void main(){vec4 w=m*vec4(p,1.);gl_Position=vp*w;vec3 nn=normalize((m*vec4(n,0.)).xyz);float l=max(dot(nn,normalize(vec3(.5,1.,.35))),0.);vc=c*(.55+.45*l);vd=length(w.xyz-cam);}',
         'precision mediump float;varying vec3 vc;varying float vd;uniform vec3 fog;uniform float lum;uniform vec3 tint;void main(){float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(vc*lum*tint,fog,f),1.);}');
@@ -335,7 +335,7 @@ H.vox = (function(){
     const th = theme(), a = (S.tod - .25) * 6.2832, sunH = Math.sin(a), k = smoothstep(-.18, .22, sunH);
     const night = [.03, .04, .13], w = Math.exp(-Math.pow(sunH / .22, 2)) * (1 - Math.abs(Math.sin(a - 1.5708)) * .0) * .38;
     const sky = [0, 1, 2].map(i => clamp(night[i] + (th.sky[i] - night[i]) * k + [1, .5, .25][i] * w * (k > .02 && k < .98 ? 1 : .25), 0, 1));
-    return {a, sunH, k, amb: .3 + .7 * k, sky};
+    return {a, sunH, k, amb: .15 + .85 * k, sky};
   }
   const STARS = (() => { const r = rngOf(31), out = []; for(let i = 0; i < 46; i++){ const az = r() * 6.2832, el = .15 + r() * 1.2; out.push([Math.cos(az) * Math.cos(el), Math.sin(el), Math.sin(az) * Math.cos(el)]); } return out; })();
 
@@ -805,7 +805,7 @@ H.vox = (function(){
     st.addEventListener('pointerup', rel); st.addEventListener('pointercancel', rel);
     H.$('vxjump').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); S.jump = true; });
     H.$('vxmode').addEventListener('click', () => { editMode = editMode === 'build' ? 'break' : 'build'; H.sfx.tap(); renderBar(); renderTop(); });
-    H.$('vxtime').addEventListener('click', () => { const seq = [.5, .72, .0, .27]; const nxt = seq.find(v => v > S.tod + .02) ; S.tod = nxt === undefined ? seq[0] : nxt; H.sfx.tap(); H.toast(S.tod === .5 ? '☀️ צהריים' : S.tod === .72 ? '🌇 שקיעה' : S.tod === 0 ? '🌙 לילה' : '🌅 זריחה'); });
+    H.$('vxtime').addEventListener('click', () => { const seq = [.5, .72, .0, .27], names = ['☀️ צהריים', '🌇 שקיעה', '🌙 לילה', '🌅 זריחה']; S.todI = ((S.todI === undefined ? -1 : S.todI) + 1) % 4; S.tod = seq[S.todI]; H.sfx.tap(); H.toast(names[S.todI]); });
     H.$('vxrot').addEventListener('click', () => { S.rot = ((S.rot || 0) + 1) % 4; H.sfx.tap(); H.toast('↻ סיבוב'); });
   }
 
