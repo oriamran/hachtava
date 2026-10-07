@@ -38,7 +38,7 @@ H.vox = (function(){
   const {NX, NZ, NY, SEA, CH} = H.VOX;
   const AIR = 0, WATER = 10, LET0 = 64, TS = 32, COLS = 16;
   let gl = null, cv = null, progM = null, progS = null, progB = null, running = false, last = 0;
-  let blocks = null, S = null, mode = 'free', editMode = 'build', challenge = null, edits = new Map(), undo = [], dirtyT = 0;
+  let blocks = null, S = null, mode = 'free', editMode = 'build', challenge = null, edits = new Map(), undo = [], dirtyT = 0, grp = null, pendingMesh = null;
   const cam = {yaw: .6, pitch: .5, dist: 8};
   const keys = {}, stick = {x: 0, y: 0, id: null}, ptr = new Map();
   let tap = null, pinch = 0, atlas = null, atlasTex = null, tileUrl = {};
@@ -328,15 +328,19 @@ H.vox = (function(){
     const i = idx(x, y, z), old = blocks[i];
     if(record !== false){
       if(edits.size >= 5000 && !edits.has(i)){ H.toast('הגעת למקסימום בלוקים שנשמרים', 'no'); return false; }
-      undo.push([i, old]); if(undo.length > 60) undo.shift(); edits.set(i, id);
+      if(grp) grp.push([i, old]); else { undo.push([[i, old]]); if(undo.length > 60) undo.shift(); }
+      edits.set(i, id);
     }
-    blocks[i] = id; remeshAround(x, z); markDirty(); return true;
+    blocks[i] = id;
+    if(pendingMesh) pendingMesh.push([x, z]); else remeshAround(x, z);
+    markDirty(); return true;
   }
   const markDirty = () => { dirtyT = performance.now(); };
   function act(hit){
     if(!hit) return;
     const p = S.p, cx = hit.x + .5, cy = hit.y + .5, cz = hit.z + .5;
     if(Math.hypot(cx - p.x, cy - (p.y + 1), cz - p.z) > 7.5){ H.toast('רחוק מדי. התקרב'); return; }
+    if(editMode === 'stamp') return placeStamp(hit);
     if(editMode === 'break'){
       if(hit.y <= 0) return;
       const id = get(hit.x, hit.y, hit.z); if(id === 3 && hit.y <= 1) return;
@@ -374,6 +378,49 @@ H.vox = (function(){
     if(unl && key === unlKey) return unl;
     const set = new Set(); H.state.album.forEach(w => { for(const c of String(w)) if(H.VOX_LETTERS.includes(c)) set.add(c); });
     unlKey = key; return unl = set;
+  }
+
+  /* ---------- תבניות בנייה (נוצרו ב-Blender) ---------- */
+  const TPL = {};
+  (H.VOX_TEMPLATES || []).forEach(t => {
+    const bin = atob(t.v), vox = []; for(let i = 0; i + 3 < bin.length; i += 4) vox.push([bin.charCodeAt(i), bin.charCodeAt(i+1), bin.charCodeAt(i+2), bin.charCodeAt(i+3)]);
+    TPL[t.id] = {id: t.id, n: t.n, size: t.size, vox, png: 'data:image/png;base64,' + t.png};
+  });
+  /* סיבוב ברבעי סיבוב: (x,z) -> (-z,x), ואז מיישרים לפינה */
+  function rotated(t, k){
+    let v = t.vox.map(a => [a[0], a[1], a[2], a[3]]), w = t.size[0], d = t.size[2];
+    for(let r = 0; r < k; r++){ v = v.map(a => [d - 1 - a[2], a[1], a[0], a[3]]); const tmp = w; w = d; d = tmp; }
+    return {v, w, d};
+  }
+  /* הדלת בתבניות פונה ל-z=0 (כלפי "צפון"). מסובבים כך שתפנה אל המצלמה. */
+  function faceRot(){
+    const sx = Math.sin(cam.yaw), cz = Math.cos(cam.yaw);
+    if(Math.abs(sx) > Math.abs(cz)) return sx > 0 ? 1 : 3;
+    return cz > 0 ? 2 : 0;
+  }
+  function placeStamp(hit){
+    const t = TPL[S.stamp]; if(!t) return;
+    const R = rotated(t, S.rot || 0);
+    const ax = hit.x + hit.nx - Math.floor(R.w / 2), ay = hit.y + hit.ny, az = hit.z + hit.nz - Math.floor(R.d / 2);
+    if(edits.size + R.v.length > 5000){ H.toast('אין מקום בשמירה לתבנית הזאת. נקה קצת', 'no'); return; }
+    const p = S.p; let placed = 0; grp = []; pendingMesh = [];
+    R.v.forEach(a => {
+      const x = ax + a[0], y = ay + a[1], z = az + a[2]; if(x < 1 || z < 1 || x >= NX - 1 || z >= NZ - 1 || y < 1 || y >= NY - 1) return;
+      const cur = blocks[idx(x, y, z)]; if(cur !== AIR && cur !== WATER && cur !== 6) return;               /* לא דורסים קרקע */
+      if(a[3] === 0) return;
+      if(p.x + HW > x && p.x - HW < x + 1 && p.z + HW > z && p.z - HW < z + 1 && p.y + PH > y && p.y < y + 1) return;
+      if(setBlock(x, y, z, a[3])) placed++;
+    });
+    const g = grp, pm = pendingMesh; grp = null; pendingMesh = null;
+    if(g.length){ undo.push(g); if(undo.length > 60) undo.shift(); }
+    const keys = new Set(); pm.forEach(([x, z]) => { for(let dx = -1; dx <= 1; dx++) for(let dz = -1; dz <= 1; dz++) keys.add(Math.floor((x + dx) / CH) + ',' + Math.floor((z + dz) / CH)); });
+    keys.forEach(kk => { const [a, b] = kk.split(',').map(Number); remesh(a, b); });
+    H.sfx.tap(); H.toast('🏗️ ' + t.n + ': ' + placed + ' בלוקים (אפשר לבטל)', 'good'); renderTop(); checkWord();
+  }
+  function pickStamp(id){
+    S.stamp = id; S.rot = faceRot(); editMode = 'stamp';
+    H.$('vxpal').style.display = 'none'; renderBar(); renderTop();
+    H.toast('לחץ על הקרקע כדי להניח: ' + TPL[id].n);
   }
 
   /* ---------- שמירה ---------- */
@@ -423,12 +470,16 @@ H.vox = (function(){
     const box = H.$('vxhud'); if(!box) return;
     let mid = '';
     if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + H.esc(c) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה: האותיות לפי הסדר (אפשר גם מלמעלה למטה)</div>';
-    else mid = '<div class="wh-sub">' + (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה') + ' · 🧱 ' + edits.size + '</div>';
+    else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + '</div>';
     box.innerHTML = '<div class="wh-top"><button class="wh-exit" id="vxexit">✕ יציאה</button><span class="wh-coins">🪙 ' + H.state.coins + '</span>' +
       '<button class="wh-topic" id="vxundo">↶ בטל</button></div>' + mid;
     H.$('vxexit').onclick = () => { H.sfx.tap(); flush(); H.goBack(); };
-    H.$('vxundo').onclick = () => { const u = undo.pop(); if(!u) return; const i = u[0], id = u[1]; blocks[i] = id; if(id === AIR) edits.delete(i); else edits.set(i, id);
-      const y = Math.floor(i / (NX * NZ)), r = i % (NX * NZ); remeshAround(r % NX, Math.floor(r / NX)); markDirty(); renderTop(); };
+    H.$('vxundo').onclick = () => {
+      const g = undo.pop(); if(!g) return;
+      const keys = new Set();
+      for(let k = g.length - 1; k >= 0; k--){ const i = g[k][0], id = g[k][1]; blocks[i] = id; if(id === AIR) edits.delete(i); else edits.set(i, id);
+        const r = i % (NX * NZ), x = r % NX, z = Math.floor(r / NX); for(let dx = -1; dx <= 1; dx++) for(let dz = -1; dz <= 1; dz++) keys.add(Math.floor((x + dx) / CH) + ',' + Math.floor((z + dz) / CH)); }
+      keys.forEach(kk => { const [a, b] = kk.split(',').map(Number); remesh(a, b); }); markDirty(); renderTop(); };
   }
   function slotImg(id){ const ft = faceTiles(id); return tileDataUrl(id >= LET0 ? LET0 + (id - LET0) : ft[1]); }
   function renderBar(){
@@ -440,18 +491,20 @@ H.vox = (function(){
       bar.appendChild(b);
     });
     const more = H.el('button', 'vxslot more', '⋯'); more.onclick = () => openPalette(); bar.appendChild(more);
-    const mbtn = H.$('vxmode'); if(mbtn){ mbtn.textContent = editMode === 'build' ? '🔨' : '⛏️'; mbtn.classList.toggle('brk', editMode === 'break'); }
+    const mbtn = H.$('vxmode'); if(mbtn){ mbtn.textContent = editMode === 'stamp' ? '🏗️' : (editMode === 'build' ? '🔨' : '⛏️'); mbtn.classList.toggle('brk', editMode === 'break'); }
+    const rb = H.$('vxrot'); if(rb) rb.style.display = editMode === 'stamp' ? '' : 'none';
   }
   function openPalette(){
     const pal = H.$('vxpal'); pal.style.display = ''; let html = '<div class="vxp-h"><b>בלוקים</b><button class="mini" id="vxpclose">✕</button></div><div class="vxp-grid">';
     H.VOX_BLOCKS.forEach(b => { const o = owned(b.id);
       html += '<button class="vxp-b' + (o ? '' : ' lock') + '" data-id="' + b.id + '"><img src="' + slotImg(b.id) + '" alt=""><small>' + H.esc(b.n) + (o ? '' : '<br>🪙 ' + b.cost) + '</small></button>'; });
-    html += '</div><div class="vxp-h"><b>אותיות</b><small>נפתחות כשלומדים מילה</small></div><div class="vxp-grid">';
+    html += '</div><div class="vxp-h"><b>🏗️ תבניות (נבנו ב-Blender)</b><small>לחץ והנח בלחיצה על הקרקע</small></div><div class="vxp-grid tpl">' + Object.values(TPL).map(t => '<button class="vxp-b tplb" data-tpl="' + t.id + '"><img src="' + t.png + '" alt=""><small>' + H.esc(t.n) + '</small></button>').join('') + '</div><div class="vxp-h"><b>אותיות</b><small>נפתחות כשלומדים מילה</small></div><div class="vxp-grid">';
     for(let i = 0; i < H.VOX_LETTERS.length; i++){ const ch = H.VOX_LETTERS[i], o = letterOpen(ch);
       html += '<button class="vxp-b' + (o ? '' : ' lock') + '" data-id="' + (LET0 + i) + '"><img src="' + slotImg(LET0 + i) + '" alt=""><small>' + (o ? '' : '🔒') + '</small></button>'; }
     pal.innerHTML = html + '</div>';
     H.$('vxpclose').onclick = () => { pal.style.display = 'none'; };
-    pal.querySelectorAll('.vxp-b').forEach(b => b.onclick = () => {
+    pal.querySelectorAll('.tplb').forEach(b => b.onclick = () => pickStamp(b.dataset.tpl));
+    pal.querySelectorAll('.vxp-b:not(.tplb)').forEach(b => b.onclick = () => {
       const id = Number(b.dataset.id);
       if(!owned(id)){ if(id < LET0) buyBlock(id); else H.toast('האות הזאת נעולה. למד מילה עם האות 🔒'); openPalette(); return; }
       S.hot[S.sel] = id; editMode = 'build'; pal.style.display = 'none'; renderBar(); renderTop(); save(); });
@@ -556,6 +609,7 @@ H.vox = (function(){
     st.addEventListener('pointerup', rel); st.addEventListener('pointercancel', rel);
     H.$('vxjump').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); S.jump = true; });
     H.$('vxmode').addEventListener('click', () => { editMode = editMode === 'build' ? 'break' : 'build'; H.sfx.tap(); renderBar(); renderTop(); });
+    H.$('vxrot').addEventListener('click', () => { S.rot = ((S.rot || 0) + 1) % 4; H.sfx.tap(); H.toast('↻ סיבוב'); });
   }
 
   /* ---------- כניסה ---------- */

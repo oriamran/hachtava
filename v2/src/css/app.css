@@ -731,3 +731,5 @@ body.inworld .hud,body.inworld #backbtn{display:none!important}
 
 /* תיבת המילים בהורים: בכתב כשבחרו כתב (כלל ה-id למעלה דרס אותה) */
 body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
+.vxp-grid.tpl{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+.vxp-b.tplb img{width:84px;height:84px;image-rendering:auto}
