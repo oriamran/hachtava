@@ -30,6 +30,10 @@ H.VOX_BLOCKS = [
   {id: 19, k: 'black',  n: 'שחור',    t: ['black'], cost: 20},
   {id: 20, k: 'gold',   n: 'זהב',     t: ['gold'], cost: 60},
   {id: 21, k: 'lamp',   n: 'מנורה',   t: ['lamp'], cost: 40},
+  {id: 22, k: 'snow',    n: 'שלג',      t: ['snow_top', 'snow_side', 'dirt'], cost: 0},
+  {id: 23, k: 'cactus',  n: 'קקטוס',    t: ['cactus_top', 'cactus_side', 'cactus_top'], cost: 0},
+  {id: 24, k: 'spruce',  n: 'עלי אורן', t: ['spruce'], cost: 0},
+  {id: 25, k: 'path',    n: 'שביל',     t: ['path'], cost: 0},
   {id: 30, k: 'tallgrass', n: 'עשב',      t: ['tallgrass'], cost: 0},
   {id: 31, k: 'flower_red', n: 'פרח אדום',  t: ['flower_red'], cost: 0},
   {id: 32, k: 'flower_yellow', n: 'פרח צהוב', t: ['flower_yellow'], cost: 0},
@@ -56,7 +60,7 @@ H.vox = (function(){
   /* ---------- מרקמים ---------- */
   const TILES = ['grass_top','grass_side','dirt','stone','sand','log_side','log_top','leaves','planks','brick','glass','water',
     'wool_red','wool_orange','wool_yellow','wool_green','wool_blue','wool_purple','wool_pink','wool_white','black','gold','lamp',
-    'tallgrass','flower_red','flower_yellow','flower_blue','mushroom'];
+    'tallgrass','flower_red','flower_yellow','flower_blue','mushroom','snow_top','snow_side','cactus_top','cactus_side','spruce','path'];
   const TI = {}; TILES.forEach((t, i) => TI[t] = i);
   const WOOL = {wool_red:[214,60,60], wool_orange:[240,140,40], wool_yellow:[245,210,60], wool_green:[80,180,70], wool_blue:[60,110,220], wool_purple:[140,90,210], wool_pink:[245,130,180], wool_white:[240,240,240]};
   function makeAtlas(){
@@ -92,6 +96,12 @@ H.vox = (function(){
       else if(name === 'mushroom'){ for(let j = 9; j < 16; j++) for(let i = 6; i < 10; i++) px(i, j, rgb([235, 225, 205], 1 + (r() - .5) * .1));
         for(let j = 4; j < 10; j++) for(let i = 3; i < 13; i++){ if((j - 4) < 2 && (i < 5 || i > 10)) continue; px(i, j, rgb([210, 50, 50], 1 + (r() - .5) * .1)); }
         px(5, 6, 'rgb(255,255,255)'); px(9, 5, 'rgb(255,255,255)'); px(11, 7, 'rgb(255,255,255)'); }
+      else if(name === 'snow_top') noise([240, 244, 250], .07);
+      else if(name === 'snow_side'){ noise([134, 96, 60], .3); for(let i = 0; i < 16; i++){ const h = 4 + (r() < .5 ? 1 : 0) + (r() < .3 ? 1 : 0); for(let j = 0; j < h; j++) px(i, j, rgb([240, 244, 250], 1 + (r() - .5) * .07)); } }
+      else if(name === 'cactus_top'){ for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const d = Math.max(Math.abs(i - 7.5), Math.abs(j - 7.5)); px(i, j, rgb(d > 6.5 ? [40, 110, 45] : [70, 150, 70], (Math.floor(d) % 2 ? .9 : 1.05) * (1 + (r() - .5) * .1))); } }
+      else if(name === 'cactus_side'){ for(let i = 0; i < 16; i++){ const f = (i % 5 === 2) ? 1.15 : (i % 5 === 0 ? .8 : 1); for(let j = 0; j < 16; j++) px(i, j, rgb([62, 140, 62], f * (1 + (r() - .5) * .1))); } for(let k = 0; k < 10; k++) px(Math.floor(r() * 16), Math.floor(r() * 16), rgb([235, 230, 190], 1)); }
+      else if(name === 'spruce'){ for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ if(r() < .16) continue; px(i, j, rgb([32, 100, 62], 1 + (r() - .5) * .5)); } }
+      else if(name === 'path'){ noise([166, 140, 98], .2); for(let k = 0; k < 14; k++) px(Math.floor(r() * 16), Math.floor(r() * 16), rgb([130, 112, 80], 1 + (r() - .5) * .3)); }
       else if(name === 'lamp'){ for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const bar = (i === 7 || i === 8 || j === 7 || j === 8); px(i, j, rgb(bar ? [200, 140, 50] : [255, 236, 150], 1 + (r() - .5) * .12)); } }
     });
     /* אריחי אותיות: רקע בהיר ומסגרת, האות בסגול */
@@ -116,7 +126,7 @@ H.vox = (function(){
     const t = b.t.map(n => TI[n]); return [t[0], t[1] === undefined ? t[0] : t[1], t[2] === undefined ? t[0] : t[2]];
   }
   const PLANT = id => id >= 30 && id < 40;
-  const TRANSPARENT = id => id === AIR || id === 6 || id === 9 || id === WATER || PLANT(id);
+  const TRANSPARENT = id => id === AIR || id === 6 || id === 24 || id === 9 || id === WATER || PLANT(id);
   const SOLID = id => id !== AIR && id !== WATER && !PLANT(id);    /* אפשר לעמוד עליו / להתנגש בו */
   const AOSOLID = id => id !== AIR && id !== WATER && id !== 9 && !PLANT(id);
   const LIGHTBLOCK = id => id !== AIR && id !== WATER && id !== 9 && !PLANT(id);
@@ -129,42 +139,114 @@ H.vox = (function(){
       const a = hs(xi, zi), b = hs(xi + 1, zi), c = hs(xi, zi + 1), d = hs(xi + 1, zi + 1);
       return (a + (b - a) * fx) * (1 - fz) + (c + (d - c) * fx) * fz; };
   }
+  /* ---------- יצירת העולם: ביומות, הרים, נהרות וכפרים ---------- */
+  const BIOME_PLAINS = 0, BIOME_FOREST = 1, BIOME_DESERT = 2, BIOME_TUNDRA = 3;
   function generate(){
     blocks = new Uint8Array(NX * NY * NZ);
-    const n1 = noise2(1337), cx = NX / 2, cz = NZ / 2, heights = new Int16Array(NX * NZ), rnd = rngOf(99);
+    const nL = noise2(1337), nM = noise2(2024), nR = noise2(777), nT = noise2(31), nW = noise2(52), nMt = noise2(909), nF = noise2(4040);
+    const cx = NX / 2, cz = NZ / 2, heights = new Int16Array(NX * NZ), biome = new Uint8Array(NX * NZ), occ = new Uint8Array(NX * NZ), rnd = rngOf(99);
+    const at = (x, z) => z * NX + x;
     for(let z = 0; z < NZ; z++) for(let x = 0; x < NX; x++){
-      const d = Math.hypot(x - cx, z - cz) / (NX * .5), f = n1(x / 16, z / 16) * .6 + n1(x / 8, z / 8) * .28 + n1(x / 4, z / 4) * .12;
-      let h = Math.round(SEA - 5 + f * 15 - d * d * 11);
-      const dc = Math.hypot(x - cx, z - cz); if(dc < 22) h = Math.round(h + (SEA + 2 - h) * (dc < 12 ? 1 : 1 - (dc - 12) / 10));   /* מישור גדול לבנייה במרכז */
-      h = clamp(h, 2, NY - 8); heights[z * NX + x] = h;
-      for(let y = 0; y <= h; y++){
-        let id = 3;
-        if(y === h) id = (h <= SEA + 1) ? 4 : 1; else if(y >= h - 3) id = (h <= SEA + 1) ? 4 : 2;
-        blocks[idx(x, y, z)] = id;
-      }
+      const dc = Math.hypot(x - cx, z - cz), d = dc / (NX * .5);
+      const f = nL(x / 22, z / 22) * .55 + nL(x / 9, z / 9) * .3 + nL(x / 4, z / 4) * .15;
+      const mm = smoothstep(.5, .72, nMt(x / 36, z / 36)) * smoothstep(.3, .5, d);
+      const ridge = 1 - Math.abs(nM(x / 14, z / 14) * 2 - 1);
+      let h = SEA + 8 + (f - .5) * 12 + mm * (ridge * ridge * 15 + 3) - Math.pow(d, 3.2) * 30;
+      if(dc < 22) h += (SEA + 2 - h) * (dc < 12 ? 1 : 1 - (dc - 12) / 10);                    /* מישור בנייה במרכז */
+      const rv = Math.abs(nR(x / 26, z / 26) * 2 - 1);
+      if(rv < .06 && dc > 22 && mm < .35 && h > SEA - 1) h = Math.min(h, SEA - 1 + Math.round(rv / .06 * 3));   /* נהרות */
+      h = clamp(Math.round(h), 2, NY - 8); heights[at(x, z)] = h;
+      const tmp = nT(x / 48 + 10, z / 48), wet = nW(x / 40, z / 40);
+      let bm = BIOME_PLAINS;
+      if(dc > 30){ if(tmp < .33) bm = BIOME_TUNDRA; else if(tmp > .64 && wet < .55) bm = BIOME_DESERT; else if(wet > .52) bm = BIOME_FOREST; }
+      biome[at(x, z)] = bm;
+      let top = 1, sub = 2;
+      if(h <= SEA + 1){ top = 4; sub = 4; }
+      else if(h >= SEA + 17){ top = 22; sub = 3; }
+      else if(bm === BIOME_DESERT){ top = 4; sub = 4; }
+      else if(bm === BIOME_TUNDRA && h > SEA + 2){ top = 22; sub = 2; }
+      else if(h >= SEA + 12 && nF(x / 6, z / 6) > .4){ top = 3; sub = 3; }
+      for(let y = 0; y <= h; y++) blocks[idx(x, y, z)] = y === h ? top : (y >= h - 3 ? sub : 3);
       for(let y = h + 1; y <= SEA; y++) blocks[idx(x, y, z)] = WATER;
     }
-    /* עצים */
-    for(let k = 0, nt = Math.round(90 * NX * NZ / 6400); k < nt; k++){
-      const x = 3 + Math.floor(rnd() * (NX - 6)), z = 3 + Math.floor(rnd() * (NZ - 6)), h = heights[z * NX + x];
-      if(h <= SEA + 1 || Math.hypot(x - cx, z - cz) < 16 || blocks[idx(x, h, z)] !== 1) continue;
-      const th = 4 + Math.floor(rnd() * 2);
-      for(let y = 1; y <= th; y++) blocks[idx(x, h + y, z)] = 5;
-      for(let dy = th - 1; dy <= th + 2; dy++){ const r = dy >= th + 1 ? 1 : 2;
-        for(let dx = -r; dx <= r; dx++) for(let dz = -r; dz <= r; dz++){
-          if(Math.abs(dx) === r && Math.abs(dz) === r && (dy === th + 2 || rnd() < .5)) continue;
-          const xx = x + dx, zz = z + dz, yy = h + dy; if(xx < 0 || zz < 0 || xx >= NX || zz >= NZ || yy >= NY) continue;
-          if(blocks[idx(xx, yy, zz)] === AIR) blocks[idx(xx, yy, zz)] = 6; } }
+    /* כפרים: מקומות שטוחים ויבשים, רחוקים מהמרכז ומהים */
+    const villages = [], flatAt = (vx, vz, r) => { let lo = 99, hi = -99; for(let dz = -r; dz <= r; dz += 3) for(let dx = -r; dx <= r; dx += 3){ const h = heights[at(vx + dx, vz + dz)]; lo = Math.min(lo, h); hi = Math.max(hi, h); } return [lo, hi]; };
+    for(let relax = 0; relax < 3 && villages.length < 3; relax++){
+      for(let tries = 0; tries < 500 && villages.length < 3; tries++){
+        const vx = 24 + Math.floor(rnd() * (NX - 48)), vz = 24 + Math.floor(rnd() * (NZ - 48)), dc = Math.hypot(vx - cx, vz - cz);
+        if(dc < 28 || dc > 58 || biome[at(vx, vz)] === BIOME_TUNDRA || villages.some(v => Math.hypot(v.x - vx, v.z - vz) < 38)) continue;
+        const [lo, hi] = flatAt(vx, vz, 8), hi14 = flatAt(vx, vz, 14)[1];
+        if(lo < SEA + 1 || hi14 >= SEA + 16 || hi - lo > [3, 6, 10][relax]) continue;
+        villages.push({x: vx, z: vz, base: heights[at(vx, vz)], biome: biome[at(vx, vz)]});
+      }
     }
-    /* עשב ופרחים על הדשא */
-    const pr = rngOf(555);
+    villages.forEach((v, vi) => buildVillage(v, vi, heights, occ, at, rnd));
+    /* עצים וצמחים לפי ביום */
+    const trng = rngOf(2718), pr = rngOf(555);
+    const put = (x, y, z, id, soft) => { if(x < 0 || z < 0 || x >= NX || z >= NZ || y < 0 || y >= NY) return; const c = blocks[idx(x, y, z)]; if(c === AIR || (soft && (c === 6 || c === 24 || PLANT(c)))) blocks[idx(x, y, z)] = id; };
+    const oak = (x, h, z, big) => { const th = big ? 7 + Math.floor(trng() * 2) : 4 + Math.floor(trng() * 2), R = big ? 3 : 2;
+      for(let y = 1; y <= th; y++) put(x, h + y, z, 5, true);
+      for(let dy = th - 2; dy <= th + (big ? 3 : 2); dy++){ const r = dy >= th + (big ? 2 : 1) ? R - 1 : R;
+        for(let dx = -r; dx <= r; dx++) for(let dz = -r; dz <= r; dz++){
+          if(Math.abs(dx) === r && Math.abs(dz) === r && (dy === th + (big ? 3 : 2) || trng() < .45)) continue; if(!dx && !dz && dy < th + 1) continue;
+          put(x + dx, h + dy, z + dz, 6, true); } } };
+    const spruce = (x, h, z) => { const th = 6 + Math.floor(trng() * 4);
+      for(let y = 1; y <= th; y++) put(x, h + y, z, 5, true);
+      for(let dy = 2; dy <= th + 1; dy++){ const t = (th + 1 - dy) / (th - 1), r = dy === th + 1 ? 0 : Math.round(t * 2.6) + (dy % 2 ? 0 : 1) - (dy > th - 2 ? 1 : 0);
+        for(let dx = -r; dx <= r; dx++) for(let dz = -r; dz <= r; dz++){ if(Math.abs(dx) + Math.abs(dz) > r + 1 || (!dx && !dz && dy <= th)) continue; put(x + dx, h + dy, z + dz, 24, true); } }
+      put(x, h + th + 2, z, 24, true); };
+    const DENS = [.012, .045, .02, .02];
+    for(let n = 0, tot = NX * NZ; n < tot; n++){
+      const x = 3 + Math.floor(trng() * (NX - 6)), z = 3 + Math.floor(trng() * (NZ - 6)), i = at(x, z), h = heights[i], bm = biome[i], tp = blocks[idx(x, h, z)];
+      if(occ[i] || h <= SEA + 1 || Math.hypot(x - cx, z - cz) < 18 || trng() > DENS[bm] * 3) continue;
+      if(blocks[idx(x, h + 1, z)] !== AIR) continue;
+      let near = false; for(let dz = -2; dz <= 2 && !near; dz++) for(let dx = -2; dx <= 2; dx++) if(blocks[idx(clamp(x + dx, 0, NX - 1), h + 1, clamp(z + dz, 0, NZ - 1))] === 5){ near = true; break; }
+      if(near) continue;
+      if(bm === BIOME_DESERT && tp === 4){ const ch = 2 + Math.floor(trng() * 3); for(let y = 1; y <= ch; y++) blocks[idx(x, h + y, z)] = 23; }
+      else if(tp === 22 && h < SEA + 16) spruce(x, h, z);
+      else if(tp === 1) { if(bm === BIOME_TUNDRA) spruce(x, h, z); else oak(x, h, z, trng() < (bm === BIOME_FOREST ? .12 : .05)); }
+    }
+    /* עשב ופרחים, ושדות פרחים בכתמים */
     for(let z = 1; z < NZ - 1; z++) for(let x = 1; x < NX - 1; x++){
-      const h = heights[z * NX + x]; if(blocks[idx(x, h, z)] !== 1 || blocks[idx(x, h + 1, z)] !== AIR) continue;
-      const q = pr(); if(q < .10) blocks[idx(x, h + 1, z)] = 30; else if(q < .125) blocks[idx(x, h + 1, z)] = 31 + Math.floor(pr() * 3); else if(q < .131) blocks[idx(x, h + 1, z)] = 34;
+      const i = at(x, z), h = heights[i]; if(blocks[idx(x, h, z)] !== 1 || blocks[idx(x, h + 1, z)] !== AIR || occ[i]) continue;
+      const patch = nF(x / 5 + 7, z / 5 + 3) > .66, q = pr(), bm = biome[i];
+      if(patch && q < .5) blocks[idx(x, h + 1, z)] = 31 + Math.floor(pr() * 3);
+      else if(q < (bm === BIOME_FOREST ? .12 : .09)) blocks[idx(x, h + 1, z)] = 30;
+      else if(q < .105) blocks[idx(x, h + 1, z)] = 31 + Math.floor(pr() * 3);
+      else if(bm === BIOME_FOREST && q < .115) blocks[idx(x, h + 1, z)] = 34;
     }
     S0.spawn = {x: cx + .5, y: heights[Math.floor(cz) * NX + Math.floor(cx)] + 1.01, z: cz + .5};
+    S0.villages = villages;
     edits.forEach((id, i) => { blocks[i] = id; });
     computeLight();
+  }
+  /* כפר: מישור, מרכז (מזרקה או באר), בניינים בטבעת עם הדלת למרכז, שבילים ועמודי תאורה */
+  function buildVillage(v, vi, heights, occ, at, rnd){
+    const R = 18, base = v.base, desert = v.biome === BIOME_DESERT, topId = desert ? 4 : 1, subId = desert ? 4 : 2;
+    for(let dz = -R; dz <= R; dz++) for(let dx = -R; dx <= R; dx++){
+      const x = v.x + dx, z = v.z + dz, r = Math.hypot(dx, dz); if(r > R || x < 1 || z < 1 || x >= NX - 1 || z >= NZ - 1) continue;
+      const k = r < R - 5 ? 1 : (R - r) / 5, h0 = heights[at(x, z)], h = Math.round(h0 + (base - h0) * k);
+      for(let y = 0; y < NY; y++) blocks[idx(x, y, z)] = y > h ? AIR : (y === h ? topId : (y >= h - 3 ? subId : 3));
+      heights[at(x, z)] = h; occ[at(x, z)] = 1;
+    }
+    const setTop = (x, z, id) => { if(x < 1 || z < 1 || x >= NX - 1 || z >= NZ - 1) return; const h = heights[at(x, z)]; blocks[idx(x, h, z)] = id; };
+    const stamp = (id, px, pz, k) => {
+      const t = TPL[id]; if(!t) return; const Rr = rotated(t, k), ax = px - Math.floor(Rr.w / 2), az = pz - Math.floor(Rr.d / 2);
+      for(const a of Rr.v){ if(!a[3]) continue; const x = ax + a[0], y = base + a[1], z = az + a[2]; if(x < 1 || z < 1 || x >= NX - 1 || z >= NZ - 1 || y < 1 || y >= NY - 1) continue; blocks[idx(x, y, z)] = a[3]; }
+    };
+    const doorRot = (dx, dz) => { const l = Math.hypot(dx, dz) || 1, ux = -dx / l, uz = -dz / l, dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]]; let best = 0, bd = -9; dirs.forEach((d, k) => { const s = d[0] * ux + d[1] * uz; if(s > bd){ bd = s; best = k; } }); return best; };
+    const kinds = ['house', 'cottage', 'farmhouse', 'barn', 'cottage', 'market', 'windmill', 'house'], n = 6 + (vi % 2), a0 = rnd() * 6.28;
+    /* שבילים: טבעת וחישורים, לפני הבניינים (הבניינים יכסו אותם) */
+    for(let a = 0; a < 6.283; a += .04) setTop(Math.round(v.x + Math.cos(a) * 8), Math.round(v.z + Math.sin(a) * 8), 25);
+    const spots = [];
+    for(let i = 0; i < n; i++){
+      const a = a0 + i / n * 6.283 + (rnd() - .5) * .25, rr = 12.5 + (rnd() - .5) * 2, px = Math.round(v.x + Math.cos(a) * rr), pz = Math.round(v.z + Math.sin(a) * rr);
+      spots.push([px, pz, kinds[(i + vi * 2) % kinds.length]]);
+      for(let t = 3; t < rr; t += .5) setTop(Math.round(v.x + Math.cos(a) * t), Math.round(v.z + Math.sin(a) * t), 25);
+    }
+    stamp(vi % 2 ? 'well' : 'fountain', v.x, v.z, 0);
+    spots.forEach(([px, pz, kind]) => stamp(kind, px, pz, doorRot(px - v.x, pz - v.z)));
+    for(let i = 0; i < 4; i++){ const a = a0 + .5 + i * 1.5708; stamp('lamppost', Math.round(v.x + Math.cos(a) * 9.5), Math.round(v.z + Math.sin(a) * 9.5), 0); }
   }
 
   /* ---------- תאורה: אור שמיים לפי גובה העמודה, ואור ממנורות ---------- */
@@ -245,7 +327,7 @@ H.vox = (function(){
         let vis;
         if(isW) vis = nid === AIR || PLANT(nid);
         else if(id === 9) vis = nid === AIR || nid === WATER || PLANT(nid);
-        else if(id === 6) vis = TRANSPARENT(nid) && nid !== 6;
+        else if(id === 6 || id === 24) vis = TRANSPARENT(nid) && nid !== id;
         else vis = TRANSPARENT(nid);
         if(!vis) continue;
         const ti = a === 1 ? (s > 0 ? ft[0] : ft[2]) : ft[1];
@@ -495,7 +577,7 @@ H.vox = (function(){
     const p = S.p; let placed = 0; grp = []; pendingMesh = [];
     R.v.forEach(a => {
       const x = ax + a[0], y = ay + a[1], z = az + a[2]; if(x < 1 || z < 1 || x >= NX - 1 || z >= NZ - 1 || y < 1 || y >= NY - 1) return;
-      const cur = blocks[idx(x, y, z)]; if(cur !== AIR && cur !== WATER && cur !== 6 && !PLANT(cur)) return;               /* לא דורסים קרקע */
+      const cur = blocks[idx(x, y, z)]; if(cur !== AIR && cur !== WATER && cur !== 6 && cur !== 24 && !PLANT(cur)) return;               /* לא דורסים קרקע */
       if(a[3] === 0) return;
       if(p.x + HW > x && p.x - HW < x + 1 && p.z + HW > z && p.z - HW < z + 1 && p.y + PH > y && p.y < y + 1) return;
       if(setBlock(x, y, z, a[3])) placed++;
@@ -866,6 +948,7 @@ H.vox = (function(){
     const ql = gl.getAttribLocation(progS, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(ql); gl.vertexAttribPointer(ql, 2, gl.FLOAT, false, 0, 0);
     const p = S.p, bob = S.p.ground && (Math.abs(stick.x) + Math.abs(stick.y) > .1 || keys.w || keys.s || keys.a || keys.d) ? Math.abs(Math.sin(p.walk)) * .12 : 0;
     sprite(avatarTex(), p.x, p.y + 1.0 + bob, p.z, 2.0, 2.0);
+    S.clouds.forEach(c => sprite(emojiTex('☁️'), c.x, c.y, c.z, c.s, c.s * .62));
     { const tt = performance.now() / 1000; S.stones.forEach(st => { if(st.done) return; const by = st.y + 1.3 + Math.sin(tt * 2 + st.x) * .15;
       sprite(emojiTex('📚'), st.x, by, st.z, 1.5, 1.5); sprite(emojiTex('✨'), st.x + Math.sin(tt * 3) * .5, by + .5 + Math.sin(tt * 2.2) * .2, st.z, .6, .6); }); }
     S.mobs.forEach(m => { if(m.heart > 0) sprite(emojiTex('❤️'), m.x, m.y + H.MOBS[m.kind].h + .4 + (1.6 - m.heart) * .6, m.z, .7, .7); });
@@ -886,7 +969,7 @@ H.vox = (function(){
     if(mode === 'free' && !S.quiz && !H.limTick('b', dt)){ running = false; H.limBlock('b'); return; }
     S.acc = (S.acc || 0) + dt; S.nf = (S.nf || 0) + 1;
     if(S.nf >= 60){ const a = S.acc / S.nf; if(a > .042 && (S.qual || 1) > .7) S.qual = (S.qual || 1) - .1; S.acc = 0; S.nf = 0; }
-    S.tod = (S.tod + dt / 600) % 1; if(S.mobs) updateMobs(dt);
+    S.tod = (S.tod + dt / 600) % 1; S.clouds.forEach(c => { c.x += c.v * dt; if(c.x > NX * 1.3) c.x -= NX * 1.6; }); if(S.mobs) updateMobs(dt);
     try{ physics(dt); checkStones(); draw(); if(dirtyT && performance.now() - dirtyT > 2500){ dirtyT = 0; save(); } }catch(e){ console.warn(e); running = false; return; }
     requestAnimationFrame(frame);
   }
@@ -946,6 +1029,7 @@ H.vox = (function(){
     if(S.p.y < 1) S.p.y = 20;
     for(let k = 0; k < 40 && collides(S.p.x, S.p.y, S.p.z); k++) S.p.y += 1;      /* אם נולדנו בתוך בלוק, עולים החוצה */
     cam.dist = cv.clientWidth / Math.max(1, cv.clientHeight) < .75 ? 9 : 7.5;
+    { const cr = rngOf(8080); S.clouds = []; for(let i = 0; i < 16; i++) S.clouds.push({x: cr() * NX * 1.6 - NX * .3, z: cr() * NZ * 1.6 - NZ * .3, y: NY + 6 + cr() * 14, s: 16 + cr() * 18, v: .6 + cr() * .9}); }
     S.mobs = spawnMobs(); S.stones = mode === 'free' ? spawnStones() : [];
     renderBar(); renderTop(); H.$('vxpal').style.display = 'none';
     if(!running){ running = true; last = performance.now(); requestAnimationFrame(frame); }
@@ -955,7 +1039,7 @@ H.vox = (function(){
     supported: () => initGL(), open, hunt, flush, state: () => S, cam: () => cam, mode: () => mode,
     reset(){ edits = new Map(); undo = []; generate(); remeshAll(); S.p.x = S0.spawn.x; S.p.y = S0.spawn.y; S.p.z = S0.spawn.z; S.p.vy = 0; save(); renderTop(); },
     diag: () => ({vmode: mode, edit: editMode, edits: edits.size, tod: S ? +S.tod.toFixed(2) : 0, mobs: S ? S.mobs.length : 0, vqual: S ? +(S.qual || 1).toFixed(2) : 0}),
-    mobs: () => S && S.mobs, setBlock: (x, y, z, id) => setBlock(x, y, z, id), get, edits: () => edits, check: checkWord, end(){ flush(); running = false; document.body.classList.remove('inworld'); }
+    mobs: () => S && S.mobs, villages: () => S0.villages || [], setBlock: (x, y, z, id) => setBlock(x, y, z, id), get, edits: () => edits, check: checkWord, end(){ flush(); running = false; document.body.classList.remove('inworld'); }
   };
 })();
 
