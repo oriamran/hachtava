@@ -655,6 +655,7 @@ H.world = (function(){
     if(!running) return;
     if(H.screen !== 'world'){ running = false; return; }
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
+    if(mode === 'explore' && !H.limTick('i', dt)){ running = false; H.limBlock('i'); return; }
     /* מכשיר איטי: מורידים רזולוציה כדי לשמור על זרימה */
     frame.acc = (frame.acc || 0) + dt; frame.n = (frame.n || 0) + 1;
     if(frame.n >= 60){ const avg = frame.acc / frame.n; if(avg > .042 && qual > .7) qual -= .1; else if(avg < .019 && qual < 1) qual = Math.min(1, qual + .1); frame.acc = 0; frame.n = 0; }
@@ -754,6 +755,7 @@ H.world = (function(){
 /* ---------- כניסות ---------- */
 H.openWorld = function(){
   H.run = {origin: 'home', game: null, word: null, right: 0, wrong: 0, total: 0, queue: []};
+  if(H.limGate('i')) return;
   H.show('world');
   if(!H.world.open('explore', true)){ H.toast('הדפדפן הזה לא תומך בתלת־ממד'); H.home(); }
 };

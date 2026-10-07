@@ -27,6 +27,7 @@ H.startChallenge = function(){
 H.finishChallenge = function(){
   const r = H.run, stars = H.stars(), perfect = r.wrong === 0;
   H.state.daily.chal = H.today();
+  H.limEarn(300);
   H.save();
   H.finish({
     emoji: perfect ? '🏆' : '🎯',

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Fzc5cxRrfky7Do3794/YQiojL4Fw7zY3tYzx88b+1Jw=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-WEr9mf9neuv7LDwKkWUC7NuXYA941/gVQCCNPjg8IvU=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2epGuoessZgivvMGwszlEeJJhj2AA45PYnqWwuHaNg4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-6KM4tsZ/B3MYkwMNnPDBzIpqM2MCG3hfjjXYaw2R+Es=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -828,6 +828,24 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
 .vxq-opt.wrongpick{background:#ffd3de;color:#8c1236}
 .vxq-fb{min-height:20px;font-weight:700}
 
+/* ---------- זמן מסך וקוד הורים ---------- */
+.limchip{position:fixed;top:calc(env(safe-area-inset-top,0px) + 66px);right:12px;z-index:65;background:rgba(255,255,255,.9);border-radius:999px;padding:5px 12px;font-weight:800;font-size:14px;box-shadow:var(--drop);pointer-events:none}
+.limchip.low{background:#ffd3de;color:#8c1236}
+.limover,.pinov{position:fixed;inset:0;z-index:90;background:rgba(30,24,60,.7);display:flex;align-items:center;justify-content:center;padding:16px}
+.lim-card,.pin-card{background:#fff;border-radius:26px;padding:20px;width:min(380px,100%);text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;box-shadow:var(--drop)}
+.lim-e{font-size:64px}
+.lim-card h2{margin:0}
+.lim-card p{margin:0;color:var(--ink2);line-height:1.5}
+.lim-btns{display:flex;flex-direction:column;gap:8px;width:100%}
+.pin-dots{display:flex;gap:12px;direction:ltr}
+.pin-dots i{width:18px;height:18px;border-radius:50%;border:3px solid var(--ink2);display:block}
+.pin-dots i.on{background:var(--ink2)}
+.pin-msg{margin:0;min-height:20px;font-size:14px;color:var(--ink2)}
+.pin-msg.bad{color:#c0194a;font-weight:700}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:10px;direction:ltr}
+.pin-pad button{height:60px;font-size:26px;font-weight:800;border-radius:16px;background:#f1edff;color:var(--ink);padding:0;min-height:0}
+.timebox select{margin-top:4px}
+
 </style>
 </head>
 <body>
@@ -1240,6 +1258,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
   <section class="screen" id="s-settings">
     <h2>מסך הורים ⚙️</h2>
     <div class="row"><button class="mini" data-go="report">📊 דוח התקדמות</button></div>
+    <div id="timebox" class="timebox"></div>
     <label class="lbl">חבילות מילים</label>
     <div id="packlist" class="packlist"></div>
     <label class="lbl">שם הילד<input id="nameIn" placeholder="לא חובה"></label>
@@ -1343,7 +1362,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 18:10 8e05884';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 18:17 f287177';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -1442,6 +1461,7 @@ H.blank = () => ({
   daily: {last: '', streak: 0},
   plan: {d: '', n: 0, intro: '', pre: {}},   /* התרגול של היום */
   world: {d: '', gems: 0, chest: false},     /* האי: אבני חן ותיבה ליום */
+  lim: {i: 0, b: 0, bank: 0, d: '', ui: 0, ub: 0, earn: 0, set: false, pin: ''},   /* זמן מסך, בנק זמן וקוד הורים (גיבוב) */
   build: {e: '', hot: []},                   /* עולם הבנייה: שינויים שנשמרו (בסיס64) ושורת הבלוקים */
   wins: 0
 });
@@ -1724,6 +1744,9 @@ H.cleanState = function(raw){
   keys(pl.pre, 20).forEach(k => { if(pl.pre[k] === true) s.plan.pre[H.cleanText(k, 40)] = true; });
   const wd = isO(raw.world) ? raw.world : {};
   s.world = {d: T(wd.d, 12), gems: num(wd.gems, 0, 50), chest: wd.chest === true};
+  const lm = isO(raw.lim) ? raw.lim : {}, ni = (v, hi) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(0, Math.round(v))) : 0;
+  s.lim = {i: ni(lm.i, 240), b: ni(lm.b, 240), bank: ni(lm.bank, 86400), d: T(lm.d, 10), ui: ni(lm.ui, 86400), ub: ni(lm.ub, 86400), earn: ni(lm.earn, 86400), set: lm.set === true,
+           pin: (typeof lm.pin === 'string' && /^[0-9a-f]{64}$/.test(lm.pin)) ? lm.pin : ''};
   const bd = isO(raw.build) ? raw.build : {};
   s.build = {e: (typeof bd.e === 'string' && /^[A-Za-z0-9+\/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : '', hot: Array.isArray(bd.hot) ? bd.hot.filter(n => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [], l: (typeof bd.l === 'string' ? bd.l.replace(/[^\u05d0-\u05ea]/g, '') : '').slice(0, 30)};
   s.stars = {};
@@ -1970,12 +1993,14 @@ H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','a
 /* חזרה לאי אחרי משחק שנפתח משער */
 H.returnToWorld = function(){
   speechSynthesis.cancel();
+  if(H.limGate('i')) return;
   H.show('world');
   if(!H.world.open('explore', true)){ H.home(); }
 };
 /* חזרה לעולם הבנייה אחרי משחק שנפתח משם */
 H.returnToVoxel = function(){
   speechSynthesis.cancel();
+  if(H.limGate('b')) return;
   H.show('voxel');
   if(!H.vox.open('free')){ H.home(); }
 };
@@ -2177,6 +2202,7 @@ H.right = function(xp){
   if(r.pretest) H.setStage(r.word, 2);        /* בוחן פתיחה: מילה שהוכרה מדלגת, בלי לספור כרצף */
   else H.hit(r.word, r.game && r.game.id);
   H.sfx.good();
+  H.limEarn(30);
   if(xp) { H.state.xp += 0; }
 };
 H.wrong = function(){
@@ -2197,6 +2223,8 @@ H.endRound = function(){
   /* משחק שדילג על כל המילים (למשל "האות הקשה" ברשימה בלי אותיות כאלה) לא נותן כוכבים */
   if(r.right + r.wrong === 0){ H.toast('לא היה מה לתרגל כאן עם המילים האלה'); return H.home(); }
   const stars = H.stars();
+  if(stars === 3 && !(r.game && r.game.letters)) H.limEarn(120);
+  if(r.earn) H.toast('⏱️ הרווחת ' + H.limMin(r.earn) + ' זמן משחק', 'good');
   H.logEnd(r.right, r.wrong, r.game && r.game.id);
   if(r.plan) return H.planRoundDone();
   if(r.challenge) return H.finishChallenge();
@@ -2306,6 +2334,7 @@ H.startChallenge = function(){
 H.finishChallenge = function(){
   const r = H.run, stars = H.stars(), perfect = r.wrong === 0;
   H.state.daily.chal = H.today();
+  H.limEarn(300);
   H.save();
   H.finish({
     emoji: perfect ? '🏆' : '🎯',
@@ -3792,6 +3821,7 @@ H.openSettings = function(){
   H.renderOcr();
   H.renderQuota();
   H.renderAccount();
+  H.renderTimeBox();
   H.show('settings');
 };
 /* המילים שבתיבה, נקיות ובלי מספור */
@@ -6337,6 +6367,7 @@ H.world = (function(){
     if(!running) return;
     if(H.screen !== 'world'){ running = false; return; }
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
+    if(mode === 'explore' && !H.limTick('i', dt)){ running = false; H.limBlock('i'); return; }
     /* מכשיר איטי: מורידים רזולוציה כדי לשמור על זרימה */
     frame.acc = (frame.acc || 0) + dt; frame.n = (frame.n || 0) + 1;
     if(frame.n >= 60){ const avg = frame.acc / frame.n; if(avg > .042 && qual > .7) qual -= .1; else if(avg < .019 && qual < 1) qual = Math.min(1, qual + .1); frame.acc = 0; frame.n = 0; }
@@ -6436,6 +6467,7 @@ H.world = (function(){
 /* ---------- כניסות ---------- */
 H.openWorld = function(){
   H.run = {origin: 'home', game: null, word: null, right: 0, wrong: 0, total: 0, queue: []};
+  if(H.limGate('i')) return;
   H.show('world');
   if(!H.world.open('explore', true)){ H.toast('הדפדפן הזה לא תומך בתלת־ממד'); H.home(); }
 };
@@ -7199,7 +7231,7 @@ H.vox = (function(){
   function closeQuiz(ok, st){
     clearTimeout(S.quizT); H.$('vxquiz').style.display = 'none'; S.quiz = null; S.quizCool = performance.now() + 2500;
     if(ok === true){
-      st.done = true; H.state.coins += 3; H.save(); H.paint();
+      st.done = true; H.state.coins += 3; H.limEarn(30); H.save(); H.paint();
       if(S.stones.every(s => s.done)){
         const lock = H.lockedLetters(), pick = lock[Math.floor(Math.random() * lock.length)];
         H.state.coins += 20; if(pick) H.learnLetter(pick); H.save(); H.paint();
@@ -7349,6 +7381,7 @@ H.vox = (function(){
     if(!running) return;
     if(H.screen !== 'voxel'){ running = false; return; }
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
+    if(mode === 'free' && !S.quiz && !H.limTick('b', dt)){ running = false; H.limBlock('b'); return; }
     S.acc = (S.acc || 0) + dt; S.nf = (S.nf || 0) + 1;
     if(S.nf >= 60){ const a = S.acc / S.nf; if(a > .042 && (S.qual || 1) > .7) S.qual = (S.qual || 1) - .1; S.acc = 0; S.nf = 0; }
     S.tod = (S.tod + dt / 600) % 1; if(S.mobs) updateMobs(dt);
@@ -7426,6 +7459,7 @@ H.vox = (function(){
 
 H.openVoxel = function(){
   H.run = {origin: 'home', game: null, word: null, right: 0, wrong: 0, total: 0, queue: []};
+  if(H.limGate('b')) return;
   H.show('voxel');
   if(!H.vox.open('free')){ H.toast('הדפדפן הזה לא תומך בתלת־ממד'); H.home(); }
 };
@@ -7680,7 +7714,7 @@ H.game({
   done(){
     const r = H.run, ch = r.letter, ok = r.okA && r.okB;
     if(ok){
-      r.right++;
+      r.right++; H.limEarn(30);
       if(!H.letterOpenAny(ch)){ H.learnLetter(ch); r.opened.push(ch); H.confetti && H.confetti(30); }
       H.sfx.great && H.sfx.great();
     } else r.wrong++;
@@ -7688,6 +7722,187 @@ H.game({
   },
   stop(){}
 });
+
+/* ===== 99e-limits.js ===== */
+/* ==========================================================
+   זמן מסך: מגבלה יומית ל"האי שלי" ולעולם הבנייה, בנק זמן משותף
+   שהילד מרוויח מלמידה, וקוד הורים של 4 ספרות שנועל את מסך ההורים.
+
+   - ההורה קובע כמה דקות ביום בכל עולם (0 = בלי הגבלה).
+   - משחקי הלמידה בתוך העולמות (ציד אותיות, בונים מילה) לא נספרים.
+   - תשובה נכונה = חצי דקה בבנק, סיבוב מושלם +2 דקות, אתגר היום +5 דקות.
+     תקרה של 30 דקות ביום. הבנק מתאפס בכל יום.
+   - את הזמן הבסיסי אפשר לשנות רק אחרי שהושלם אתגר היום (הגדרה ראשונה חופשית).
+     הוספת זמן חד־פעמית (10/15/30 דקות) תמיד אפשרית אחרי הקוד.
+   ========================================================== */
+H.LIM_CAP = 1800;                 /* תקרת זמן שמרוויחים ביום, בשניות */
+H.LIM_CHOICES = [0, 10, 15, 20, 30, 45, 60];
+H.LIM_ADD = [10, 15, 30];
+
+H.lim = function(){
+  const s = H.state, L = s.lim || (s.lim = {i: 0, b: 0, bank: 0, d: '', ui: 0, ub: 0, earn: 0, set: false, pin: ''});
+  if(L.d !== H.today()){ L.d = H.today(); L.ui = 0; L.ub = 0; L.bank = 0; L.earn = 0; }
+  return L;
+};
+const base = (L, w) => (w === 'i' ? L.i : L.b) * 60;
+const used = (L, w) => w === 'i' ? L.ui : L.ub;
+/* כמה שניות נשארו בעולם הזה היום. Infinity = בלי הגבלה */
+H.limLeft = function(w){
+  const L = H.lim(), b = base(L, w);
+  if(!b) return Infinity;
+  return Math.max(0, b - used(L, w)) + Math.max(0, L.bank);
+};
+H.limFmt = function(sec){
+  sec = Math.max(0, Math.round(sec));
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m + ':' + (s < 10 ? '0' : '') + s;
+};
+H.limMin = sec => { const m = Math.round(sec / 60); return m === 1 ? 'דקה' : m + ' דקות'; };
+
+/* נקרא מכל פריים בעולם: מוסיף זמן שימוש. מחזיר false כשהזמן נגמר. */
+let tickAcc = 0, warned = {};
+H.limTick = function(w, dt){
+  const L = H.lim(), b = base(L, w);
+  if(!b) return true;
+  if(used(L, w) < b){ if(w === 'i') L.ui += dt; else L.ub += dt; }
+  else L.bank = Math.max(0, L.bank - dt);
+  tickAcc += dt; if(tickAcc > 15){ tickAcc = 0; H.save(); }
+  const left = H.limLeft(w);
+  [120, 60].forEach(t => { const k = w + t; if(left <= t && !warned[k]){ warned[k] = 1; H.toast('⏱️ נשארו ' + (t === 120 ? 'שתי דקות' : 'דקה'), 'no'); } });
+  if(left > 130) warned = {};
+  return left > 0;
+};
+/* הרווחת זמן מלמידה. מחזיר כמה שניות נוספו. */
+H.limEarn = function(sec){
+  const L = H.lim();
+  if(!(L.i || L.b)) return 0;
+  const g = Math.min(sec, Math.max(0, H.LIM_CAP - L.earn));
+  if(g <= 0) return 0;
+  L.earn += g; L.bank += g;
+  if(H.run) H.run.earn = (H.run.earn || 0) + g;
+  return g;
+};
+H.limAdd = function(min){
+  const L = H.lim(); L.bank += min * 60; H.save();
+  H.toast('➕ נוספו ' + min + ' דקות', 'good');
+};
+
+/* ---------- מסך "נגמר הזמן" ---------- */
+H.limBlock = function(w){
+  speechSynthesis.cancel();
+  let ov = H.$('limover');
+  if(!ov){ ov = H.el('div', 'limover'); ov.id = 'limover'; document.body.appendChild(ov); }
+  const name = w === 'i' ? 'האי שלי' : 'עולם הבנייה';
+  ov.style.display = '';
+  ov.innerHTML = '<div class="lim-card"><div class="lim-e">🌙</div><h2>נגמר הזמן ב' + H.esc(name) + ' להיום</h2>' +
+    '<p>רוצים עוד? בכל תשובה נכונה במשחקי הלמידה מרוויחים זמן: ' +
+    'תשובה נכונה = חצי דקה, סיבוב מושלם = 2 דקות, אתגר היום = 5 דקות.</p>' +
+    '<div class="lim-btns"><button class="go" id="limplay">🎮 משחקי למידה</button>' +
+    '<button class="mini" id="limhome">🏠 הביתה</button><button class="mini" id="limparent">👨‍👩‍👧 הורה: הוסף זמן</button></div></div>';
+  H.$('limplay').onclick = () => { ov.style.display = 'none'; H.sfx.tap(); H.renderPlay(); H.show('play'); };
+  H.$('limhome').onclick = () => { ov.style.display = 'none'; H.home(); };
+  H.$('limparent').onclick = () => H.askPin(() => {
+    ov.querySelector('.lim-btns').innerHTML = H.LIM_ADD.map(m => '<button class="go" data-m="' + m + '">➕ ' + m + ' דקות</button>').join('');
+    ov.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { H.limAdd(Number(b.dataset.m)); ov.style.display = 'none'; (w === 'i' ? H.returnToWorld : H.returnToVoxel)(); });
+  });
+};
+/* בדיקה לפני כניסה לעולם. true = חסום (והמסך "נגמר הזמן" מוצג) */
+H.limGate = function(w){
+  if(H.limLeft(w) > 0) return false;
+  H.show(w === 'i' ? 'world' : 'voxel');
+  H.limBlock(w);
+  return true;
+};
+
+/* שבב זמן שנשאר, בפינה, בזמן שמשחקים בעולם */
+setInterval(() => {
+  let chip = H.$('limchip');
+  const w = H.screen === 'world' && H.world && H.world.mode() === 'explore' ? 'i' : (H.screen === 'voxel' && H.vox && H.vox.mode() === 'free' ? 'b' : '');
+  const left = w ? H.limLeft(w) : Infinity, ov = H.$('limover');
+  if(!w || left === Infinity || (ov && ov.style.display !== 'none')){ if(chip) chip.style.display = 'none'; return; }
+  if(!chip){ chip = H.el('div', 'limchip'); chip.id = 'limchip'; document.body.appendChild(chip); }
+  chip.style.display = ''; chip.classList.toggle('low', left < 120);
+  chip.textContent = '⏱️ ' + H.limFmt(left);
+}, 1000);
+window.addEventListener('pagehide', () => { try{ H.save(); }catch(e){} });
+
+/* ---------- קוד הורים ---------- */
+H.pinHash = async function(code){
+  const t = 'hachtava-parent:' + code;
+  try{
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }catch(e){ let h = 5381; for(let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0; return ('0000000000000000000000000000000000000000000000000000000000000000' + h.toString(16)).slice(-64); }
+};
+H.parentUntil = 0;
+H.parentOpen = () => Date.now() < H.parentUntil;
+/* חלון קוד: onOk נקרא רק אחרי קוד נכון (או אחרי בחירת קוד חדש). */
+H.askPin = function(onOk, opts){
+  opts = opts || {};
+  const L = H.lim();
+  if(!opts.force && H.parentOpen()){ onOk(); return; }
+  const setup = opts.change || !L.pin;
+  let ov = H.$('pinov'); if(ov) ov.remove();
+  ov = H.el('div', 'pinov'); ov.id = 'pinov'; document.body.appendChild(ov);
+  let code = '', first = '', step = setup ? 'new' : 'ask';
+  const titles = {new: 'בחר קוד הורים של 4 ספרות', again: 'הקלד שוב את הקוד', ask: 'קוד הורים'};
+  const close = () => { ov.remove(); window.removeEventListener('keydown', onKey, true); };
+  const paint = (msg, bad) => {
+    ov.innerHTML = '<div class="pin-card"><h3>' + H.esc(titles[step]) + '</h3><div class="pin-dots">' +
+      [0, 1, 2, 3].map(i => '<i class="' + (i < code.length ? 'on' : '') + '"></i>').join('') + '</div>' +
+      '<p class="pin-msg' + (bad ? ' bad' : '') + '">' + H.esc(msg || (step === 'new' ? 'הקוד נועל את מסך ההורים והגדרות הזמן' : '')) + '</p>' +
+      '<div class="pin-pad">' + [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map(k => k === '' ? '<span></span>' : '<button data-k="' + k + '">' + k + '</button>').join('') + '</div>' +
+      '<div class="row">' + (step === 'ask' && H.signedIn && H.signedIn() ? '<button class="mini" id="pinforgot">שכחתי קוד</button>' : '') + '<button class="mini" id="pincancel">ביטול</button></div></div>';
+    ov.querySelectorAll('[data-k]').forEach(b => b.onclick = () => key(b.dataset.k));
+    H.$('pincancel').onclick = close;
+    const f = H.$('pinforgot');
+    if(f) f.onclick = () => { if(confirm('לאפס את קוד ההורים? תבחר קוד חדש. (אפשר רק כשמחוברים עם גוגל)')){ L.pin = ''; H.save(); close(); H.askPin(onOk, opts); } };
+  };
+  const done = async () => {
+    if(step === 'new'){ first = code; code = ''; step = 'again'; return paint(); }
+    if(step === 'again'){
+      if(code !== first){ code = ''; first = ''; step = 'new'; return paint('הקודים לא זהים. נסה שוב', true); }
+      L.pin = await H.pinHash(code); H.save(); H.parentUntil = Date.now() + 10 * 60000; close(); H.toast('🔒 קוד ההורים נקבע', 'good'); return onOk();
+    }
+    if(await H.pinHash(code) === L.pin){ H.parentUntil = Date.now() + 10 * 60000; close(); return onOk(); }
+    code = ''; H.sfx.bad(); paint('קוד שגוי', true);
+  };
+  const key = k => {
+    if(k === '⌫') code = code.slice(0, -1);
+    else if(code.length < 4) code += k;
+    paint(); if(code.length === 4) setTimeout(done, 120);
+  };
+  const onKey = e => { if(/^[0-9]$/.test(e.key)) key(e.key); else if(e.key === 'Backspace') key('⌫'); else if(e.key === 'Escape') close(); else return; e.preventDefault(); e.stopPropagation(); };
+  window.addEventListener('keydown', onKey, true);
+  paint();
+};
+/* מסך ההורים והדוח נפתחים רק אחרי קוד */
+{
+  const rawShow = H.show;
+  H.show = function(id){
+    if((id === 'settings' || id === 'report') && !H.parentOpen()){ H.askPin(() => rawShow.call(H, id)); return; }
+    if(id === 'settings' || id === 'report') H.parentUntil = Date.now() + 10 * 60000;
+    return rawShow.call(H, id);
+  };
+}
+
+/* ---------- אזור זמן מסך במסך ההורים ---------- */
+H.renderTimeBox = function(){
+  const box = H.$('timebox'); if(!box) return;
+  const L = H.lim(), canBase = !L.set || H.challengeDone();
+  const sel = (id, v) => '<select id="' + id + '"' + (canBase ? '' : ' disabled') + '>' + H.LIM_CHOICES.map(m => '<option value="' + m + '"' + (m === v ? ' selected' : '') + '>' + (m ? m + ' דקות ביום' : 'בלי הגבלה') + '</option>').join('') + '</select>';
+  const u = (w) => { const b = base(L, w); return b ? ' · היום ' + Math.round(used(L, w) / 60) + ' מתוך ' + (b / 60) + ' דק׳' : ''; };
+  box.innerHTML = '<label class="lbl">⏱️ זמן מסך</label>' +
+    '<label class="lbl">🏝️ האי שלי' + H.esc(u('i')) + sel('limI', L.i) + '</label>' +
+    '<label class="lbl">🧱 עולם הבנייה' + H.esc(u('b')) + sel('limB', L.b) + '</label>' +
+    (canBase ? '' : '<p class="note">את הזמן הבסיסי אפשר לשנות רק אחרי שהילד משלים את אתגר היום.</p>') +
+    '<p class="note">בנק זמן להיום: ' + H.esc(H.limMin(L.bank)) + ' (הילד מרוויח מלמידה, עד חצי שעה ביום)</p>' +
+    '<div class="row">' + H.LIM_ADD.map(m => '<button class="mini" data-add="' + m + '">➕ ' + m + ' דקות</button>').join('') + '<button class="mini" id="pinchange">🔑 שנה קוד</button></div>';
+  const apply = () => { L.i = Number(H.$('limI').value); L.b = Number(H.$('limB').value); L.set = true; H.save(); H.renderTimeBox(); H.toast('נשמר', 'good'); };
+  if(canBase){ H.$('limI').onchange = apply; H.$('limB').onchange = apply; }
+  box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { H.limAdd(Number(b.dataset.add)); H.renderTimeBox(); });
+  H.$('pinchange').onclick = () => H.askPin(() => H.renderTimeBox(), {change: true, force: true});
+};
 
 </script>
 </body>

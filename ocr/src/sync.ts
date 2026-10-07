@@ -81,6 +81,9 @@ export function sanitizeState(raw: unknown): Obj | null {
   s.daily = { last: str(d.last, 40), streak: num(d.streak, 0, 100000), chal: str(d.chal, 12) };
 
   /* עולם הבנייה: שינויים בבסיס64 (מוגבל בגודל) ושורת בלוקים קצרה */
+  const lm = isObj(raw.lim) ? raw.lim : {}, ni = (v: unknown, hi: number) => Math.round(num(v, 0, hi, 0));
+  s.lim = { i: ni(lm.i, 240), b: ni(lm.b, 240), bank: ni(lm.bank, 86400), d: str(lm.d, 10), ui: ni(lm.ui, 86400), ub: ni(lm.ub, 86400), earn: ni(lm.earn, 86400), set: lm.set === true,
+            pin: (typeof lm.pin === "string" && /^[0-9a-f]{64}$/.test(lm.pin)) ? lm.pin : "" };
   const bd = isObj(raw.build) ? raw.build : {};
   s.build = { e: (typeof bd.e === "string" && /^[A-Za-z0-9+/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : "",
               hot: Array.isArray(bd.hot) ? bd.hot.filter((n): n is number => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [],

@@ -51,6 +51,7 @@ H.right = function(xp){
   if(r.pretest) H.setStage(r.word, 2);        /* בוחן פתיחה: מילה שהוכרה מדלגת, בלי לספור כרצף */
   else H.hit(r.word, r.game && r.game.id);
   H.sfx.good();
+  H.limEarn(30);
   if(xp) { H.state.xp += 0; }
 };
 H.wrong = function(){
@@ -71,6 +72,8 @@ H.endRound = function(){
   /* משחק שדילג על כל המילים (למשל "האות הקשה" ברשימה בלי אותיות כאלה) לא נותן כוכבים */
   if(r.right + r.wrong === 0){ H.toast('לא היה מה לתרגל כאן עם המילים האלה'); return H.home(); }
   const stars = H.stars();
+  if(stars === 3 && !(r.game && r.game.letters)) H.limEarn(120);
+  if(r.earn) H.toast('⏱️ הרווחת ' + H.limMin(r.earn) + ' זמן משחק', 'good');
   H.logEnd(r.right, r.wrong, r.game && r.game.id);
   if(r.plan) return H.planRoundDone();
   if(r.challenge) return H.finishChallenge();

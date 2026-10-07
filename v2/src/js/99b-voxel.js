@@ -733,7 +733,7 @@ H.vox = (function(){
   function closeQuiz(ok, st){
     clearTimeout(S.quizT); H.$('vxquiz').style.display = 'none'; S.quiz = null; S.quizCool = performance.now() + 2500;
     if(ok === true){
-      st.done = true; H.state.coins += 3; H.save(); H.paint();
+      st.done = true; H.state.coins += 3; H.limEarn(30); H.save(); H.paint();
       if(S.stones.every(s => s.done)){
         const lock = H.lockedLetters(), pick = lock[Math.floor(Math.random() * lock.length)];
         H.state.coins += 20; if(pick) H.learnLetter(pick); H.save(); H.paint();
@@ -883,6 +883,7 @@ H.vox = (function(){
     if(!running) return;
     if(H.screen !== 'voxel'){ running = false; return; }
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
+    if(mode === 'free' && !S.quiz && !H.limTick('b', dt)){ running = false; H.limBlock('b'); return; }
     S.acc = (S.acc || 0) + dt; S.nf = (S.nf || 0) + 1;
     if(S.nf >= 60){ const a = S.acc / S.nf; if(a > .042 && (S.qual || 1) > .7) S.qual = (S.qual || 1) - .1; S.acc = 0; S.nf = 0; }
     S.tod = (S.tod + dt / 600) % 1; if(S.mobs) updateMobs(dt);
@@ -960,6 +961,7 @@ H.vox = (function(){
 
 H.openVoxel = function(){
   H.run = {origin: 'home', game: null, word: null, right: 0, wrong: 0, total: 0, queue: []};
+  if(H.limGate('b')) return;
   H.show('voxel');
   if(!H.vox.open('free')){ H.toast('הדפדפן הזה לא תומך בתלת־ממד'); H.home(); }
 };

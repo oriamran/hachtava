@@ -51,6 +51,7 @@ H.openSettings = function(){
   H.renderOcr();
   H.renderQuota();
   H.renderAccount();
+  H.renderTimeBox();
   H.show('settings');
 };
 /* המילים שבתיבה, נקיות ובלי מספור */

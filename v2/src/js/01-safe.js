@@ -63,6 +63,9 @@ H.cleanState = function(raw){
   keys(pl.pre, 20).forEach(k => { if(pl.pre[k] === true) s.plan.pre[H.cleanText(k, 40)] = true; });
   const wd = isO(raw.world) ? raw.world : {};
   s.world = {d: T(wd.d, 12), gems: num(wd.gems, 0, 50), chest: wd.chest === true};
+  const lm = isO(raw.lim) ? raw.lim : {}, ni = (v, hi) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(0, Math.round(v))) : 0;
+  s.lim = {i: ni(lm.i, 240), b: ni(lm.b, 240), bank: ni(lm.bank, 86400), d: T(lm.d, 10), ui: ni(lm.ui, 86400), ub: ni(lm.ub, 86400), earn: ni(lm.earn, 86400), set: lm.set === true,
+           pin: (typeof lm.pin === 'string' && /^[0-9a-f]{64}$/.test(lm.pin)) ? lm.pin : ''};
   const bd = isO(raw.build) ? raw.build : {};
   s.build = {e: (typeof bd.e === 'string' && /^[A-Za-z0-9+\/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : '', hot: Array.isArray(bd.hot) ? bd.hot.filter(n => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [], l: (typeof bd.l === 'string' ? bd.l.replace(/[^\u05d0-\u05ea]/g, '') : '').slice(0, 30)};
   s.stars = {};

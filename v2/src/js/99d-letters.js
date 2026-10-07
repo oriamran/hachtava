@@ -115,7 +115,7 @@ H.game({
   done(){
     const r = H.run, ch = r.letter, ok = r.okA && r.okB;
     if(ok){
-      r.right++;
+      r.right++; H.limEarn(30);
       if(!H.letterOpenAny(ch)){ H.learnLetter(ch); r.opened.push(ch); H.confetti && H.confetti(30); }
       H.sfx.great && H.sfx.great();
     } else r.wrong++;

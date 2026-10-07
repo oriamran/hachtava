@@ -100,6 +100,8 @@ ok("edits string and hot bar kept, bad ids dropped", vb.build.e === "AAECAw==" &
 ok("non-base64 edits dropped", sanitizeState({ build: { e: "<script>" } }).build.e === "");
 ok("oversized edits are truncated", sanitizeState({ build: { e: "A".repeat(150000) } }).build.e.length === 100000);
 ok("learned letters kept, junk dropped", sanitizeState({ build: { l: "אב<x>ת1" } }).build.l === "אבת");
+ok("time limits clamped, bad pin dropped", (() => { const l = sanitizeState({ lim: { i: 9999, b: -5, bank: 1e12, pin: "xyz", set: true } }).lim; return l.i === 240 && l.b === 0 && l.bank === 86400 && l.pin === "" && l.set === true; })());
+ok("valid pin hash kept", sanitizeState({ lim: { pin: "a".repeat(64) } }).lim.pin === "a".repeat(64));
 ok("hideWord flag is boolean only", sanitizeState({ hideWord: true }).hideWord === true && sanitizeState({ hideWord: "yes" }).hideWord === false);
 
 console.log("problem reports");

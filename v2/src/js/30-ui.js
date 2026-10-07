@@ -29,12 +29,14 @@ H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','a
 /* חזרה לאי אחרי משחק שנפתח משער */
 H.returnToWorld = function(){
   speechSynthesis.cancel();
+  if(H.limGate('i')) return;
   H.show('world');
   if(!H.world.open('explore', true)){ H.home(); }
 };
 /* חזרה לעולם הבנייה אחרי משחק שנפתח משם */
 H.returnToVoxel = function(){
   speechSynthesis.cancel();
+  if(H.limGate('b')) return;
   H.show('voxel');
   if(!H.vox.open('free')){ H.home(); }
 };
