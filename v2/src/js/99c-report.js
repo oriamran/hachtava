@@ -95,3 +95,15 @@ H.markReport = async function(id, action){
   try{ await fetch(H.apiUrl() + '/admin/reports', {method: 'POST', headers: Object.assign({'Content-Type': 'application/json'}, H.authHeader()), body: JSON.stringify({id, action})}); }catch(e){}
   H.openReports();
 };
+
+/* כפתור דיווחים בראש לוח הניהול, עם מספר הפתוחים */
+H.admReportsBtn = async function(){
+  const body = H.$('admbody'); if(!body) return;
+  const b = H.el('button', 'go', '🐞 דיווחים על בעיות'); b.style.margin = '0 0 12px'; b.onclick = () => H.openReports();
+  body.insertBefore(b, body.firstChild);
+  try{
+    const r = await fetch(H.apiUrl() + '/admin/reports', {headers: H.authHeader()});
+    if(!r.ok) return; const d = await r.json(), open = (d.reports || []).filter(x => x.status !== 'done').length;
+    b.textContent = '🐞 דיווחים על בעיות · ' + (open ? open + ' חדשים' : 'אין חדשים');
+  }catch(e){}
+};

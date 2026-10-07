@@ -18,6 +18,7 @@ H.openAdmin = async function(){
     if(r.status === 401){ H.acc.exp = 0; H.renderAccount(); return msg('ההתחברות פגה. התחבר מחדש.', true); }
     if(!r.ok) return msg('שגיאה ' + r.status, true);
     H.renderAdmin(await r.json());
+    if(H.admReportsBtn) H.admReportsBtn();
   }catch(e){ msg('אין חיבור לשרת', true); }
 };
 

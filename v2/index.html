@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VnVYeExKqi6K7BYSNtVNCqVwhwBJROd0OSsykal4e1w=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-WEr9mf9neuv7LDwKkWUC7NuXYA941/gVQCCNPjg8IvU=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Fzc5cxRrfky7Do3794/YQiojL4Fw7zY3tYzx88b+1Jw=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-WEr9mf9neuv7LDwKkWUC7NuXYA941/gVQCCNPjg8IvU=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1343,7 +1343,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 18:04 92ccf2e';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 18:10 8e05884';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -4670,6 +4670,7 @@ H.openAdmin = async function(){
     if(r.status === 401){ H.acc.exp = 0; H.renderAccount(); return msg('ההתחברות פגה. התחבר מחדש.', true); }
     if(!r.ok) return msg('שגיאה ' + r.status, true);
     H.renderAdmin(await r.json());
+    if(H.admReportsBtn) H.admReportsBtn();
   }catch(e){ msg('אין חיבור לשרת', true); }
 };
 
@@ -7547,6 +7548,18 @@ H.renderReports = function(d){
 H.markReport = async function(id, action){
   try{ await fetch(H.apiUrl() + '/admin/reports', {method: 'POST', headers: Object.assign({'Content-Type': 'application/json'}, H.authHeader()), body: JSON.stringify({id, action})}); }catch(e){}
   H.openReports();
+};
+
+/* כפתור דיווחים בראש לוח הניהול, עם מספר הפתוחים */
+H.admReportsBtn = async function(){
+  const body = H.$('admbody'); if(!body) return;
+  const b = H.el('button', 'go', '🐞 דיווחים על בעיות'); b.style.margin = '0 0 12px'; b.onclick = () => H.openReports();
+  body.insertBefore(b, body.firstChild);
+  try{
+    const r = await fetch(H.apiUrl() + '/admin/reports', {headers: H.authHeader()});
+    if(!r.ok) return; const d = await r.json(), open = (d.reports || []).filter(x => x.status !== 'done').length;
+    b.textContent = '🐞 דיווחים על בעיות · ' + (open ? open + ' חדשים' : 'אין חדשים');
+  }catch(e){}
 };
 
 /* ===== 99d-letters.js ===== */
