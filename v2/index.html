@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2epGuoessZgivvMGwszlEeJJhj2AA45PYnqWwuHaNg4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-6KM4tsZ/B3MYkwMNnPDBzIpqM2MCG3hfjjXYaw2R+Es=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8qzmf7U/AcRy0quiYWvZB46wKCKv0VhhOaojN/bNV0w=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-6txbhHas65vqp98DEsjw7r9kpfwaxkUtoZIPsjg7TeE=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -846,6 +846,12 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
 .pin-pad button{height:60px;font-size:26px;font-weight:800;border-radius:16px;background:#f1edff;color:var(--ink);padding:0;min-height:0}
 .timebox select{margin-top:4px}
 
+/* ---------- מדריך להורים ---------- */
+.pg details{background:#fff;border-radius:16px;padding:10px 14px;margin:8px 0;box-shadow:0 3px 0 var(--cardEdge)}
+.pg summary{font-weight:800;font-size:16px;cursor:pointer}
+.pg ol,.pg ul{margin:8px 0 2px;padding-inline-start:20px;line-height:1.6;font-size:14px}
+.pg p{line-height:1.6;font-size:14px}
+
 </style>
 </head>
 <body>
@@ -898,6 +904,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
       <button class="mini tb" onclick="H.openLibrary()">📚 מאגר מילים</button>
       <button class="mini tb" onclick="H.openSettings()">⚙️ הורים</button>
       <button class="mini tb" onclick="H.startTour()">❓ מדריך</button>
+      <button class="mini tb" onclick="H.show('pguide')">👨‍👩‍👧 מדריך להורים</button>
       <button class="mini tb" onclick="H.show('tips')">💡 טיפים</button>
       <button class="mini tb" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
       <button class="mini tb" onclick="H.openReport()">🐞 דווח</button>
@@ -1198,6 +1205,52 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <div class="row"><button class="go" id="intro-next" onclick="H.introNext()">הבא ➜</button></div>
   </section>
 
+  <!-- ============ מדריך להורים ============ -->
+  <section class="screen" id="s-pguide">
+    <h2>👨‍👩‍👧 מדריך להורים</h2>
+    <p class="note">לחצו על נושא כדי לפתוח אותו.</p>
+    <div class="pg">
+      <details open><summary>➕ איך מוסיפים מילים</summary>
+        <ol>
+          <li>במסך הראשי לוחצים על <b>⚙️ הורים</b>. בפעם הראשונה בוחרים קוד של 4 ספרות. בכניסות הבאות מקלידים אותו.</li>
+          <li>ב"חבילות מילים" לוחצים <b>➕</b> לחבילה חדשה (למשל "הכתבה של יום שלישי"), או בוחרים חבילה קיימת.</li>
+          <li>בתיבת המילים כותבים <b>מילה בכל שורה</b>. אפשר להדביק רשימה מוכנה. לניקוד לוחצים על כפתורי הניקוד שמתחת לתיבה.</li>
+          <li>אין לכם רשימה? לוחצים <b>📚 מאגר מילים</b> במסך הראשי ובוחרים נושא מוכן לפי כיתה. הנושא נוסף כחבילה.</li>
+          <li>ממלאים נושא ופרס (לא חובה) ולוחצים על שמירה. החבילה שנבחרה היא זו שהילד מתרגל.</li>
+        </ol>
+      </details>
+      <details><summary>🎮 איך משתמשים במשחק</summary>
+        <ol>
+          <li>בוחרים כיתה ב"מי משחק?". היא קובעת ניקוד, אורך סבב וקושי.</li>
+          <li><b>📅 התרגול של היום</b> בונה לילד תוכנית קצרה לפי המילים שלו. זו נקודת ההתחלה הכי קלה.</li>
+          <li><b>🗺️ המסע</b> פותח תחנות בזו אחר זו, ו<b>משחקים</b> נותן בחירה חופשית. בכל סבב מרוויחים עד 3 כוכבים.</li>
+          <li><b>🎯 אתגר היום</b> הוא משחק קצר אחד ביום. כל מילה שנלמדת הופכת למדבקה באלבום, ובסוף מחכה הפרס שבחרתם.</li>
+          <li><b>🏝️ האי שלי</b> ו<b>🧱 עולם הבנייה</b> הם עולמות לטיול ובנייה. בתוכם יש משחקי למידה: ציד אותיות, בונים מילה, אבני למידה ומשחק אותיות.</li>
+          <li>כתב או דפוס: כפתורי "✏️ כתב" ו"🔤 דפוס" במסך הראשי.</li>
+        </ol>
+      </details>
+      <details><summary>🧠 התאמה לילדים גדולים</summary>
+        <p>במסך ההורים אפשר לסמן <b>"הסתר את המילה"</b>. אז הילד רק שומע, והאותיות מתגלות כשהוא מוצא אותן. כדאי גם לבחור כיתה גבוהה יותר, או לעבור לנושא בלי ניקוד.</p>
+      </details>
+      <details><summary>⏱️ זמן מסך ובנק זמן</summary>
+        <ul>
+          <li>במסך ההורים, תחת <b>זמן מסך</b>, קובעים כמה דקות ביום לכל עולם (או בלי הגבלה).</li>
+          <li>הילד מרוויח זמן מלמידה: תשובה נכונה = חצי דקה, סיבוב מושלם = 2 דקות, אתגר היום = 5 דקות. עד חצי שעה ביום. הבנק משותף לשני העולמות ומתאפס כל יום.</li>
+          <li>משחקי הלמידה בתוך העולמות לא נספרים בזמן המסך.</li>
+          <li>את הזמן הבסיסי אפשר לשנות רק אחרי שהילד השלים את אתגר היום (ההגדרה הראשונה חופשית).</li>
+          <li>צריך עוד דקות עכשיו? ב<b>➕ 10/15/30 דקות</b> אפשר להוסיף בכל עת, אחרי הקוד.</li>
+        </ul>
+      </details>
+      <details><summary>📊 התקדמות ושמירה</summary>
+        <ul>
+          <li><b>📊 דוח התקדמות</b> במסך ההורים מראה אילו מילים נתקעות ואילו שלטו.</li>
+          <li>כניסה עם גוגל שומרת את ההתקדמות בשרת ומאפשרת להמשיך ממכשיר אחר. בלי כניסה ההתקדמות נשמרת רק במכשיר הזה.</li>
+          <li>משהו לא עובד או לא ברור? בכל מסך יש <b>🐞 דווח</b>. הדיווח מגיע למפתח עם פרטי המסך.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
   <!-- ============ מדריך ============ -->
   <section class="screen" id="s-tour">
     <div class="tour-card">
@@ -1257,6 +1310,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
   <!-- ============ הורים ============ -->
   <section class="screen" id="s-settings">
     <h2>מסך הורים ⚙️</h2>
+    <div class="row"><button class="mini" onclick="H.show('pguide')">📘 איך מוסיפים מילים ואיך משתמשים</button></div>
     <div class="row"><button class="mini" data-go="report">📊 דוח התקדמות</button></div>
     <div id="timebox" class="timebox"></div>
     <label class="lbl">חבילות מילים</label>
@@ -1362,7 +1416,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 18:17 f287177';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 18:23 413ef3e';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -5083,7 +5137,7 @@ H.TOUR = [
   {e:'🎯', t:'אתגר יומי, אלבום ופרס',
    p:'כל יום יש אתגר של שלוש מילים. כל מילה שנלמדת הופכת למדבקה באלבום, וכשהאלבום מלא מחכה פרס שההורה בחר.'},
   {e:'👨‍👩‍👧', t:'להורים',
-   p:'במסך ⚙️ הורים מוסיפים את מילות ההכתבה: מקלידים, מנקדים בלחיצות, או בוחרים מהספרייה. מתחברים עם גוגל כדי לשמור את ההתקדמות ולראות דוח. סריקת דף מצולם תגיע בקרוב.'}
+   p:'במסך ⚙️ הורים (נעול בקוד) מוסיפים את מילות ההכתבה: מקלידים, מנקדים בלחיצות, או בוחרים מהספרייה. מתחברים עם גוגל כדי לשמור את ההתקדמות ולראות דוח. סריקת דף מצולם תגיע בקרוב.'}
 ];
 H.tour = {i: 0};
 

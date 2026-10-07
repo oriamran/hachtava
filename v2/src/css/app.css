@@ -801,3 +801,9 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
 .pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:10px;direction:ltr}
 .pin-pad button{height:60px;font-size:26px;font-weight:800;border-radius:16px;background:#f1edff;color:var(--ink);padding:0;min-height:0}
 .timebox select{margin-top:4px}
+
+/* ---------- מדריך להורים ---------- */
+.pg details{background:#fff;border-radius:16px;padding:10px 14px;margin:8px 0;box-shadow:0 3px 0 var(--cardEdge)}
+.pg summary{font-weight:800;font-size:16px;cursor:pointer}
+.pg ol,.pg ul{margin:8px 0 2px;padding-inline-start:20px;line-height:1.6;font-size:14px}
+.pg p{line-height:1.6;font-size:14px}
