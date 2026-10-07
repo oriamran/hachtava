@@ -234,7 +234,7 @@ H.world = (function(){
   function texOf(key, w, h, draw){
     if(texCache[key]) return texCache[key];
     const c = document.createElement('canvas'); c.width = w; c.height = h;
-    const x = c.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; draw(x, w, h);
+    const x = c.getContext('2d'); x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; draw(x, w, h);
     const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
     gl.generateMipmap(gl.TEXTURE_2D);
@@ -455,16 +455,18 @@ H.world = (function(){
   /* ---------- ציד אותיות ---------- */
   function hunt(word, onDone){
     const need = H.clusters(word).filter(c => c !== ' ');
-    const extra = []; let guard = 0;
-    while(extra.length < 3 && guard++ < 80){ const c = H.randTile(true); if(!need.includes(c) && !extra.includes(c)) extra.push(c); }
-    const all = need.concat(extra), spots = [];
+    /* רק האותיות של המילה, ועוד אות אחת לא קשורה (לא אות שכבר במילה, גם לא עם ניקוד אחר) */
+    const bases = need.map(c => H.strip(c)), extra = []; let guard = 0;
+    while(extra.length < 1 && guard++ < 80){ const c = H.randTile(true); if(!bases.includes(H.strip(c))) extra.push(c); }
+    const all = need.concat(extra);
     S.items = []; S.need = need; S.idx = 0; S.miss = 0; S.onDone = onDone; S.word = word;
-    all.forEach(ch => {
-      let x, z, tries = 0;
-      do{ const a = Math.random() * 6.2832, r = 5 + Math.random() * (R - 11); x = Math.cos(a) * r; z = Math.sin(a) * r; tries++; }
-      while(tries < 60 && (spots.some(s => Math.hypot(s[0] - x, s[1] - z) < 3.4) || Math.hypot(S.av.x - x, S.av.z - z) < 4));
-      spots.push([x, z]); S.items.push({type: 'letter', ch, x, z, ph: Math.random() * 6, shake: 0});
+    /* האותיות מפוזרות במעגל סביב מרכז האי, על הדשא הפתוח: בלי יער, בלי גבעות, ותמיד בטווח ראייה */
+    const ang0 = Math.random() * 6.2832, n = all.length, order = all.map((_, i) => i).sort(() => Math.random() - .5);
+    order.forEach((i, k) => {
+      const a = ang0 + k / n * 6.2832 + (Math.random() - .5) * .35, r = 5.2 + Math.random() * 3.6;
+      S.items.push({type: 'letter', ch: all[i], x: Math.cos(a) * r, z: Math.sin(a) * r, ph: Math.random() * 6, shake: 0});
     });
+    S.av.x = 0; S.av.z = 0; S.av.moving = false;
     renderHud();
   }
   function renderHud(){
@@ -639,7 +641,7 @@ H.world = (function(){
       push(d0, () => sprite(c, emojiTex(q.g.e), q.x, q.y + 3.4 + Math.sin(S.t * 2 + q.x) * .12, q.z, 1.5, 1.5));
       if(d0 < 46) labels.push({d: d0, f: () => { const k = clamp(d0 / 11, .8, 2.6), t = q === S.near ? 0 : 1; if(t) sprite(c, labelTex(q.g.name), q.x, q.y + 4.7 + k * .12, q.z, 2.6 * k, .65 * k); }}); });
     S.items.forEach(it => { const y = hgt(it.x, it.z) + 1.9 + Math.sin(S.t * 2 + it.ph) * .12;
-      if(it.type === 'letter') push(dist(it.x, y, it.z) - 1, () => sprite(c, letterTex(it.ch), it.x, y, it.z, 1.15, 1.15));
+      if(it.type === 'letter'){ const d1 = dist(it.x, y, it.z); labels.push({d: d1, f: () => { const k = clamp(d1 / 9, 1, 2.2); sprite(c, letterTex(it.ch), it.x, y, it.z, 1.25 * k, 1.25 * k); }}); }
       if(it.type === 'chest') push(dist(it.x, y, it.z), () => sprite(c, emojiTex('🎁'), it.x, hgt(it.x, it.z) + 1.9, it.z, 1, 1)); });
     const av = S.av, ay = hgt(av.x, av.z) + 1.05 + (av.moving ? Math.abs(Math.sin(av.ph)) * .25 : Math.sin(S.t * 2) * .03);
     push(dist(av.x, ay, av.z), () => sprite(c, avatarTex(), av.x, ay + .1, av.z, 2.1, 2.1));

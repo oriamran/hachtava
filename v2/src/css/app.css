@@ -712,8 +712,8 @@ body.inworld .hud,body.inworld #backbtn{display:none!important}
 .vxslot.lock img{opacity:.45}
 .vxslot i{position:absolute;right:1px;bottom:0;font-size:13px;font-style:normal}
 .vxslot.more{color:#fff;font-size:22px;line-height:1;background:rgba(255,255,255,.2)}
-.vxbtns{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 82px);display:flex;flex-direction:column;gap:12px;z-index:2}
-.vxbtn{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.88);font-size:28px;padding:0;box-shadow:var(--drop);min-height:0}
+.vxbtns{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 82px);display:flex;flex-direction:column;gap:8px;z-index:2}
+.vxbtn{width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.88);font-size:24px;padding:0;box-shadow:var(--drop);min-height:0}
 .vxbtn.brk{background:#ffd3de}
 #s-voxel .wstick{bottom:calc(env(safe-area-inset-bottom,0px) + 82px)}
 .vxpal{position:absolute;left:10px;right:10px;top:70px;bottom:80px;background:rgba(255,255,255,.97);border-radius:20px;padding:12px;overflow:auto;z-index:5;box-shadow:var(--drop)}
@@ -748,3 +748,6 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
 .rc-t{font-size:16px;line-height:1.5;margin:6px 0;white-space:pre-wrap}
 .rc-c{font-size:12px;color:var(--ink2);margin:3px 0;word-break:break-word}
 .rc-e{font-size:12px;color:var(--bad);margin:3px 0;direction:ltr;text-align:left}
+
+/* כיוון טקסט: סימני פיסוק וסוגריים בתוך עברית לא מתהפכים בתוך כפתורים, הודעות ותוויות */
+.toast,.wh-sub,.wg-t,.wg-d,.vxp-b small,.vxp-h,button{unicode-bidi:plaintext}

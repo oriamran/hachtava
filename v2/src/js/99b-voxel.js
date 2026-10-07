@@ -7,7 +7,7 @@
    אותיות נפתחים אחרי שלומדים מילה עם האות. המשחק "בונים מילה" מבקש
    להציב את אותיות המילה בשורה.
    ========================================================== */
-H.VOX = {NX: 80, NZ: 80, NY: 40, SEA: 9, CH: 16};
+H.VOX = {NX: 144, NZ: 144, NY: 40, SEA: 9, CH: 16, OLD: 80};
 H.VOX_BLOCKS = [
   /* id, מפתח, שם, מרקם(top/side/bottom), מחיר (0 = חינם) */
   {id: 1,  k: 'grass',  n: 'דשא',     t: ['grass_top', 'grass_side', 'dirt'], cost: 0},
@@ -135,7 +135,7 @@ H.vox = (function(){
     for(let z = 0; z < NZ; z++) for(let x = 0; x < NX; x++){
       const d = Math.hypot(x - cx, z - cz) / (NX * .5), f = n1(x / 16, z / 16) * .6 + n1(x / 8, z / 8) * .28 + n1(x / 4, z / 4) * .12;
       let h = Math.round(SEA - 5 + f * 15 - d * d * 11);
-      const dc = Math.hypot(x - cx, z - cz); if(dc < 7) h = Math.round(h + (SEA + 2 - h) * (1 - dc / 7) * 1.0);   /* מישור לבנייה במרכז */
+      const dc = Math.hypot(x - cx, z - cz); if(dc < 22) h = Math.round(h + (SEA + 2 - h) * (dc < 12 ? 1 : 1 - (dc - 12) / 10));   /* מישור גדול לבנייה במרכז */
       h = clamp(h, 2, NY - 8); heights[z * NX + x] = h;
       for(let y = 0; y <= h; y++){
         let id = 3;
@@ -145,9 +145,9 @@ H.vox = (function(){
       for(let y = h + 1; y <= SEA; y++) blocks[idx(x, y, z)] = WATER;
     }
     /* עצים */
-    for(let k = 0; k < 90; k++){
+    for(let k = 0, nt = Math.round(90 * NX * NZ / 6400); k < nt; k++){
       const x = 3 + Math.floor(rnd() * (NX - 6)), z = 3 + Math.floor(rnd() * (NZ - 6)), h = heights[z * NX + x];
-      if(h <= SEA + 1 || Math.hypot(x - cx, z - cz) < 9 || blocks[idx(x, h, z)] !== 1) continue;
+      if(h <= SEA + 1 || Math.hypot(x - cx, z - cz) < 16 || blocks[idx(x, h, z)] !== 1) continue;
       const th = 4 + Math.floor(rnd() * 2);
       for(let y = 1; y <= th; y++) blocks[idx(x, h + y, z)] = 5;
       for(let dy = th - 1; dy <= th + 2; dy++){ const r = dy >= th + 1 ? 1 : 2;
@@ -290,7 +290,7 @@ H.vox = (function(){
   function mul(a, b){ const o = new Float32Array(16); for(let i = 0; i < 4; i++) for(let j = 0; j < 4; j++){ let s = 0; for(let k = 0; k < 4; k++) s += a[k*4+j] * b[i*4+k]; o[i*4+j] = s; } return o; }
   function texOf(key, w, h, draw){
     if(texS[key]) return texS[key];
-    const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; draw(x, w, h);
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; draw(x, w, h);
     const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -308,12 +308,12 @@ H.vox = (function(){
     try{
       progM = compile('attribute vec3 p;attribute vec2 t;attribute float s;attribute float b;uniform mat4 vp;uniform vec3 cam;varying vec2 uv;varying float sh;varying float bl;varying float vd;' +
         'void main(){gl_Position=vp*vec4(p,1.);uv=t;sh=s;bl=b;vd=length(p-cam);}',
-        'precision mediump float;varying vec2 uv;varying float sh;varying float bl;varying float vd;uniform sampler2D tx;uniform vec3 fog;uniform float cut;uniform vec3 tint;uniform float amb;' +
+        'precision mediump float;varying vec2 uv;varying float sh;varying float bl;varying float vd;uniform sampler2D tx;uniform vec3 fog;uniform float cut;uniform vec3 tint;uniform float amb;uniform float fk;' +
         'void main(){vec4 c=texture2D(tx,uv);if(c.a<cut)discard;float sky=sh*amb;float l=max(sky,bl);float dk=clamp((amb-.15)/.85,0.,1.);vec3 mn=mix(vec3(1.),mix(vec3(.55,.68,1.25),vec3(1.),dk),clamp(1.-(bl-sky)*2.2,0.,1.));vec3 warm=mix(vec3(1.),vec3(1.2,.95,.7),clamp((bl-sky)*2.2,0.,1.));' +
-        'float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(c.rgb*l*tint*warm*mn,fog,f),c.a);}');
+        'float f=clamp((vd-45.*fk)/(80.*fk),0.,1.);gl_FragColor=vec4(mix(c.rgb*l*tint*warm*mn,fog,f),c.a);}');
       progE = compile('attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 vp;uniform mat4 m;uniform vec3 cam;varying vec3 vc;varying float vd;' +
         'void main(){vec4 w=m*vec4(p,1.);gl_Position=vp*w;vec3 nn=normalize((m*vec4(n,0.)).xyz);float l=max(dot(nn,normalize(vec3(.5,1.,.35))),0.);vc=c*(.55+.45*l);vd=length(w.xyz-cam);}',
-        'precision mediump float;varying vec3 vc;varying float vd;uniform vec3 fog;uniform float lum;uniform vec3 tint;void main(){float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(vc*lum*tint,fog,f),1.);}');
+        'precision mediump float;varying vec3 vc;varying float vd;uniform vec3 fog;uniform float lum;uniform vec3 tint;uniform float fk;void main(){float f=clamp((vd-45.*fk)/(80.*fk),0.,1.);gl_FragColor=vec4(mix(vc*lum*tint,fog,f),1.);}');
       progS = compile('attribute vec2 q;uniform mat4 vp;uniform vec3 ctr;uniform vec2 sz;uniform vec3 rt;uniform vec3 up;varying vec2 uv;' +
         'void main(){uv=vec2(q.x*.5+.5,.5-q.y*.5);vec3 w=ctr+rt*q.x*sz.x+up*q.y*sz.y;gl_Position=vp*vec4(w,1.);}',
         'precision mediump float;varying vec2 uv;uniform sampler2D tx;void main(){vec4 c=texture2D(tx,uv);if(c.a<.06)discard;gl_FragColor=c;}');
@@ -540,6 +540,7 @@ H.vox = (function(){
   }
   function spawnMobs(){
     const r = rngOf(777), kinds = ['pig','pig','pig','pig','pig','pig','sheep','sheep','sheep','sheep','sheep','sheep','cow','cow','cow','cow','cow','chicken','chicken','chicken','chicken','chicken','chicken'], out = [];
+    kinds.push(...kinds.slice(0, 17));
     for(const kind of kinds){
       for(let tries = 0; tries < 60; tries++){
         const x = 6 + r() * (NX - 12), z = 6 + r() * (NZ - 12), xi = Math.floor(x), zi = Math.floor(z), y = topY[zi * NX + xi] + 1;
@@ -573,7 +574,7 @@ H.vox = (function(){
     const B = mobBuffers(), th = theme();
     gl.useProgram(progE);
     gl.uniformMatrix4fv(gl.getUniformLocation(progE, 'vp'), false, c.vp); gl.uniform3fv(gl.getUniformLocation(progE, 'cam'), c.eye);
-    gl.uniform3fv(gl.getUniformLocation(progE, 'fog'), S.day.sky); gl.uniform3fv(gl.getUniformLocation(progE, 'tint'), new Float32Array(th.tint));
+    gl.uniform1f(gl.getUniformLocation(progE, 'fk'), fogK()); gl.uniform3fv(gl.getUniformLocation(progE, 'fog'), S.day.sky); gl.uniform3fv(gl.getUniformLocation(progE, 'tint'), new Float32Array(th.tint));
     const lp = gl.getAttribLocation(progE, 'p'), ln = gl.getAttribLocation(progE, 'n'), lc = gl.getAttribLocation(progE, 'c'), um = gl.getUniformLocation(progE, 'm'), ul = gl.getUniformLocation(progE, 'lum');
     S.mobs.forEach(m => {
       const parts = B[m.kind]; if(!parts) return;
@@ -611,16 +612,19 @@ H.vox = (function(){
   }
 
   /* ---------- שמירה ---------- */
+  /* גרסה חדשה של השמירה מסומנת בשינוי מיוחד באינדקס 0 (id 255). בלי הסימון זו שמירה מהעולם הקטן (80×80), והיא מוזזת למרכז העולם הגדול */
   function encodeEdits(){
-    const bytes = new Uint8Array(edits.size * 4); let o = 0;
+    const bytes = new Uint8Array((edits.size + 1) * 4); let o = 3; bytes[o++] = 255;
     edits.forEach((id, i) => { bytes[o++] = i & 255; bytes[o++] = (i >> 8) & 255; bytes[o++] = (i >> 16) & 255; bytes[o++] = id; });
     let s = ''; for(let i = 0; i < bytes.length; i += 8192) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
     return btoa(s);
   }
   function decodeEdits(str){
     edits = new Map(); if(!str) return;
-    try{ const bin = atob(str); for(let i = 0; i + 3 < bin.length; i += 4){ const ix = bin.charCodeAt(i) | (bin.charCodeAt(i+1) << 8) | (bin.charCodeAt(i+2) << 16), id = bin.charCodeAt(i+3);
-      if(ix < NX * NY * NZ) edits.set(ix, id); } }catch(e){ edits = new Map(); }
+    try{ const bin = atob(str), cur = bin.length >= 4 && bin.charCodeAt(3) === 255 && !(bin.charCodeAt(0) | bin.charCodeAt(1) | bin.charCodeAt(2)), O = H.VOX.OLD, off = (NX - O) >> 1;
+      for(let i = cur ? 4 : 0; i + 3 < bin.length; i += 4){ let ix = bin.charCodeAt(i) | (bin.charCodeAt(i+1) << 8) | (bin.charCodeAt(i+2) << 16); const id = bin.charCodeAt(i+3);
+        if(!cur){ const x = ix % O, z = Math.floor(ix / O) % O, y = Math.floor(ix / (O * O)); if(y >= NY) continue; ix = idx(x + off, y, z + off); }
+        if(ix < NX * NY * NZ) edits.set(ix, id); } }catch(e){ edits = new Map(); }
   }
   function save(){
     const b = H.state.build || (H.state.build = {e: '', hot: []});
@@ -656,7 +660,7 @@ H.vox = (function(){
   function renderTop(){
     const box = H.$('vxhud'); if(!box) return;
     let mid = '';
-    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + H.esc(c) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה: האותיות לפי הסדר (אפשר גם מלמעלה למטה)</div>';
+    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + H.esc(c) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה של אותיות לפי הסדר, מימין לשמאל או מלמעלה למטה</div>';
     else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + '</div>';
     box.innerHTML = '<div class="wh-top"><button class="wh-exit" id="vxexit">✕ יציאה</button><span class="wh-coins">🪙 ' + H.state.coins + '</span><button class="wh-bug" id="vxbug" aria-label="דווח על בעיה">🐞</button>' +
       '<button class="wh-topic" id="vxundo">↶ בטל</button></div>' + mid;
@@ -706,16 +710,19 @@ H.vox = (function(){
     let dist = cam.dist; const h = ray(head, dir, dist + .4); if(h) dist = Math.max(1.2, Math.min(dist, h.t - .3));
     const eye = [head[0] + dir[0] * dist, head[1] + dir[1] * dist, head[2] + dir[2] * dist];
     const asp = cv.width / cv.height, look_ = look(eye, head);
-    return {eye, vp: mul(persp(1.0, asp, .1, 300), look_.m), right: look_.right, up: look_.up, fwd: look_.fwd, asp};
+    return {eye, vp: mul(persp(1.0, asp, .2, 520), look_.m), right: look_.right, up: look_.up, fwd: look_.fwd, asp};
   }
+  const fogK = () => clamp(cam.dist / 12, 1, 3);
   function drawChunks(c, pass, cut){
     const th = theme(); gl.useProgram(progM);
     gl.uniformMatrix4fv(gl.getUniformLocation(progM, 'vp'), false, c.vp); gl.uniform3fv(gl.getUniformLocation(progM, 'cam'), c.eye);
-    gl.uniform3fv(gl.getUniformLocation(progM, 'fog'), S.day.sky); gl.uniform1f(gl.getUniformLocation(progM, 'cut'), cut); gl.uniform1f(gl.getUniformLocation(progM, 'amb'), S.day.amb);
+    gl.uniform3fv(gl.getUniformLocation(progM, 'fog'), S.day.sky); gl.uniform1f(gl.getUniformLocation(progM, 'cut'), cut); gl.uniform1f(gl.getUniformLocation(progM, 'amb'), S.day.amb); gl.uniform1f(gl.getUniformLocation(progM, 'fk'), fogK());
     gl.uniform3fv(gl.getUniformLocation(progM, 'tint'), new Float32Array(th.tint));
     gl.bindTexture(gl.TEXTURE_2D, atlasTex);
     const lp = gl.getAttribLocation(progM, 'p'), lt = gl.getAttribLocation(progM, 't'), ls = gl.getAttribLocation(progM, 's'), lb = gl.getAttribLocation(progM, 'b');
+    const rr = 125 * fogK() + 14, ex = c.eye[0], ez = c.eye[2];
     for(const k in chunks){ const m = chunks[k][pass]; if(!m) continue;
+      const kk = k.split(','); if(Math.hypot(kk[0] * CH + CH / 2 - ex, kk[1] * CH + CH / 2 - ez) > rr + CH) continue;
       gl.bindBuffer(gl.ARRAY_BUFFER, m.b);
       gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 3, gl.FLOAT, false, 28, 0);
       gl.enableVertexAttribArray(lt); gl.vertexAttribPointer(lt, 2, gl.FLOAT, false, 28, 12);
@@ -782,14 +789,14 @@ H.vox = (function(){
       tap = ptr.size === 1 ? {x: e.clientX, y: e.clientY, t: performance.now(), moved: false} : null;
       if(ptr.size === 2){ const [a, b] = [...ptr.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); } });
     cv.addEventListener('pointermove', e => { const p = ptr.get(e.pointerId); if(!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-      if(ptr.size === 2){ const [a, b] = [...ptr.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if(pinch) cam.dist = clamp(cam.dist * pinch / d, 3, 16); pinch = d; return; }
+      if(ptr.size === 2){ const [a, b] = [...ptr.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if(pinch) cam.dist = clamp(cam.dist * pinch / d, 3, 70); pinch = d; return; }
       if(tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap.moved = true;
       if(tap && tap.moved){ cam.yaw -= dx * .008; cam.pitch = clamp(cam.pitch + dy * .005, -.2, 1.3); } });
     const up = e => { ptr.delete(e.pointerId); pinch = 0;
       if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY), hit = ray(r.o, r.d, 60, true), m = S.mobs && mobAtTap(r.o, r.d, hit ? hit.t : 60); if(m) tapMob(m); else act(hit); }
       tap = null; };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-    cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * .01, 3, 16); }, {passive: false});
+    cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * (cam.dist > 16 ? .06 : .01), 3, 70); }, {passive: false});
     window.addEventListener('keydown', e => { if(H.screen !== 'voxel') return; if(e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = true;
       if(k === ' ' || k.startsWith('Arrow')) e.preventDefault();
       if(k >= '1' && k <= '9'){ S.sel = Math.min(S.hot.length - 1, Number(k) - 1); editMode = 'build'; renderBar(); renderTop(); }
@@ -806,6 +813,9 @@ H.vox = (function(){
     H.$('vxjump').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); S.jump = true; });
     H.$('vxmode').addEventListener('click', () => { editMode = editMode === 'build' ? 'break' : 'build'; H.sfx.tap(); renderBar(); renderTop(); });
     H.$('vxtime').addEventListener('click', () => { const seq = [.5, .72, .0, .27], names = ['☀️ צהריים', '🌇 שקיעה', '🌙 לילה', '🌅 זריחה']; S.todI = ((S.todI === undefined ? -1 : S.todI) + 1) % 4; S.tod = seq[S.todI]; H.sfx.tap(); H.toast(names[S.todI]); });
+    H.$('vxzoom').addEventListener('click', () => { H.sfx.tap();
+      if(cam.dist > 20){ cam.dist = S.zoomBack || 8; cam.pitch = S.pitchBack || .45; H.toast('🔭 חזרה לדמות'); }
+      else { S.zoomBack = cam.dist; S.pitchBack = cam.pitch; cam.dist = 90; cam.pitch = 1.1; H.toast('🔭 רואים את כל העולם · לחץ שוב לחזור'); } });
     H.$('vxrot').addEventListener('click', () => { S.rot = ((S.rot || 0) + 1) % 4; H.sfx.tap(); H.toast('↻ סיבוב'); });
   }
 

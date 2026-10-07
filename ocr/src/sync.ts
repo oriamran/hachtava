@@ -81,7 +81,7 @@ export function sanitizeState(raw: unknown): Obj | null {
 
   /* עולם הבנייה: שינויים בבסיס64 (מוגבל בגודל) ושורת בלוקים קצרה */
   const bd = isObj(raw.build) ? raw.build : {};
-  s.build = { e: (typeof bd.e === "string" && /^[A-Za-z0-9+/=]*$/.test(bd.e)) ? bd.e.slice(0, 36000) : "",
+  s.build = { e: (typeof bd.e === "string" && /^[A-Za-z0-9+/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : "",
               hot: Array.isArray(bd.hot) ? bd.hot.filter((n): n is number => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [] };
   const u = isObj(raw.usage) ? raw.usage : {};
   const games: Obj = {};
