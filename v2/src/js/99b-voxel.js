@@ -42,7 +42,7 @@ H.VOX_FINAL = {'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ'};
 H.vox = (function(){
   const {NX, NZ, NY, SEA, CH} = H.VOX;
   const AIR = 0, WATER = 10, LET0 = 64, TS = 32, COLS = 16;
-  let gl = null, cv = null, progM = null, progS = null, progB = null, running = false, last = 0;
+  let gl = null, cv = null, progE = null, progM = null, progS = null, progB = null, running = false, last = 0;
   let blocks = null, S = null, mode = 'free', editMode = 'build', challenge = null, edits = new Map(), undo = [], dirtyT = 0, grp = null, pendingMesh = null;
   const cam = {yaw: .6, pitch: .5, dist: 8};
   const keys = {}, stick = {x: 0, y: 0, id: null}, ptr = new Map();
@@ -311,6 +311,9 @@ H.vox = (function(){
         'precision mediump float;varying vec2 uv;varying float sh;varying float bl;varying float vd;uniform sampler2D tx;uniform vec3 fog;uniform float cut;uniform vec3 tint;uniform float amb;' +
         'void main(){vec4 c=texture2D(tx,uv);if(c.a<cut)discard;float sky=sh*amb;float l=max(sky,bl);vec3 warm=mix(vec3(1.),vec3(1.2,.95,.7),clamp((bl-sky)*2.2,0.,1.));' +
         'float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(c.rgb*l*tint*warm,fog,f),c.a);}');
+      progE = compile('attribute vec3 p;attribute vec3 n;attribute vec3 c;uniform mat4 vp;uniform mat4 m;uniform vec3 cam;varying vec3 vc;varying float vd;' +
+        'void main(){vec4 w=m*vec4(p,1.);gl_Position=vp*w;vec3 nn=normalize((m*vec4(n,0.)).xyz);float l=max(dot(nn,normalize(vec3(.5,1.,.35))),0.);vc=c*(.55+.45*l);vd=length(w.xyz-cam);}',
+        'precision mediump float;varying vec3 vc;varying float vd;uniform vec3 fog;uniform float lum;uniform vec3 tint;void main(){float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(vc*lum*tint,fog,f),1.);}');
       progS = compile('attribute vec2 q;uniform mat4 vp;uniform vec3 ctr;uniform vec2 sz;uniform vec3 rt;uniform vec3 up;varying vec2 uv;' +
         'void main(){uv=vec2(q.x*.5+.5,.5-q.y*.5);vec3 w=ctr+rt*q.x*sz.x+up*q.y*sz.y;gl_Position=vp*vec4(w,1.);}',
         'precision mediump float;varying vec2 uv;uniform sampler2D tx;void main(){vec4 c=texture2D(tx,uv);if(c.a<.06)discard;gl_FragColor=c;}');
@@ -502,6 +505,111 @@ H.vox = (function(){
     H.toast('לחץ על הקרקע כדי להניח: ' + TPL[id].n);
   }
 
+  /* ---------- חיות (נבנו ב-Blender) ---------- */
+  const mT = (x, y, z) => new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]);
+  const mRY = a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]); };
+  const mRX = a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]); };
+  const mRZ = a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]); };
+  const MOBBUF = {};
+  function mobBuffers(){
+    if(MOBBUF.done) return MOBBUF; MOBBUF.done = true;
+    const b64 = t => { const bin = atob(t), a = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; };
+    Object.keys(H.MOBS || {}).forEach(k => {
+      MOBBUF[k] = {};
+      H.MOBS[k].parts.forEach(pt => {
+        const raw = b64(pt.v), i16 = new Int16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.length)), cols = b64(pt.c), n = pt.n;
+        const P = new Float32Array(n * 9), N = new Float32Array(n * 9), C = new Float32Array(n * 9);
+        for(let i = 0; i < n; i++){
+          for(let j = 0; j < 9; j++) P[i*9+j] = i16[i*9+j] / 256;
+          const ux = P[i*9+3]-P[i*9], uy = P[i*9+4]-P[i*9+1], uz = P[i*9+5]-P[i*9+2], vx = P[i*9+6]-P[i*9], vy = P[i*9+7]-P[i*9+1], vz = P[i*9+8]-P[i*9+2];
+          let nx = uy*vz-uz*vy, ny = uz*vx-ux*vz, nz = ux*vy-uy*vx; const l = Math.hypot(nx, ny, nz) || 1; nx/=l; ny/=l; nz/=l;
+          for(let v = 0; v < 3; v++){ N[i*9+v*3] = nx; N[i*9+v*3+1] = ny; N[i*9+v*3+2] = nz; C[i*9+v*3] = cols[i*3]/255; C[i*9+v*3+1] = cols[i*3+1]/255; C[i*9+v*3+2] = cols[i*3+2]/255; }
+        }
+        const mk = a => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, a, gl.STATIC_DRAW); return b; };
+        MOBBUF[k][pt.p] = {p: mk(P), n: mk(N), c: mk(C), count: n * 3, pivot: pt.pivot};
+      });
+    });
+    return MOBBUF;
+  }
+  function groundY(x, z, y){
+    const xi = Math.floor(x), zi = Math.floor(z); if(xi < 1 || zi < 1 || xi >= NX - 1 || zi >= NZ - 1) return null;
+    for(let yy = Math.floor(y) + 2; yy >= Math.floor(y) - 3; yy--){
+      if(SOLID(get(xi, yy, zi)) && !SOLID(get(xi, yy + 1, zi)) && !SOLID(get(xi, yy + 2, zi))) return get(xi, yy + 1, zi) === WATER ? null : yy + 1;
+    }
+    return null;
+  }
+  function spawnMobs(){
+    const r = rngOf(777), kinds = ['pig','pig','pig','pig','pig','pig','sheep','sheep','sheep','sheep','sheep','sheep','cow','cow','cow','cow','cow','chicken','chicken','chicken','chicken','chicken','chicken'], out = [];
+    for(const kind of kinds){
+      for(let tries = 0; tries < 60; tries++){
+        const x = 6 + r() * (NX - 12), z = 6 + r() * (NZ - 12), xi = Math.floor(x), zi = Math.floor(z), y = topY[zi * NX + xi] + 1;
+        if(get(xi, y - 1, zi) !== 1 || !(get(xi, y, zi) === AIR || PLANT(get(xi, y, zi)))) continue;      /* רק על דשא פנוי */
+        out.push({kind, x, y, z, h: r() * 6.28, wait: r() * 3, walk: false, ph: r() * 6, graze: 0, heart: 0});
+        break;
+      }
+    }
+    return out;
+  }
+  function updateMobs(dt){
+    S.mobs.forEach(m => {
+      const def = H.MOBS[m.kind]; if(!def) return;
+      if(m.heart > 0) m.heart -= dt;
+      m.wait -= dt;
+      if(m.wait <= 0){
+        if(m.walk){ m.walk = false; m.wait = 1.5 + Math.random() * 4; m.graze = Math.random() < .5 ? 1.4 : 0; }
+        else { m.walk = true; m.wait = 2 + Math.random() * 4; m.h += (Math.random() - .5) * 3.4; m.graze = 0; }
+      }
+      if(m.graze > 0) m.graze -= dt;
+      if(m.walk){
+        const sp = def.speed * dt, nx = m.x + Math.sin(m.h) * sp, nz = m.z + Math.cos(m.h) * sp, ny = groundY(nx, nz, m.y);
+        if(ny === null || Math.abs(ny - m.y) > 1.05){ m.h += 1.6 + Math.random() * 1.5; m.wait = Math.min(m.wait, .1 + Math.random() * .4); }
+        else { m.x = nx; m.z = nz; m.y += (ny - m.y) * Math.min(1, dt * 12); m.ph += dt * def.speed * 7.5; }
+      } else {
+        const ny = groundY(m.x, m.z, m.y + 1); if(ny !== null) m.y += (ny - m.y) * Math.min(1, dt * 12);
+      }
+    });
+  }
+  function drawMobs(c){
+    const B = mobBuffers(), th = theme();
+    gl.useProgram(progE);
+    gl.uniformMatrix4fv(gl.getUniformLocation(progE, 'vp'), false, c.vp); gl.uniform3fv(gl.getUniformLocation(progE, 'cam'), c.eye);
+    gl.uniform3fv(gl.getUniformLocation(progE, 'fog'), S.day.sky); gl.uniform3fv(gl.getUniformLocation(progE, 'tint'), new Float32Array(th.tint));
+    const lp = gl.getAttribLocation(progE, 'p'), ln = gl.getAttribLocation(progE, 'n'), lc = gl.getAttribLocation(progE, 'c'), um = gl.getUniformLocation(progE, 'm'), ul = gl.getUniformLocation(progE, 'lum');
+    S.mobs.forEach(m => {
+      const parts = B[m.kind]; if(!parts) return;
+      const xi = Math.floor(m.x), zi = Math.floor(m.z), lit = skyLit(xi, Math.floor(m.y) + 1, zi);
+      gl.uniform1f(ul, Math.max(lit * S.day.amb, lampAt(m.x, m.y + .6, m.z)) * 1.05);
+      const base = mul(mT(m.x, m.y, m.z), mRY(m.h)), bird = H.MOBS[m.kind].kind === 'bird', sw = m.walk ? Math.sin(m.ph) * .75 : 0;
+      for(const pn in parts){
+        const pt = parts[pn]; let M = base;
+        const a = pn === 'legFL' || pn === 'legBR' ? sw : (pn === 'legFR' || pn === 'legBL' ? -sw : 0);
+        if(pn.startsWith('leg') && a) M = mul(M, mul(mT(pt.pivot[0], pt.pivot[1], pt.pivot[2]), mul(mRX(a), mT(-pt.pivot[0], -pt.pivot[1], -pt.pivot[2]))));
+        else if(pn === 'wingL' || pn === 'wingR'){ const f = bird && m.walk ? Math.sin(m.ph * 2.2) * .7 : 0, an = pn === 'wingL' ? f : -f;
+          if(f) M = mul(M, mul(mT(pt.pivot[0], pt.pivot[1], pt.pivot[2]), mul(mRZ(an), mT(-pt.pivot[0], -pt.pivot[1], -pt.pivot[2])))); }
+        else if(pn === 'head' && (m.graze > 0 || m.walk)){ const an = m.graze > 0 ? .55 : Math.sin(m.ph * .5) * .06;
+          M = mul(M, mul(mT(pt.pivot[0], pt.pivot[1], pt.pivot[2]), mul(mRX(an), mT(-pt.pivot[0], -pt.pivot[1], -pt.pivot[2])))); }
+        gl.uniformMatrix4fv(um, false, M);
+        [[lp, pt.p], [ln, pt.n], [lc, pt.c]].forEach(([l, b]) => { gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 3, gl.FLOAT, false, 0, 0); });
+        gl.drawArrays(gl.TRIANGLES, 0, pt.count);
+      }
+    });
+  }
+  const labelTex = t => texOf('lb' + H.scriptNow() + t, 512, 128, (x, w, h) => {
+    x.fillStyle = 'rgba(255,255,255,.95)'; x.beginPath(); if(x.roundRect) x.roundRect(8, 12, w - 16, h - 24, 44); else x.rect(8, 12, w - 16, h - 24);
+    x.fill(); x.fillStyle = '#2b2250'; x.font = (H.scriptNow() === 'ktav' ? '' : 'bold ') + '72px ' + (H.scriptNow() === 'ktav' ? '"KtavYad","Arial Hebrew"' : '"Arial Hebrew"') + ',Arial,sans-serif'; x.fillText(t, w / 2, h / 2 + 4); });
+  /* לחיצה על חיה: אומרים את שמה בעברית ומציגים אותו */
+  function mobAtTap(o, d, maxT){
+    let best = null, bt = maxT;
+    S.mobs.forEach(m => { const h = H.MOBS[m.kind].h, cx = m.x, cy = m.y + h / 2, cz = m.z, rad = .55 + h * .25;
+      const ox = o[0] - cx, oy = o[1] - cy, oz = o[2] - cz, b = ox * d[0] + oy * d[1] + oz * d[2], c = ox * ox + oy * oy + oz * oz - rad * rad, disc = b * b - c;
+      if(disc < 0) return; const t = -b - Math.sqrt(disc); if(t > 0 && t < bt){ bt = t; best = m; } });
+    return best;
+  }
+  function tapMob(m){
+    const def = H.MOBS[m.kind]; H.speak(def.name); m.heart = 1.6; m.walk = false; m.wait = 1.5;
+    S.label = {m, until: performance.now() + 2600, text: def.name};
+  }
+
   /* ---------- שמירה ---------- */
   function encodeEdits(){
     const bytes = new Uint8Array(edits.size * 4); let o = 0;
@@ -632,12 +740,15 @@ H.vox = (function(){
       const q0 = gl.getAttribLocation(progB, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(q0); gl.vertexAttribPointer(q0, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 6); gl.enable(gl.DEPTH_TEST); }
     drawChunks(c, 'o', .5);
+    drawMobs(c);
     /* דמות וחבר: ציורים שפונים למצלמה */
     gl.useProgram(progS); gl.uniformMatrix4fv(gl.getUniformLocation(progS, 'vp'), false, c.vp);
     gl.uniform3fv(gl.getUniformLocation(progS, 'rt'), c.right); gl.uniform3fv(gl.getUniformLocation(progS, 'up'), c.up);
     const ql = gl.getAttribLocation(progS, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(ql); gl.vertexAttribPointer(ql, 2, gl.FLOAT, false, 0, 0);
     const p = S.p, bob = S.p.ground && (Math.abs(stick.x) + Math.abs(stick.y) > .1 || keys.w || keys.s || keys.a || keys.d) ? Math.abs(Math.sin(p.walk)) * .12 : 0;
     sprite(avatarTex(), p.x, p.y + 1.0 + bob, p.z, 2.0, 2.0);
+    S.mobs.forEach(m => { if(m.heart > 0) sprite(emojiTex('❤️'), m.x, m.y + H.MOBS[m.kind].h + .4 + (1.6 - m.heart) * .6, m.z, .7, .7); });
+    if(S.label && performance.now() < S.label.until){ const m = S.label.m; sprite(labelTex(S.label.text), m.x, m.y + H.MOBS[m.kind].h + 1.1, m.z, 2.4, .6); }
     const pet = (H.PETS.find(v => v.id === H.state.pet) || {}).e; if(pet) sprite(emojiTex(pet), S.pet.x, S.pet.y + .5, S.pet.z, 1.0, 1.0);
     { const d = S.day, sx = Math.cos(d.a), sy = Math.sin(d.a);
       if(d.sunH > -.3) sprite(emojiTex('☀️'), c.eye[0] + sx * 110, c.eye[1] + sy * 110, c.eye[2] - 40, 26, 26);
@@ -653,7 +764,7 @@ H.vox = (function(){
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
     S.acc = (S.acc || 0) + dt; S.nf = (S.nf || 0) + 1;
     if(S.nf >= 60){ const a = S.acc / S.nf; if(a > .042 && (S.qual || 1) > .7) S.qual = (S.qual || 1) - .1; S.acc = 0; S.nf = 0; }
-    S.tod = (S.tod + dt / 600) % 1;
+    S.tod = (S.tod + dt / 600) % 1; if(S.mobs) updateMobs(dt);
     try{ physics(dt); draw(); if(dirtyT && performance.now() - dirtyT > 2500){ dirtyT = 0; save(); } }catch(e){ console.warn(e); running = false; return; }
     requestAnimationFrame(frame);
   }
@@ -674,7 +785,7 @@ H.vox = (function(){
       if(tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap.moved = true;
       if(tap && tap.moved){ cam.yaw -= dx * .008; cam.pitch = clamp(cam.pitch + dy * .005, -.2, 1.3); } });
     const up = e => { ptr.delete(e.pointerId); pinch = 0;
-      if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY); act(ray(r.o, r.d, 60, true)); }
+      if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY), hit = ray(r.o, r.d, 60, true), m = S.mobs && mobAtTap(r.o, r.d, hit ? hit.t : 60); if(m) tapMob(m); else act(hit); }
       tap = null; };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * .01, 3, 16); }, {passive: false});
@@ -704,10 +815,11 @@ H.vox = (function(){
     if(!blocks){ decodeEdits((H.state.build && H.state.build.e) || ''); generate(); remeshAll(); }
     const b = H.state.build || (H.state.build = {e: '', hot: []});
     const hot = (b.hot && b.hot.length ? b.hot : [1, 2, 3, 7, 8, 15, 11, 18, 9]).filter(id => id > 0).slice(0, 9);
-    S = {p: {x: S0.spawn.x, y: S0.spawn.y, z: S0.spawn.z, vy: 0, ground: false, face: 1, walk: 0}, pet: {x: S0.spawn.x + 1.5, y: S0.spawn.y, z: S0.spawn.z + 1}, hot, sel: 0, jump: false, cam: null, qual: 1, tod: .5, day: null};
+    S = {p: {x: S0.spawn.x, y: S0.spawn.y, z: S0.spawn.z, vy: 0, ground: false, face: 1, walk: 0}, pet: {x: S0.spawn.x + 1.5, y: S0.spawn.y, z: S0.spawn.z + 1}, hot, sel: 0, jump: false, cam: null, qual: 1, tod: .5, day: null, mobs: [], label: null};
     if(S.p.y < 1) S.p.y = 20;
     for(let k = 0; k < 40 && collides(S.p.x, S.p.y, S.p.z); k++) S.p.y += 1;      /* אם נולדנו בתוך בלוק, עולים החוצה */
     cam.dist = cv.clientWidth / Math.max(1, cv.clientHeight) < .75 ? 9 : 7.5;
+    S.mobs = spawnMobs();
     renderBar(); renderTop(); H.$('vxpal').style.display = 'none';
     if(!running){ running = true; last = performance.now(); requestAnimationFrame(frame); }
     return true;
@@ -715,7 +827,7 @@ H.vox = (function(){
   return {
     supported: () => initGL(), open, hunt, flush, state: () => S, cam: () => cam, mode: () => mode,
     reset(){ edits = new Map(); undo = []; generate(); remeshAll(); S.p.x = S0.spawn.x; S.p.y = S0.spawn.y; S.p.z = S0.spawn.z; S.p.vy = 0; save(); renderTop(); },
-    setBlock: (x, y, z, id) => setBlock(x, y, z, id), get, edits: () => edits, check: checkWord, end(){ flush(); running = false; document.body.classList.remove('inworld'); }
+    mobs: () => S && S.mobs, setBlock: (x, y, z, id) => setBlock(x, y, z, id), get, edits: () => edits, check: checkWord, end(){ flush(); running = false; document.body.classList.remove('inworld'); }
   };
 })();
 
