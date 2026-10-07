@@ -8,10 +8,11 @@ H.VOWELS = [
   ['ֵ','צירה'], ['ֶ','סגול'], ['ִ','חיריק'],
   ['ֹ','חולם'],  ['ֻ','קבוץ'],
   ['ֱ','חטף סגול'], ['ֲ','חטף פתח'], ['ֳ','חטף קמץ'],
-  ['ֺ','חולם חסר'], ['ׇ','קמץ קטן']
+  ['ׇ','קמץ קטן']
 ];
 H.DAGESH = 'ּ'; H.SHIN = 'ׁ'; H.SIN = 'ׂ'; H.RAFE = 'ֿ';
-H.isVowel = c => H.VOWELS.some(v => v[0] === c);
+/* חולם חסר (U+05BA) נראה בדיוק כמו חולם. הוא הוסר מהבחירה, ומילים ישנות שיש בהן אותו נקראות כחולם רגיל. */
+H.isVowel = c => c === 'ֺ' || H.VOWELS.some(v => v[0] === c);
 
 /* פירוק אשכול לחלקיו, ובנייה מחדש בסדר קבוע: אות, דגש, נקודה, תנועה */
 H.parseCluster = function(cl){
@@ -21,7 +22,7 @@ H.parseCluster = function(cl){
     else if(c === H.SHIN) o.shin = true;
     else if(c === H.SIN) o.sin = true;
     else if(c === H.RAFE) o.rafe = true;
-    else if(H.isVowel(c)) o.vowel = c;
+    else if(H.isVowel(c)) o.vowel = (c === 'ֺ' ? 'ֹ' : c);
   }
   return o;
 };

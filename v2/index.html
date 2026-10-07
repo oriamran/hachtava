@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4vhm4R7eEGH0V1E8s7d4xUmEGh4lCdtS/soa5rx+kHY=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AMawXu6oaMIlBusCa5Rp+IcB/OHba0tSFPtf5moYZF4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1439,7 +1439,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 18:33 0bd7825';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 18:37 dc8b321';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -3853,7 +3853,7 @@ H.NIKPAD = [
   ["ֹ","חולם"],["ֻ","קבוץ"],["ּ","דגש"],
   ["ׁ","שין"],["ׂ","שין שמאלית"],
   ["ֱ","חטף סגול"],["ֲ","חטף פתח"],["ֳ","חטף קמץ"],
-  ["ֺ","חולם חסר"],["ׇ","קמץ קטן"],["ֿ","רפה"],
+  ["ׇ","קמץ קטן"],["ֿ","רפה"],
   ["וּ","שורוק", 1],["וֹ","חולם מלא", 1]            /* אות שלמה: ו עם דגש, ו עם חולם */
 ];
 H.renderPacks = function(){
@@ -4114,10 +4114,11 @@ H.VOWELS = [
   ['ֵ','צירה'], ['ֶ','סגול'], ['ִ','חיריק'],
   ['ֹ','חולם'],  ['ֻ','קבוץ'],
   ['ֱ','חטף סגול'], ['ֲ','חטף פתח'], ['ֳ','חטף קמץ'],
-  ['ֺ','חולם חסר'], ['ׇ','קמץ קטן']
+  ['ׇ','קמץ קטן']
 ];
 H.DAGESH = 'ּ'; H.SHIN = 'ׁ'; H.SIN = 'ׂ'; H.RAFE = 'ֿ';
-H.isVowel = c => H.VOWELS.some(v => v[0] === c);
+/* חולם חסר (U+05BA) נראה בדיוק כמו חולם. הוא הוסר מהבחירה, ומילים ישנות שיש בהן אותו נקראות כחולם רגיל. */
+H.isVowel = c => c === 'ֺ' || H.VOWELS.some(v => v[0] === c);
 
 /* פירוק אשכול לחלקיו, ובנייה מחדש בסדר קבוע: אות, דגש, נקודה, תנועה */
 H.parseCluster = function(cl){
@@ -4127,7 +4128,7 @@ H.parseCluster = function(cl){
     else if(c === H.SHIN) o.shin = true;
     else if(c === H.SIN) o.sin = true;
     else if(c === H.RAFE) o.rafe = true;
-    else if(H.isVowel(c)) o.vowel = c;
+    else if(H.isVowel(c)) o.vowel = (c === 'ֺ' ? 'ֹ' : c);
   }
   return o;
 };
