@@ -728,3 +728,6 @@ body.inworld .hud,body.inworld #backbtn{display:none!important}
 .seg2{display:inline-flex;gap:0;border-radius:999px;overflow:hidden;box-shadow:var(--drop);background:#fff}
 .seg2 .mini{box-shadow:none;border-radius:0;background:#fff;color:var(--ink2);padding:10px 16px}
 .seg2 .mini.on{background:linear-gradient(135deg,var(--sun),var(--sunDeep));color:#fff}
+
+/* תיבת המילים בהורים: בכתב כשבחרו כתב (כלל ה-id למעלה דרס אותה) */
+body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
