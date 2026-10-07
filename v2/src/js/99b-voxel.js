@@ -29,7 +29,12 @@ H.VOX_BLOCKS = [
   {id: 18, k: 'white',  n: 'צמר לבן',    t: ['wool_white'], cost: 0},
   {id: 19, k: 'black',  n: 'שחור',    t: ['black'], cost: 20},
   {id: 20, k: 'gold',   n: 'זהב',     t: ['gold'], cost: 60},
-  {id: 21, k: 'lamp',   n: 'מנורה',   t: ['lamp'], cost: 40}
+  {id: 21, k: 'lamp',   n: 'מנורה',   t: ['lamp'], cost: 40},
+  {id: 30, k: 'tallgrass', n: 'עשב',      t: ['tallgrass'], cost: 0},
+  {id: 31, k: 'flower_red', n: 'פרח אדום',  t: ['flower_red'], cost: 0},
+  {id: 32, k: 'flower_yellow', n: 'פרח צהוב', t: ['flower_yellow'], cost: 0},
+  {id: 33, k: 'flower_blue', n: 'פרח כחול',  t: ['flower_blue'], cost: 0},
+  {id: 34, k: 'mushroom', n: 'פטרייה',   t: ['mushroom'], cost: 0}
 ];
 H.VOX_LETTERS = 'אבגדהוזחטיכלמנסעפצקרשתךםןףץ';
 H.VOX_FINAL = {'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ'};
@@ -50,7 +55,8 @@ H.vox = (function(){
 
   /* ---------- מרקמים ---------- */
   const TILES = ['grass_top','grass_side','dirt','stone','sand','log_side','log_top','leaves','planks','brick','glass','water',
-    'wool_red','wool_orange','wool_yellow','wool_green','wool_blue','wool_purple','wool_pink','wool_white','black','gold','lamp'];
+    'wool_red','wool_orange','wool_yellow','wool_green','wool_blue','wool_purple','wool_pink','wool_white','black','gold','lamp',
+    'tallgrass','flower_red','flower_yellow','flower_blue','mushroom'];
   const TI = {}; TILES.forEach((t, i) => TI[t] = i);
   const WOOL = {wool_red:[214,60,60], wool_orange:[240,140,40], wool_yellow:[245,210,60], wool_green:[80,180,70], wool_blue:[60,110,220], wool_purple:[140,90,210], wool_pink:[245,130,180], wool_white:[240,240,240]};
   function makeAtlas(){
@@ -77,6 +83,15 @@ H.vox = (function(){
       else if(WOOL[name]) noise(WOOL[name], .14);
       else if(name === 'black') noise([40, 40, 48], .25);
       else if(name === 'gold'){ for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const e = (i === 0 || j === 0 || i === 15 || j === 15); px(i, j, rgb(e ? [200, 150, 30] : [255, 215, 70], 1 + (r() - .5) * .18)); } for(let k = 0; k < 4; k++) px(3 + k, 3 + k, 'rgb(255,250,200)'); }
+      else if(name === 'tallgrass'){ for(let i = 1; i < 16; i += 2){ const h = 5 + Math.floor(r() * 8), sw = (r() - .5) * 2; for(let j = 0; j < h; j++) px(i + (r() < .2 ? 1 : 0) + Math.round(sw * j / 8), 15 - j, rgb([70 + r() * 30, 170 + r() * 40, 50], 1 - j * .02)); } }
+      else if(name.startsWith('flower_')){ const pc = name === 'flower_red' ? [225, 60, 70] : name === 'flower_yellow' ? [250, 215, 60] : [90, 130, 240];
+        for(let j = 7; j < 16; j++) px(7, j, rgb([60, 150, 55], 1)), px(8, j, rgb([60, 150, 55], .9));
+        px(4, 11, rgb([60, 150, 55], 1)); px(5, 12, rgb([60, 150, 55], 1)); px(10, 10, rgb([60, 150, 55], 1)); px(11, 11, rgb([60, 150, 55], 1));
+        for(const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) px(7 + dx + (dx > 0 ? 1 : 0), 5 + dy, rgb(pc, (dx || dy) ? 1 : 0.8));
+        px(7, 5, rgb([255, 235, 120], 1)); px(8, 5, rgb([255, 235, 120], 1)); }
+      else if(name === 'mushroom'){ for(let j = 9; j < 16; j++) for(let i = 6; i < 10; i++) px(i, j, rgb([235, 225, 205], 1 + (r() - .5) * .1));
+        for(let j = 4; j < 10; j++) for(let i = 3; i < 13; i++){ if((j - 4) < 2 && (i < 5 || i > 10)) continue; px(i, j, rgb([210, 50, 50], 1 + (r() - .5) * .1)); }
+        px(5, 6, 'rgb(255,255,255)'); px(9, 5, 'rgb(255,255,255)'); px(11, 7, 'rgb(255,255,255)'); }
       else if(name === 'lamp'){ for(let j = 0; j < 16; j++) for(let i = 0; i < 16; i++){ const bar = (i === 7 || i === 8 || j === 7 || j === 8); px(i, j, rgb(bar ? [200, 140, 50] : [255, 236, 150], 1 + (r() - .5) * .12)); } }
     });
     /* אריחי אותיות: רקע בהיר ומסגרת, האות בסגול */
@@ -100,9 +115,11 @@ H.vox = (function(){
     const b = BDEF[id]; if(!b) return [TI.stone, TI.stone, TI.stone];
     const t = b.t.map(n => TI[n]); return [t[0], t[1] === undefined ? t[0] : t[1], t[2] === undefined ? t[0] : t[2]];
   }
-  const TRANSPARENT = id => id === AIR || id === 6 || id === 9 || id === WATER;
-  const SOLID = id => id !== AIR && id !== WATER;                  /* אפשר לעמוד עליו / לפגוע בו */
-  const AOSOLID = id => id !== AIR && id !== WATER && id !== 9;
+  const PLANT = id => id >= 30 && id < 40;
+  const TRANSPARENT = id => id === AIR || id === 6 || id === 9 || id === WATER || PLANT(id);
+  const SOLID = id => id !== AIR && id !== WATER && !PLANT(id);    /* אפשר לעמוד עליו / להתנגש בו */
+  const AOSOLID = id => id !== AIR && id !== WATER && id !== 9 && !PLANT(id);
+  const LIGHTBLOCK = id => id !== AIR && id !== WATER && id !== 9 && !PLANT(id);
 
   /* ---------- יצירת העולם ---------- */
   function noise2(seed){
@@ -139,8 +156,30 @@ H.vox = (function(){
           const xx = x + dx, zz = z + dz, yy = h + dy; if(xx < 0 || zz < 0 || xx >= NX || zz >= NZ || yy >= NY) continue;
           if(blocks[idx(xx, yy, zz)] === AIR) blocks[idx(xx, yy, zz)] = 6; } }
     }
+    /* עשב ופרחים על הדשא */
+    const pr = rngOf(555);
+    for(let z = 1; z < NZ - 1; z++) for(let x = 1; x < NX - 1; x++){
+      const h = heights[z * NX + x]; if(blocks[idx(x, h, z)] !== 1 || blocks[idx(x, h + 1, z)] !== AIR) continue;
+      const q = pr(); if(q < .10) blocks[idx(x, h + 1, z)] = 30; else if(q < .125) blocks[idx(x, h + 1, z)] = 31 + Math.floor(pr() * 3); else if(q < .131) blocks[idx(x, h + 1, z)] = 34;
+    }
     S0.spawn = {x: cx + .5, y: heights[Math.floor(cz) * NX + Math.floor(cx)] + 1.01, z: cz + .5};
     edits.forEach((id, i) => { blocks[i] = id; });
+    computeLight();
+  }
+
+  /* ---------- תאורה: אור שמיים לפי גובה העמודה, ואור ממנורות ---------- */
+  let topY = new Int16Array(NX * NZ), lamps = [];
+  function updateTop(x, z){ let y = NY - 1; while(y > 0 && !LIGHTBLOCK(blocks[idx(x, y, z)])) y--; topY[z * NX + x] = y; }
+  function computeLight(){
+    for(let z = 0; z < NZ; z++) for(let x = 0; x < NX; x++) updateTop(x, z);
+    lamps = []; for(let i = 0; i < blocks.length; i++) if(blocks[i] === 21){ const r = i % (NX * NZ); lamps.push([r % NX + .5, Math.floor(i / (NX * NZ)) + .5, Math.floor(r / NX) + .5]); }
+  }
+  const skyLit = (x, y, z) => (x < 0 || z < 0 || x >= NX || z >= NZ) ? 1 : (y > topY[z * NX + x] ? 1 : .36);
+  function lampAt(px, py, pz){
+    let m = 0;
+    for(let k = 0; k < lamps.length; k++){ const l = lamps[k], dx = l[0] - px; if(dx > 8 || dx < -8) continue; const dz = l[2] - pz; if(dz > 8 || dz < -8) continue;
+      const d = Math.hypot(dx, l[1] - py, dz); if(d < 8){ const v = 1 - d / 8; if(v > m) m = v; } }
+    return m * (.6 + .4 * m);
   }
 
   /* ---------- בניית רשת (AO והסתרת פאות) ---------- */
@@ -152,7 +191,7 @@ H.vox = (function(){
     const x0 = cx * CH, z0 = cz * CH;
     const emit = (arr, x, y, z, a, s, ti, water) => {
       const [u, v] = a === 0 ? [2, 1] : (a === 1 ? [0, 2] : [0, 1]);
-      const pos = [x, y, z], ao = [], P = [];
+      const pos = [x, y, z], ao = [], P = [], sky = [], blk = [];
       for(let c = 0; c < 4; c++){
         const cu = c === 1 || c === 2 ? 1 : 0, cvv = c >= 2 ? 1 : 0;
         const q = pos.slice(); q[a] += s > 0 ? 1 : 0; q[u] += cu; q[v] += cvv;
@@ -161,33 +200,51 @@ H.vox = (function(){
         const nb = pos.slice(); nb[a] += s;
         const su = cu ? 1 : -1, sv = cvv ? 1 : -1;
         const s1 = nb.slice(), s2 = nb.slice(), cc = nb.slice(); s1[u] += su; s2[v] += sv; cc[u] += su; cc[v] += sv;
-        const A = AOSOLID(get(s1[0], s1[1], s1[2])) ? 1 : 0, B2 = AOSOLID(get(s2[0], s2[1], s2[2])) ? 1 : 0, C = AOSOLID(get(cc[0], cc[1], cc[2])) ? 1 : 0;
+        const i1 = get(s1[0], s1[1], s1[2]), i2 = get(s2[0], s2[1], s2[2]), ic = get(cc[0], cc[1], cc[2]);
+        const A = AOSOLID(i1) ? 1 : 0, B2 = AOSOLID(i2) ? 1 : 0, C = AOSOLID(ic) ? 1 : 0;
         ao.push(A && B2 ? 0 : 3 - (A + B2 + C));
+        /* אור שמיים: ממוצע של התאים הפנויים סביב הקודקוד, כדי שהצל יתמזג בהדרגה */
+        let sv2 = skyLit(nb[0], nb[1], nb[2]), cnt = 1;
+        if(!AOSOLID(i1)){ sv2 += skyLit(s1[0], s1[1], s1[2]); cnt++; }
+        if(!AOSOLID(i2)){ sv2 += skyLit(s2[0], s2[1], s2[2]); cnt++; }
+        if(!AOSOLID(ic)){ sv2 += skyLit(cc[0], cc[1], cc[2]); cnt++; }
+        sky.push(sv2 / cnt);
+        blk.push(lamps.length ? lampAt(q[0] + (a === 0 ? s * .3 : 0), q[1] + (a === 1 ? s * .3 : 0), q[2] + (a === 2 ? s * .3 : 0)) : 0);
       }
-      /* UV: אריח במקום הנכון באטלס, וכיוון טקסט נכון מבחוץ */
       const tx = (ti % COLS) * TS, ty = Math.floor(ti / COLS) * TS, e = .35;
       const u0 = (tx + e) / (COLS * TS), u1 = (tx + TS - e) / (COLS * TS), v0 = (ty + e) / (8 * TS), v1 = (ty + TS - e) / (8 * TS);
       const flip = a === 0 ? s > 0 : (a === 2 ? s < 0 : false);
       const uv = [];
       for(let c = 0; c < 4; c++){
         const cu = c === 1 || c === 2 ? 1 : 0, cvv = c >= 2 ? 1 : 0;
-        const uu = (flip ? 1 - cu : cu), vv = a === 1 ? (1 - cvv) : (1 - cvv);
+        const uu = (flip ? 1 - cu : cu), vv = 1 - cvv;
         uv.push([u0 + (u1 - u0) * uu, v0 + (v1 - v0) * vv]);
       }
       const fs = a === 1 ? (s > 0 ? FSHADE[1] : .55) : FSHADE[a === 0 ? 0 : 2];
       const sh = ao.map(k => fs * AOF[k]);
       const order = (ao[0] + ao[2] > ao[1] + ao[3]) ? [1, 2, 3, 1, 3, 0] : [0, 1, 2, 0, 2, 3];
-      order.forEach(c => arr.push(P[c][0], P[c][1], P[c][2], uv[c][0], uv[c][1], sh[c]));
+      order.forEach(c => arr.push(P[c][0], P[c][1], P[c][2], uv[c][0], uv[c][1], sh[c] * sky[c], sh[c] * blk[c]));
+    };
+    /* צמחים: שני מישורים אלכסוניים עם שקיפות */
+    const cross = (arr, x, y, z, ti) => {
+      const tx = (ti % COLS) * TS, ty = Math.floor(ti / COLS) * TS, e = .35;
+      const u0 = (tx + e) / (COLS * TS), u1 = (tx + TS - e) / (COLS * TS), v0 = (ty + e) / (8 * TS), v1 = (ty + TS - e) / (8 * TS);
+      const sk = skyLit(x, y, z) * .95, bl = lamps.length ? lampAt(x + .5, y + .5, z + .5) * .95 : 0;
+      for(const [ax, az, bx, bz] of [[0.1, 0.1, 0.9, 0.9], [0.1, 0.9, 0.9, 0.1]]){
+        const A = [x + ax, y, z + az], B = [x + bx, y, z + bz], C = [x + bx, y + 1, z + bz], D = [x + ax, y + 1, z + az];
+        [[A, u0, v1], [B, u1, v1], [C, u1, v0], [A, u0, v1], [C, u1, v0], [D, u0, v0]].forEach(q => arr.push(q[0][0], q[0][1], q[0][2], q[1], q[2], sk, bl));
+      }
     };
     for(let y = 0; y < NY; y++) for(let z = z0; z < z0 + CH; z++) for(let x = x0; x < x0 + CH; x++){
       const id = blocks[idx(x, y, z)]; if(id === AIR) continue;
+      if(PLANT(id)){ cross(o, x, y, z, faceTiles(id)[1]); continue; }
       const ft = faceTiles(id), isW = id === WATER, trans = isW || id === 9, arr = trans ? t : o;
       for(let a = 0; a < 3; a++) for(const s of [1, -1]){
         const n = [x, y, z]; n[a] += s;
         const nid = (n[1] < 0) ? 3 : get(n[0], n[1], n[2]);
         let vis;
-        if(isW) vis = nid === AIR;
-        else if(id === 9) vis = nid === AIR || nid === WATER;
+        if(isW) vis = nid === AIR || PLANT(nid);
+        else if(id === 9) vis = nid === AIR || nid === WATER || PLANT(nid);
         else if(id === 6) vis = TRANSPARENT(nid) && nid !== 6;
         else vis = TRANSPARENT(nid);
         if(!vis) continue;
@@ -197,7 +254,7 @@ H.vox = (function(){
     }
     return {o: new Float32Array(o), t: new Float32Array(t)};
   }
-  const upload = (arr) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW); return {b, n: arr.length / 6}; };
+  const upload = (arr) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW); return {b, n: arr.length / 7}; };
   function remesh(cx, cz){
     if(cx < 0 || cz < 0 || cx >= NX / CH || cz >= NZ / CH) return;
     const key = cx + ',' + cz, m = buildChunk(cx, cz), old = chunks[key];
@@ -205,6 +262,11 @@ H.vox = (function(){
     chunks[key] = {o: m.o.length ? upload(m.o) : null, t: m.t.length ? upload(m.t) : null};
   }
   function remeshAll(){ for(let cz = 0; cz < NZ / CH; cz++) for(let cx = 0; cx < NX / CH; cx++) remesh(cx, cz); }
+  function remeshRadius(x, z, r){
+    const keys = new Set();
+    for(let dx = -r; dx <= r; dx += r) for(let dz = -r; dz <= r; dz += r) keys.add(Math.floor((x + dx) / CH) + ',' + Math.floor((z + dz) / CH));
+    keys.forEach(k => { const [a, b] = k.split(',').map(Number); remesh(a, b); });
+  }
   function remeshAround(x, z){
     const cx = Math.floor(x / CH), cz = Math.floor(z / CH); const set = new Set();
     for(let dx = -1; dx <= 1; dx++) for(let dz = -1; dz <= 1; dz++){ const px = x + dx, pz = z + dz; set.add(Math.floor(px / CH) + ',' + Math.floor(pz / CH)); }
@@ -244,10 +306,11 @@ H.vox = (function(){
     gl = cv.getContext('webgl', {antialias: true, alpha: false}) || cv.getContext('experimental-webgl');
     if(!gl) return false;
     try{
-      progM = compile('attribute vec3 p;attribute vec2 t;attribute float s;uniform mat4 vp;uniform vec3 cam;varying vec2 uv;varying float sh;varying float vd;' +
-        'void main(){gl_Position=vp*vec4(p,1.);uv=t;sh=s;vd=length(p-cam);}',
-        'precision mediump float;varying vec2 uv;varying float sh;varying float vd;uniform sampler2D tx;uniform vec3 fog;uniform float cut;uniform vec3 tint;' +
-        'void main(){vec4 c=texture2D(tx,uv);if(c.a<cut)discard;float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(c.rgb*sh*tint,fog,f),c.a);}');
+      progM = compile('attribute vec3 p;attribute vec2 t;attribute float s;attribute float b;uniform mat4 vp;uniform vec3 cam;varying vec2 uv;varying float sh;varying float bl;varying float vd;' +
+        'void main(){gl_Position=vp*vec4(p,1.);uv=t;sh=s;bl=b;vd=length(p-cam);}',
+        'precision mediump float;varying vec2 uv;varying float sh;varying float bl;varying float vd;uniform sampler2D tx;uniform vec3 fog;uniform float cut;uniform vec3 tint;uniform float amb;' +
+        'void main(){vec4 c=texture2D(tx,uv);if(c.a<cut)discard;float sky=sh*amb;float l=max(sky,bl);vec3 warm=mix(vec3(1.),vec3(1.2,.95,.7),clamp((bl-sky)*2.2,0.,1.));' +
+        'float f=clamp((vd-45.)/80.,0.,1.);gl_FragColor=vec4(mix(c.rgb*l*tint*warm,fog,f),c.a);}');
       progS = compile('attribute vec2 q;uniform mat4 vp;uniform vec3 ctr;uniform vec2 sz;uniform vec3 rt;uniform vec3 up;varying vec2 uv;' +
         'void main(){uv=vec2(q.x*.5+.5,.5-q.y*.5);vec3 w=ctr+rt*q.x*sz.x+up*q.y*sz.y;gl_Position=vp*vec4(w,1.);}',
         'precision mediump float;varying vec2 uv;uniform sampler2D tx;void main(){vec4 c=texture2D(tx,uv);if(c.a<.06)discard;gl_FragColor=c;}');
@@ -263,16 +326,26 @@ H.vox = (function(){
     return true;
   }
   const theme = () => H.WORLD_THEMES[H.state.bg] || H.WORLD_THEMES.day;
+  /* שעה ביום: 0 חצות, .25 זריחה, .5 צהריים, .75 שקיעה. מחזור מלא בעשר דקות. */
+  const smoothstep = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  function dayInfo(){
+    const th = theme(), a = (S.tod - .25) * 6.2832, sunH = Math.sin(a), k = smoothstep(-.18, .22, sunH);
+    const night = [.03, .04, .13], w = Math.exp(-Math.pow(sunH / .22, 2)) * (1 - Math.abs(Math.sin(a - 1.5708)) * .0) * .38;
+    const sky = [0, 1, 2].map(i => clamp(night[i] + (th.sky[i] - night[i]) * k + [1, .5, .25][i] * w * (k > .02 && k < .98 ? 1 : .25), 0, 1));
+    return {a, sunH, k, amb: .3 + .7 * k, sky};
+  }
+  const STARS = (() => { const r = rngOf(31), out = []; for(let i = 0; i < 46; i++){ const az = r() * 6.2832, el = .15 + r() * 1.2; out.push([Math.cos(az) * Math.cos(el), Math.sin(el), Math.sin(az) * Math.cos(el)]); } return out; })();
 
   /* ---------- קרן (DDA) ---------- */
-  function ray(o, d, maxD){
+  const RAYABLE = id => id !== AIR && id !== WATER;
+  function ray(o, d, maxD, plants){
     let x = Math.floor(o[0]), y = Math.floor(o[1]), z = Math.floor(o[2]);
     const sx = d[0] > 0 ? 1 : -1, sy = d[1] > 0 ? 1 : -1, sz = d[2] > 0 ? 1 : -1;
     const tdx = d[0] ? Math.abs(1 / d[0]) : 1e9, tdy = d[1] ? Math.abs(1 / d[1]) : 1e9, tdz = d[2] ? Math.abs(1 / d[2]) : 1e9;
     let tx = d[0] ? ((d[0] > 0 ? x + 1 - o[0] : o[0] - x) * tdx) : 1e9, ty = d[1] ? ((d[1] > 0 ? y + 1 - o[1] : o[1] - y) * tdy) : 1e9, tz = d[2] ? ((d[2] > 0 ? z + 1 - o[2] : o[2] - z) * tdz) : 1e9;
     let nx = 0, ny = 0, nz = 0, t = 0;
     for(let i = 0; i < 200 && t <= maxD; i++){
-      if(SOLID(get(x, y, z)) && !(x < 0 || z < 0 || x >= NX || z >= NZ)) return {x, y, z, nx, ny, nz, t};
+      if((plants ? RAYABLE : SOLID)(get(x, y, z)) && !(x < 0 || z < 0 || x >= NX || z >= NZ)) return {x, y, z, nx, ny, nz, t};
       if(tx < ty && tx < tz){ x += sx; t = tx; tx += tdx; nx = -sx; ny = 0; nz = 0; }
       else if(ty < tz){ y += sy; t = ty; ty += tdy; nx = 0; ny = -sy; nz = 0; }
       else { z += sz; t = tz; tz += tdz; nx = 0; ny = 0; nz = -sz; }
@@ -331,8 +404,12 @@ H.vox = (function(){
       if(grp) grp.push([i, old]); else { undo.push([[i, old]]); if(undo.length > 60) undo.shift(); }
       edits.set(i, id);
     }
-    blocks[i] = id;
-    if(pendingMesh) pendingMesh.push([x, z]); else remeshAround(x, z);
+    blocks[i] = id; updateTop(x, z);
+    const lampChange = old === 21 || id === 21;
+    if(lampChange){ lamps = lamps.filter(l => !(Math.floor(l[0]) === x && Math.floor(l[1]) === y && Math.floor(l[2]) === z)); if(id === 21) lamps.push([x + .5, y + .5, z + .5]); }
+    if(pendingMesh) pendingMesh.push([x, z]);
+    else if(lampChange) remeshRadius(x, z, 9);
+    else remeshAround(x, z);
     markDirty(); return true;
   }
   const markDirty = () => { dirtyT = performance.now(); };
@@ -348,8 +425,9 @@ H.vox = (function(){
     } else {
       const id = S.hot[S.sel]; if(!id) return;
       if(!owned(id)) return buyBlock(id);
-      const nx = hit.x + hit.nx, ny = hit.y + hit.ny, nz = hit.z + hit.nz;
-      const cur = get(nx, ny, nz); if(cur !== AIR && cur !== WATER) return;
+      const onPlant = PLANT(get(hit.x, hit.y, hit.z));
+      const nx = onPlant ? hit.x : hit.x + hit.nx, ny = onPlant ? hit.y : hit.y + hit.ny, nz = onPlant ? hit.z : hit.z + hit.nz;
+      const cur = get(nx, ny, nz); if(cur !== AIR && cur !== WATER && !PLANT(cur)) return;
       /* לא מניחים בלוק על השחקן */
       const bx0 = nx, bx1 = nx + 1, by0 = ny, by1 = ny + 1, bz0 = nz, bz1 = nz + 1;
       if(p.x + HW > bx0 && p.x - HW < bx1 && p.z + HW > bz0 && p.z - HW < bz1 && p.y + PH > by0 && p.y < by1) return;
@@ -406,14 +484,15 @@ H.vox = (function(){
     const p = S.p; let placed = 0; grp = []; pendingMesh = [];
     R.v.forEach(a => {
       const x = ax + a[0], y = ay + a[1], z = az + a[2]; if(x < 1 || z < 1 || x >= NX - 1 || z >= NZ - 1 || y < 1 || y >= NY - 1) return;
-      const cur = blocks[idx(x, y, z)]; if(cur !== AIR && cur !== WATER && cur !== 6) return;               /* לא דורסים קרקע */
+      const cur = blocks[idx(x, y, z)]; if(cur !== AIR && cur !== WATER && cur !== 6 && !PLANT(cur)) return;               /* לא דורסים קרקע */
       if(a[3] === 0) return;
       if(p.x + HW > x && p.x - HW < x + 1 && p.z + HW > z && p.z - HW < z + 1 && p.y + PH > y && p.y < y + 1) return;
       if(setBlock(x, y, z, a[3])) placed++;
     });
     const g = grp, pm = pendingMesh; grp = null; pendingMesh = null;
     if(g.length){ undo.push(g); if(undo.length > 60) undo.shift(); }
-    const keys = new Set(); pm.forEach(([x, z]) => { for(let dx = -1; dx <= 1; dx++) for(let dz = -1; dz <= 1; dz++) keys.add(Math.floor((x + dx) / CH) + ',' + Math.floor((z + dz) / CH)); });
+    computeLight();
+    const keys = new Set(); pm.forEach(([x, z]) => { for(let dx = -9; dx <= 9; dx += 9) for(let dz = -9; dz <= 9; dz += 9) keys.add(Math.floor((x + dx) / CH) + ',' + Math.floor((z + dz) / CH)); });
     keys.forEach(kk => { const [a, b] = kk.split(',').map(Number); remesh(a, b); });
     H.sfx.tap(); H.toast('🏗️ ' + t.n + ': ' + placed + ' בלוקים (אפשר לבטל)', 'good'); renderTop(); checkWord();
   }
@@ -479,7 +558,7 @@ H.vox = (function(){
       const keys = new Set();
       for(let k = g.length - 1; k >= 0; k--){ const i = g[k][0], id = g[k][1]; blocks[i] = id; if(id === AIR) edits.delete(i); else edits.set(i, id);
         const r = i % (NX * NZ), x = r % NX, z = Math.floor(r / NX); for(let dx = -1; dx <= 1; dx++) for(let dz = -1; dz <= 1; dz++) keys.add(Math.floor((x + dx) / CH) + ',' + Math.floor((z + dz) / CH)); }
-      keys.forEach(kk => { const [a, b] = kk.split(',').map(Number); remesh(a, b); }); markDirty(); renderTop(); };
+      computeLight(); remeshAll(); markDirty(); renderTop(); };
   }
   function slotImg(id){ const ft = faceTiles(id); return tileDataUrl(id >= LET0 ? LET0 + (id - LET0) : ft[1]); }
   function renderBar(){
@@ -523,15 +602,16 @@ H.vox = (function(){
   function drawChunks(c, pass, cut){
     const th = theme(); gl.useProgram(progM);
     gl.uniformMatrix4fv(gl.getUniformLocation(progM, 'vp'), false, c.vp); gl.uniform3fv(gl.getUniformLocation(progM, 'cam'), c.eye);
-    gl.uniform3fv(gl.getUniformLocation(progM, 'fog'), th.sky); gl.uniform1f(gl.getUniformLocation(progM, 'cut'), cut);
+    gl.uniform3fv(gl.getUniformLocation(progM, 'fog'), S.day.sky); gl.uniform1f(gl.getUniformLocation(progM, 'cut'), cut); gl.uniform1f(gl.getUniformLocation(progM, 'amb'), S.day.amb);
     gl.uniform3fv(gl.getUniformLocation(progM, 'tint'), new Float32Array(th.tint));
     gl.bindTexture(gl.TEXTURE_2D, atlasTex);
-    const lp = gl.getAttribLocation(progM, 'p'), lt = gl.getAttribLocation(progM, 't'), ls = gl.getAttribLocation(progM, 's');
+    const lp = gl.getAttribLocation(progM, 'p'), lt = gl.getAttribLocation(progM, 't'), ls = gl.getAttribLocation(progM, 's'), lb = gl.getAttribLocation(progM, 'b');
     for(const k in chunks){ const m = chunks[k][pass]; if(!m) continue;
       gl.bindBuffer(gl.ARRAY_BUFFER, m.b);
-      gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 3, gl.FLOAT, false, 24, 0);
-      gl.enableVertexAttribArray(lt); gl.vertexAttribPointer(lt, 2, gl.FLOAT, false, 24, 12);
-      gl.enableVertexAttribArray(ls); gl.vertexAttribPointer(ls, 1, gl.FLOAT, false, 24, 20);
+      gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 3, gl.FLOAT, false, 28, 0);
+      gl.enableVertexAttribArray(lt); gl.vertexAttribPointer(lt, 2, gl.FLOAT, false, 28, 12);
+      gl.enableVertexAttribArray(ls); gl.vertexAttribPointer(ls, 1, gl.FLOAT, false, 28, 20);
+      gl.enableVertexAttribArray(lb); gl.vertexAttribPointer(lb, 1, gl.FLOAT, false, 28, 24);
       gl.drawArrays(gl.TRIANGLES, 0, m.n); }
   }
   function sprite(tx, x, y, z, w, h){
@@ -543,11 +623,11 @@ H.vox = (function(){
     const w = Math.max(2, Math.round(cv.clientWidth * q)), h = Math.max(2, Math.round(cv.clientHeight * q));
     if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
     gl.viewport(0, 0, cv.width, cv.height);
-    const th = theme(); gl.clearColor(th.sky[0], th.sky[1], th.sky[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    S.day = dayInfo(); const th = theme(), sk = S.day.sky; gl.clearColor(sk[0], sk[1], sk[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     const c = camera(); S.cam = c;
     { const e = Math.asin(clamp(c.fwd[1], -1, 1)), hy = clamp(Math.tan(-e) / Math.tan(.5), -1, 1.4);
       gl.useProgram(progB); gl.disable(gl.DEPTH_TEST);
-      gl.uniform3fv(gl.getUniformLocation(progB, 'hz'), th.sky); gl.uniform3f(gl.getUniformLocation(progB, 'zn'), th.sky[0] * .55, th.sky[1] * .74, Math.min(1, th.sky[2] * 1.05));
+      gl.uniform3fv(gl.getUniformLocation(progB, 'hz'), sk); gl.uniform3f(gl.getUniformLocation(progB, 'zn'), sk[0] * .55, sk[1] * .74, Math.min(1, sk[2] * 1.05 + .02));
       gl.uniform1f(gl.getUniformLocation(progB, 'hy'), hy);
       const q0 = gl.getAttribLocation(progB, 'q'); gl.bindBuffer(gl.ARRAY_BUFFER, S0.quad); gl.enableVertexAttribArray(q0); gl.vertexAttribPointer(q0, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 6); gl.enable(gl.DEPTH_TEST); }
@@ -559,7 +639,10 @@ H.vox = (function(){
     const p = S.p, bob = S.p.ground && (Math.abs(stick.x) + Math.abs(stick.y) > .1 || keys.w || keys.s || keys.a || keys.d) ? Math.abs(Math.sin(p.walk)) * .12 : 0;
     sprite(avatarTex(), p.x, p.y + 1.0 + bob, p.z, 2.0, 2.0);
     const pet = (H.PETS.find(v => v.id === H.state.pet) || {}).e; if(pet) sprite(emojiTex(pet), S.pet.x, S.pet.y + .5, S.pet.z, 1.0, 1.0);
-    sprite(emojiTex(H.state.bg === 'night' || H.state.bg === 'space' ? '🌙' : '☀️'), c.eye[0] + 90, c.eye[1] + 80, c.eye[2] - 100, 30, 30);
+    { const d = S.day, sx = Math.cos(d.a), sy = Math.sin(d.a);
+      if(d.sunH > -.3) sprite(emojiTex('☀️'), c.eye[0] + sx * 110, c.eye[1] + sy * 110, c.eye[2] - 40, 26, 26);
+      if(d.sunH < .3) sprite(emojiTex('🌙'), c.eye[0] - sx * 110, c.eye[1] - sy * 110, c.eye[2] + 40, 22, 22);
+      if(d.k < .6){ const st = emojiTex('✨'); STARS.forEach(v => sprite(st, c.eye[0] + v[0] * 150, c.eye[1] + v[1] * 150, c.eye[2] + v[2] * 150, 3, 3)); } }
     /* מים וזכוכית: שקופים, אחרי הכול */
     gl.depthMask(false); drawChunks(c, 't', 0); gl.depthMask(true);
     /* משבצת מסומנת: מסגרת סביב הבלוק שמכוון אליו */
@@ -570,6 +653,7 @@ H.vox = (function(){
     const dt = Math.min(.05, (ts - last) / 1000); last = ts;
     S.acc = (S.acc || 0) + dt; S.nf = (S.nf || 0) + 1;
     if(S.nf >= 60){ const a = S.acc / S.nf; if(a > .042 && (S.qual || 1) > .7) S.qual = (S.qual || 1) - .1; S.acc = 0; S.nf = 0; }
+    S.tod = (S.tod + dt / 600) % 1;
     try{ physics(dt); draw(); if(dirtyT && performance.now() - dirtyT > 2500){ dirtyT = 0; save(); } }catch(e){ console.warn(e); running = false; return; }
     requestAnimationFrame(frame);
   }
@@ -590,7 +674,7 @@ H.vox = (function(){
       if(tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap.moved = true;
       if(tap && tap.moved){ cam.yaw -= dx * .008; cam.pitch = clamp(cam.pitch + dy * .005, -.2, 1.3); } });
     const up = e => { ptr.delete(e.pointerId); pinch = 0;
-      if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY); act(ray(r.o, r.d, 60)); }
+      if(tap && !tap.moved && performance.now() - tap.t < 450 && S){ const r = rayFromPixel(e.clientX, e.clientY); act(ray(r.o, r.d, 60, true)); }
       tap = null; };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * .01, 3, 16); }, {passive: false});
@@ -609,6 +693,7 @@ H.vox = (function(){
     st.addEventListener('pointerup', rel); st.addEventListener('pointercancel', rel);
     H.$('vxjump').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); S.jump = true; });
     H.$('vxmode').addEventListener('click', () => { editMode = editMode === 'build' ? 'break' : 'build'; H.sfx.tap(); renderBar(); renderTop(); });
+    H.$('vxtime').addEventListener('click', () => { const seq = [.5, .72, .0, .27]; const nxt = seq.find(v => v > S.tod + .02) ; S.tod = nxt === undefined ? seq[0] : nxt; H.sfx.tap(); H.toast(S.tod === .5 ? '☀️ צהריים' : S.tod === .72 ? '🌇 שקיעה' : S.tod === 0 ? '🌙 לילה' : '🌅 זריחה'); });
     H.$('vxrot').addEventListener('click', () => { S.rot = ((S.rot || 0) + 1) % 4; H.sfx.tap(); H.toast('↻ סיבוב'); });
   }
 
@@ -619,7 +704,7 @@ H.vox = (function(){
     if(!blocks){ decodeEdits((H.state.build && H.state.build.e) || ''); generate(); remeshAll(); }
     const b = H.state.build || (H.state.build = {e: '', hot: []});
     const hot = (b.hot && b.hot.length ? b.hot : [1, 2, 3, 7, 8, 15, 11, 18, 9]).filter(id => id > 0).slice(0, 9);
-    S = {p: {x: S0.spawn.x, y: S0.spawn.y, z: S0.spawn.z, vy: 0, ground: false, face: 1, walk: 0}, pet: {x: S0.spawn.x + 1.5, y: S0.spawn.y, z: S0.spawn.z + 1}, hot, sel: 0, jump: false, cam: null, qual: 1};
+    S = {p: {x: S0.spawn.x, y: S0.spawn.y, z: S0.spawn.z, vy: 0, ground: false, face: 1, walk: 0}, pet: {x: S0.spawn.x + 1.5, y: S0.spawn.y, z: S0.spawn.z + 1}, hot, sel: 0, jump: false, cam: null, qual: 1, tod: .5, day: null};
     if(S.p.y < 1) S.p.y = 20;
     for(let k = 0; k < 40 && collides(S.p.x, S.p.y, S.p.z); k++) S.p.y += 1;      /* אם נולדנו בתוך בלוק, עולים החוצה */
     cam.dist = cv.clientWidth / Math.max(1, cv.clientHeight) < .75 ? 9 : 7.5;
