@@ -23,6 +23,7 @@ H.show = function(id){
   document.body.classList.toggle('inworld', id === 'world' || id === 'voxel');
   window.scrollTo(0, 0);
   H.paint();
+  if(H.navSync) H.navSync();
 };
 /* חזרה אחורה: ממשחק חוזרים למקום שממנו התחלנו (רשימת המשחקים, המפה, התוכנית) ולא תמיד לבית */
 H.GAME_SCREENS = new Set(['memory','build','pick','missing','bubbles','write','anagram','catch','proof','tricky','flash','search','letters','world','voxel','end']);
