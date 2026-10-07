@@ -2,7 +2,7 @@
    דיווח על בעיה מתוך המשחק. נשלח לשרת (אותו שרת של הסנכרון),
    ונקרא בלוח הניהול או בסקריפט tools/reports.mjs.
    נשלח: מה שהמשתמש כתב + מסך, גרסה, מכשיר, שגיאות אחרונות, וטקסט המסך.
-   לא נשלחים: שם הילד, תמונות. אימייל רק אם ההורה מחובר וסימן "אפשר לחזור אליי".
+   לא נשלחים: שם הילד. תמונה נשלחת רק אם המשתמש צירף אותה (צילום מסך). אימייל רק אם ההורה מחובר וסימן "אפשר לחזור אליי".
    ========================================================== */
 H.REPORT_KEY = 'hachtava_report_draft';
 H.reportCtx = function(){
@@ -26,13 +26,60 @@ H.openReport = function(){
   H.$('repText').value = draft; H.$('repMsg').textContent = ''; H.$('repMsg').className = 'note';
   H.$('repContactRow').style.display = (H.signedIn && H.signedIn()) ? '' : 'none';
   H.$('repContact').checked = false; H.$('repSend').disabled = false;
-  H.repKind = 'bug'; H.renderRepKinds();
+  H.repKind = 'bug'; H.renderRepKinds(); H.repImg = ''; H.renderRepImg();
   setTimeout(() => H.$('repText').focus(), 60);
 };
 H.renderRepKinds = function(){
   const K = [['bug', '🐞 משהו לא עובד'], ['confusing', '❓ משהו מבלבל'], ['idea', '💡 רעיון']];
   const row = H.$('repKinds'); row.innerHTML = '';
   K.forEach(([id, t]) => { const b = H.el('button', 'lvchip' + (H.repKind === id ? ' on' : ''), t); b.onclick = () => { H.repKind = id; H.renderRepKinds(); }; row.appendChild(b); });
+};
+/* תמונה מצורפת: מקטינים לצד של עד 1100 פיקסלים ול-JPEG, כדי שתישלח מהר גם בסלולר */
+H.shrinkImage = function(src, done){
+  const img = new Image();
+  img.onload = () => {
+    const sc = Math.min(1, 1100 / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height)), c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round((img.naturalWidth || img.width) * sc)); c.height = Math.max(1, Math.round((img.naturalHeight || img.height) * sc));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    let q = .7, out = c.toDataURL('image/jpeg', q);
+    while(out.length > 290000 && q > .3){ q -= .1; out = c.toDataURL('image/jpeg', q); }
+    done(out.length <= 300000 ? out : '');
+  };
+  img.onerror = () => done('');
+  img.src = src;
+};
+H.renderRepImg = function(){
+  const box = H.$('repImgBox'); if(!box) return;
+  const can = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  box.innerHTML = (H.repImg ? '<div class="rep-prev"><img alt="" src="' + H.repImg + '"><button class="mini" id="repImgX">✕ הסר</button></div>' : '') +
+    '<div class="row"><button class="mini" id="repAttach">📎 צרף צילום מסך</button>' + (can ? '<button class="mini" id="repGrab">📸 צלם את המסך עכשיו</button>' : '') + '</div>';
+  H.$('repAttach').onclick = () => H.$('repFile').click();
+  const x = H.$('repImgX'); if(x) x.onclick = () => { H.repImg = ''; H.renderRepImg(); };
+  const g = H.$('repGrab'); if(g) g.onclick = H.grabScreen;
+};
+H.pickRepFile = function(inp){
+  const f = inp.files && inp.files[0]; inp.value = '';
+  if(!f) return;
+  if(!/^image\//.test(f.type)){ H.$('repMsg').className = 'note bad'; H.$('repMsg').textContent = 'אפשר לצרף רק תמונה'; return; }
+  const rd = new FileReader();
+  rd.onload = () => H.shrinkImage(rd.result, out => {
+    if(!out){ H.$('repMsg').className = 'note bad'; H.$('repMsg').textContent = 'לא הצלחתי לקרוא את התמונה'; return; }
+    H.repImg = out; H.$('repMsg').textContent = ''; H.renderRepImg();
+  });
+  rd.readAsDataURL(f);
+};
+/* צילום של הלשונית הנוכחית (מחשב). מסתירים את חלון הדיווח לרגע כדי שלא ייכנס לתמונה. */
+H.grabScreen = async function(){
+  const box = H.$('reportbox');
+  try{
+    const st = await navigator.mediaDevices.getDisplayMedia({video: true, audio: false, preferCurrentTab: true});
+    box.style.visibility = 'hidden';
+    const v = document.createElement('video'); v.srcObject = st; v.muted = true; await v.play();
+    await new Promise(r => setTimeout(r, 450));
+    const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0);
+    st.getTracks().forEach(t => t.stop()); box.style.visibility = '';
+    H.shrinkImage(c.toDataURL('image/png'), out => { if(out){ H.repImg = out; H.renderRepImg(); } });
+  }catch(e){ box.style.visibility = ''; }
 };
 H.closeReport = function(){ H.$('reportbox').style.display = 'none'; };
 H.sendReport = async function(){
@@ -43,12 +90,15 @@ H.sendReport = async function(){
   H.$('repSend').disabled = true; msg.className = 'note'; msg.textContent = 'שולח…';
   const contact = H.$('repContact').checked && H.signedIn && H.signedIn();
   try{
-    const r = await fetch(H.apiUrl() + '/report', {method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text, kind: H.repKind, contact: !!contact, email: contact ? H.acc.email : '', ctx: H.reportCtxNow || H.reportCtx()})});
+    const post = img => fetch(H.apiUrl() + '/report', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text, kind: H.repKind, contact: !!contact, email: contact ? H.acc.email : '', ctx: H.reportCtxNow || H.reportCtx(), img})});
+    let r = await post(H.repImg || ''), noImg = false;
+    /* שרת ישן (לפני עדכון) דוחה בקשה גדולה: שולחים שוב בלי התמונה, כדי שהטקסט לפחות יגיע */
+    if(!r.ok && r.status !== 429 && H.repImg){ r = await post(''); noImg = r.ok; }
     if(r.status === 429){ msg.className = 'note bad'; msg.textContent = 'נשלחו הרבה דיווחים. נסה שוב בעוד קצת.'; H.$('repSend').disabled = false; return; }
     if(!r.ok) throw new Error('http ' + r.status);
     try{ localStorage.removeItem(H.REPORT_KEY); }catch(e){}
-    msg.className = 'note ok'; msg.textContent = 'תודה! הדיווח נשלח 🙏'; H.sfx.good && H.sfx.good();
+    msg.className = 'note ok'; msg.textContent = noImg ? 'הדיווח נשלח, אבל בלי התמונה. נסו שוב מאוחר יותר.' : 'תודה! הדיווח נשלח 🙏'; H.sfx.good && H.sfx.good();
     setTimeout(H.closeReport, 1600);
   }catch(e){
     msg.className = 'note bad'; msg.textContent = 'לא הצלחתי לשלוח. בדוק חיבור ונסה שוב. הטקסט נשמר.'; H.$('repSend').disabled = false;
@@ -83,7 +133,12 @@ H.renderReports = function(d){
       '<p class="rc-c">' + H.esc((c.ua || '').slice(0, 110)) + '</p>' +
       ((c.errs && c.errs.length) ? '<p class="rc-e">' + c.errs.map(H.esc).join('<br>') + '</p>' : '') +
       (x.email ? '<p class="rc-c">📧 ' + H.esc(x.email) + '</p>' : '') +
+      (x.hasImg ? '<button class="mini" data-img="' + H.esc(x.id) + '">🖼️ הצג תמונה מצורפת</button><div class="rc-img"></div>' : '') +
       (c.snap ? '<details><summary>מה היה על המסך</summary><p class="rc-c">' + H.esc(c.snap) + '</p></details>' : '');
+    const ib = card.querySelector('[data-img]');
+    if(ib) ib.onclick = async () => { ib.disabled = true;
+      try{ const r = await fetch(H.apiUrl() + '/admin/reports?img=' + encodeURIComponent(x.id), {headers: H.authHeader()}), d = await r.json();
+        if(d.img) card.querySelector('.rc-img').innerHTML = '<img alt="" src="' + d.img + '">'; else ib.textContent = 'אין תמונה'; }catch(e){ ib.disabled = false; } };
     const row = H.el('div', 'row');
     const done = H.el('button', 'mini', x.status === 'done' ? '↩️ פתח מחדש' : '✔ טופל');
     done.onclick = () => H.markReport(x.id, x.status === 'done' ? 'open' : 'done');

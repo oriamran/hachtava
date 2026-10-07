@@ -29,8 +29,10 @@
     <div class="lv-chips" id="repKinds"></div>
     <textarea id="repText" rows="5" maxlength="1000" placeholder="מה קרה? מה ציפית שיקרה?"></textarea>
     <label class="rep-contact" id="repContactRow"><input type="checkbox" id="repContact"> אפשר לחזור אליי (נשלח האימייל של החשבון)</label>
+    <div id="repImgBox"></div>
+    <input type="file" id="repFile" accept="image/*" style="display:none" onchange="H.pickRepFile(this)">
     <p class="note" id="repMsg"></p>
-    <p class="note">נשלח גם מידע טכני: המסך, הגרסה, סוג המכשיר והשגיאות האחרונות. לא נשלחים שם הילד או תמונות.</p>
+    <p class="note">צילום מסך עוזר לנו מאוד. אפשר לצלם במכשיר (בטלפון: כפתורי ההפעלה והווליום יחד) ולצרף כאן. התמונה נשלחת רק אם צירפתם, ורק לצוות. נשלח גם מידע טכני: המסך, הגרסה, סוג המכשיר והשגיאות האחרונות. לא נשלח שם הילד.</p>
     <div class="row"><button class="go" id="repSend" onclick="H.sendReport()">שלח</button><button class="mini" onclick="H.closeReport()">ביטול</button></div>
   </div>
 </div>
@@ -74,6 +76,8 @@
       <button class="mini tb" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
       <button class="mini tb" onclick="H.openReport()">🐞 דווח</button>
     </nav>
+    <div class="betanote" id="betanote">🚧 <b>האפליקציה בהרצה.</b> לכן יכולות להתגלות בעיות ובאגים, ואנו מתנצלים על כך. נתקלתם במשהו? נשמח שתצלמו מסך עם הבעיה ותדווחו עליה.
+      <div><button class="mini" onclick="H.openReport()">🐞 דווחו על בעיה</button></div></div>
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
 
@@ -405,6 +409,16 @@
           <li>את הזמן הבסיסי אפשר לשנות רק אחרי שהילד השלים את אתגר היום (ההגדרה הראשונה חופשית).</li>
           <li>צריך עוד דקות עכשיו? ב<b>➕ 10/15/30 דקות</b> אפשר להוסיף בכל עת, אחרי הקוד.</li>
         </ul>
+      </details>
+      <details><summary>🐞 משהו לא עובד? איך מדווחים עם צילום מסך</summary>
+        <p>האפליקציה בהרצה, ולכן יכולות להתגלות בעיות ובאגים. אנחנו מתנצלים על כך, ושמחים שתעזרו לנו לתקן.</p>
+        <ol>
+          <li>לוחצים על <b>🐞 דווח</b> (במסך הראשי, ובתוך העולמות ליד כפתור היציאה).</li>
+          <li>כותבים בכמה מילים מה קרה ומה ציפיתם שיקרה.</li>
+          <li>מצלמים מסך: בטלפון לוחצים יחד על כפתור ההפעלה וכפתור הווליום (באייפון: הפעלה וכפתור הגברה). במחשב אפשר ללחוץ על <b>📸 צלם את המסך עכשיו</b>.</li>
+          <li>לוחצים <b>📎 צרף צילום מסך</b>, בוחרים את התמונה מהגלריה, ולוחצים שלח.</li>
+        </ol>
+        <p>התמונה נשלחת רק אם צירפתם אותה. כדאי לצלם לפני שסוגרים את המסך עם הבעיה.</p>
       </details>
       <details><summary>📊 התקדמות ושמירה</summary>
         <ul>

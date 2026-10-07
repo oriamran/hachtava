@@ -807,3 +807,10 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
 .pg summary{font-weight:800;font-size:16px;cursor:pointer}
 .pg ol,.pg ul{margin:8px 0 2px;padding-inline-start:20px;line-height:1.6;font-size:14px}
 .pg p{line-height:1.6;font-size:14px}
+
+/* ---------- צילום מסך בדיווח ---------- */
+.rep-prev{display:flex;align-items:center;gap:10px;margin:6px 0}
+.rep-prev img{max-width:120px;max-height:120px;border-radius:10px;border:2px solid var(--cardEdge)}
+.rc-img img{max-width:100%;border-radius:12px;margin:6px 0}
+.betanote{background:#fff7e0;border:2px solid #ffd77a;border-radius:16px;padding:10px 14px;margin:10px auto;max-width:560px;font-size:14px;line-height:1.55;color:#5a3c00;text-align:center}
+.betanote button{margin-top:6px}

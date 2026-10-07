@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8qzmf7U/AcRy0quiYWvZB46wKCKv0VhhOaojN/bNV0w=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-6txbhHas65vqp98DEsjw7r9kpfwaxkUtoZIPsjg7TeE=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hTMZBXJ4X3qjkvc5OLvKI7tEmmUWHdWialqzkZyMPtw=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-Eb8rLNdSUbdTVBNcg1QlBV5F7fCDlj1Iv6EfhA1607E=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -852,6 +852,13 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
 .pg ol,.pg ul{margin:8px 0 2px;padding-inline-start:20px;line-height:1.6;font-size:14px}
 .pg p{line-height:1.6;font-size:14px}
 
+/* ---------- צילום מסך בדיווח ---------- */
+.rep-prev{display:flex;align-items:center;gap:10px;margin:6px 0}
+.rep-prev img{max-width:120px;max-height:120px;border-radius:10px;border:2px solid var(--cardEdge)}
+.rc-img img{max-width:100%;border-radius:12px;margin:6px 0}
+.betanote{background:#fff7e0;border:2px solid #ffd77a;border-radius:16px;padding:10px 14px;margin:10px auto;max-width:560px;font-size:14px;line-height:1.55;color:#5a3c00;text-align:center}
+.betanote button{margin-top:6px}
+
 </style>
 </head>
 <body>
@@ -864,8 +871,10 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <div class="lv-chips" id="repKinds"></div>
     <textarea id="repText" rows="5" maxlength="1000" placeholder="מה קרה? מה ציפית שיקרה?"></textarea>
     <label class="rep-contact" id="repContactRow"><input type="checkbox" id="repContact"> אפשר לחזור אליי (נשלח האימייל של החשבון)</label>
+    <div id="repImgBox"></div>
+    <input type="file" id="repFile" accept="image/*" style="display:none" onchange="H.pickRepFile(this)">
     <p class="note" id="repMsg"></p>
-    <p class="note">נשלח גם מידע טכני: המסך, הגרסה, סוג המכשיר והשגיאות האחרונות. לא נשלחים שם הילד או תמונות.</p>
+    <p class="note">צילום מסך עוזר לנו מאוד. אפשר לצלם במכשיר (בטלפון: כפתורי ההפעלה והווליום יחד) ולצרף כאן. התמונה נשלחת רק אם צירפתם, ורק לצוות. נשלח גם מידע טכני: המסך, הגרסה, סוג המכשיר והשגיאות האחרונות. לא נשלח שם הילד.</p>
     <div class="row"><button class="go" id="repSend" onclick="H.sendReport()">שלח</button><button class="mini" onclick="H.closeReport()">ביטול</button></div>
   </div>
 </div>
@@ -909,6 +918,8 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
       <button class="mini tb" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
       <button class="mini tb" onclick="H.openReport()">🐞 דווח</button>
     </nav>
+    <div class="betanote" id="betanote">🚧 <b>האפליקציה בהרצה.</b> לכן יכולות להתגלות בעיות ובאגים, ואנו מתנצלים על כך. נתקלתם במשהו? נשמח שתצלמו מסך עם הבעיה ותדווחו עליה.
+      <div><button class="mini" onclick="H.openReport()">🐞 דווחו על בעיה</button></div></div>
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
 
@@ -1241,6 +1252,16 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
           <li>צריך עוד דקות עכשיו? ב<b>➕ 10/15/30 דקות</b> אפשר להוסיף בכל עת, אחרי הקוד.</li>
         </ul>
       </details>
+      <details><summary>🐞 משהו לא עובד? איך מדווחים עם צילום מסך</summary>
+        <p>האפליקציה בהרצה, ולכן יכולות להתגלות בעיות ובאגים. אנחנו מתנצלים על כך, ושמחים שתעזרו לנו לתקן.</p>
+        <ol>
+          <li>לוחצים על <b>🐞 דווח</b> (במסך הראשי, ובתוך העולמות ליד כפתור היציאה).</li>
+          <li>כותבים בכמה מילים מה קרה ומה ציפיתם שיקרה.</li>
+          <li>מצלמים מסך: בטלפון לוחצים יחד על כפתור ההפעלה וכפתור הווליום (באייפון: הפעלה וכפתור הגברה). במחשב אפשר ללחוץ על <b>📸 צלם את המסך עכשיו</b>.</li>
+          <li>לוחצים <b>📎 צרף צילום מסך</b>, בוחרים את התמונה מהגלריה, ולוחצים שלח.</li>
+        </ol>
+        <p>התמונה נשלחת רק אם צירפתם אותה. כדאי לצלם לפני שסוגרים את המסך עם הבעיה.</p>
+      </details>
       <details><summary>📊 התקדמות ושמירה</summary>
         <ul>
           <li><b>📊 דוח התקדמות</b> במסך ההורים מראה אילו מילים נתקעות ואילו שלטו.</li>
@@ -1416,7 +1437,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 18:23 413ef3e';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-07 18:26 e492781';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -5137,7 +5158,9 @@ H.TOUR = [
   {e:'🎯', t:'אתגר יומי, אלבום ופרס',
    p:'כל יום יש אתגר של שלוש מילים. כל מילה שנלמדת הופכת למדבקה באלבום, וכשהאלבום מלא מחכה פרס שההורה בחר.'},
   {e:'👨‍👩‍👧', t:'להורים',
-   p:'במסך ⚙️ הורים (נעול בקוד) מוסיפים את מילות ההכתבה: מקלידים, מנקדים בלחיצות, או בוחרים מהספרייה. מתחברים עם גוגל כדי לשמור את ההתקדמות ולראות דוח. סריקת דף מצולם תגיע בקרוב.'}
+   p:'במסך ⚙️ הורים (נעול בקוד) מוסיפים את מילות ההכתבה: מקלידים, מנקדים בלחיצות, או בוחרים מהספרייה. מתחברים עם גוגל כדי לשמור את ההתקדמות ולראות דוח. סריקת דף מצולם תגיע בקרוב.'},
+  {e:'🐞', t:'האפליקציה בהרצה',
+   p:'יכולות להתגלות בעיות ובאגים, ואנו מתנצלים על כך. נתקלתם במשהו? צלמו מסך ולחצו על 🐞 דווח כדי לשלוח אותו אלינו.'}
 ];
 H.tour = {i: 0};
 
@@ -7544,7 +7567,7 @@ H.game({
    דיווח על בעיה מתוך המשחק. נשלח לשרת (אותו שרת של הסנכרון),
    ונקרא בלוח הניהול או בסקריפט tools/reports.mjs.
    נשלח: מה שהמשתמש כתב + מסך, גרסה, מכשיר, שגיאות אחרונות, וטקסט המסך.
-   לא נשלחים: שם הילד, תמונות. אימייל רק אם ההורה מחובר וסימן "אפשר לחזור אליי".
+   לא נשלחים: שם הילד. תמונה נשלחת רק אם המשתמש צירף אותה (צילום מסך). אימייל רק אם ההורה מחובר וסימן "אפשר לחזור אליי".
    ========================================================== */
 H.REPORT_KEY = 'hachtava_report_draft';
 H.reportCtx = function(){
@@ -7568,13 +7591,60 @@ H.openReport = function(){
   H.$('repText').value = draft; H.$('repMsg').textContent = ''; H.$('repMsg').className = 'note';
   H.$('repContactRow').style.display = (H.signedIn && H.signedIn()) ? '' : 'none';
   H.$('repContact').checked = false; H.$('repSend').disabled = false;
-  H.repKind = 'bug'; H.renderRepKinds();
+  H.repKind = 'bug'; H.renderRepKinds(); H.repImg = ''; H.renderRepImg();
   setTimeout(() => H.$('repText').focus(), 60);
 };
 H.renderRepKinds = function(){
   const K = [['bug', '🐞 משהו לא עובד'], ['confusing', '❓ משהו מבלבל'], ['idea', '💡 רעיון']];
   const row = H.$('repKinds'); row.innerHTML = '';
   K.forEach(([id, t]) => { const b = H.el('button', 'lvchip' + (H.repKind === id ? ' on' : ''), t); b.onclick = () => { H.repKind = id; H.renderRepKinds(); }; row.appendChild(b); });
+};
+/* תמונה מצורפת: מקטינים לצד של עד 1100 פיקסלים ול-JPEG, כדי שתישלח מהר גם בסלולר */
+H.shrinkImage = function(src, done){
+  const img = new Image();
+  img.onload = () => {
+    const sc = Math.min(1, 1100 / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height)), c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round((img.naturalWidth || img.width) * sc)); c.height = Math.max(1, Math.round((img.naturalHeight || img.height) * sc));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    let q = .7, out = c.toDataURL('image/jpeg', q);
+    while(out.length > 290000 && q > .3){ q -= .1; out = c.toDataURL('image/jpeg', q); }
+    done(out.length <= 300000 ? out : '');
+  };
+  img.onerror = () => done('');
+  img.src = src;
+};
+H.renderRepImg = function(){
+  const box = H.$('repImgBox'); if(!box) return;
+  const can = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  box.innerHTML = (H.repImg ? '<div class="rep-prev"><img alt="" src="' + H.repImg + '"><button class="mini" id="repImgX">✕ הסר</button></div>' : '') +
+    '<div class="row"><button class="mini" id="repAttach">📎 צרף צילום מסך</button>' + (can ? '<button class="mini" id="repGrab">📸 צלם את המסך עכשיו</button>' : '') + '</div>';
+  H.$('repAttach').onclick = () => H.$('repFile').click();
+  const x = H.$('repImgX'); if(x) x.onclick = () => { H.repImg = ''; H.renderRepImg(); };
+  const g = H.$('repGrab'); if(g) g.onclick = H.grabScreen;
+};
+H.pickRepFile = function(inp){
+  const f = inp.files && inp.files[0]; inp.value = '';
+  if(!f) return;
+  if(!/^image\//.test(f.type)){ H.$('repMsg').className = 'note bad'; H.$('repMsg').textContent = 'אפשר לצרף רק תמונה'; return; }
+  const rd = new FileReader();
+  rd.onload = () => H.shrinkImage(rd.result, out => {
+    if(!out){ H.$('repMsg').className = 'note bad'; H.$('repMsg').textContent = 'לא הצלחתי לקרוא את התמונה'; return; }
+    H.repImg = out; H.$('repMsg').textContent = ''; H.renderRepImg();
+  });
+  rd.readAsDataURL(f);
+};
+/* צילום של הלשונית הנוכחית (מחשב). מסתירים את חלון הדיווח לרגע כדי שלא ייכנס לתמונה. */
+H.grabScreen = async function(){
+  const box = H.$('reportbox');
+  try{
+    const st = await navigator.mediaDevices.getDisplayMedia({video: true, audio: false, preferCurrentTab: true});
+    box.style.visibility = 'hidden';
+    const v = document.createElement('video'); v.srcObject = st; v.muted = true; await v.play();
+    await new Promise(r => setTimeout(r, 450));
+    const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0);
+    st.getTracks().forEach(t => t.stop()); box.style.visibility = '';
+    H.shrinkImage(c.toDataURL('image/png'), out => { if(out){ H.repImg = out; H.renderRepImg(); } });
+  }catch(e){ box.style.visibility = ''; }
 };
 H.closeReport = function(){ H.$('reportbox').style.display = 'none'; };
 H.sendReport = async function(){
@@ -7585,12 +7655,15 @@ H.sendReport = async function(){
   H.$('repSend').disabled = true; msg.className = 'note'; msg.textContent = 'שולח…';
   const contact = H.$('repContact').checked && H.signedIn && H.signedIn();
   try{
-    const r = await fetch(H.apiUrl() + '/report', {method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text, kind: H.repKind, contact: !!contact, email: contact ? H.acc.email : '', ctx: H.reportCtxNow || H.reportCtx()})});
+    const post = img => fetch(H.apiUrl() + '/report', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text, kind: H.repKind, contact: !!contact, email: contact ? H.acc.email : '', ctx: H.reportCtxNow || H.reportCtx(), img})});
+    let r = await post(H.repImg || ''), noImg = false;
+    /* שרת ישן (לפני עדכון) דוחה בקשה גדולה: שולחים שוב בלי התמונה, כדי שהטקסט לפחות יגיע */
+    if(!r.ok && r.status !== 429 && H.repImg){ r = await post(''); noImg = r.ok; }
     if(r.status === 429){ msg.className = 'note bad'; msg.textContent = 'נשלחו הרבה דיווחים. נסה שוב בעוד קצת.'; H.$('repSend').disabled = false; return; }
     if(!r.ok) throw new Error('http ' + r.status);
     try{ localStorage.removeItem(H.REPORT_KEY); }catch(e){}
-    msg.className = 'note ok'; msg.textContent = 'תודה! הדיווח נשלח 🙏'; H.sfx.good && H.sfx.good();
+    msg.className = 'note ok'; msg.textContent = noImg ? 'הדיווח נשלח, אבל בלי התמונה. נסו שוב מאוחר יותר.' : 'תודה! הדיווח נשלח 🙏'; H.sfx.good && H.sfx.good();
     setTimeout(H.closeReport, 1600);
   }catch(e){
     msg.className = 'note bad'; msg.textContent = 'לא הצלחתי לשלוח. בדוק חיבור ונסה שוב. הטקסט נשמר.'; H.$('repSend').disabled = false;
@@ -7625,7 +7698,12 @@ H.renderReports = function(d){
       '<p class="rc-c">' + H.esc((c.ua || '').slice(0, 110)) + '</p>' +
       ((c.errs && c.errs.length) ? '<p class="rc-e">' + c.errs.map(H.esc).join('<br>') + '</p>' : '') +
       (x.email ? '<p class="rc-c">📧 ' + H.esc(x.email) + '</p>' : '') +
+      (x.hasImg ? '<button class="mini" data-img="' + H.esc(x.id) + '">🖼️ הצג תמונה מצורפת</button><div class="rc-img"></div>' : '') +
       (c.snap ? '<details><summary>מה היה על המסך</summary><p class="rc-c">' + H.esc(c.snap) + '</p></details>' : '');
+    const ib = card.querySelector('[data-img]');
+    if(ib) ib.onclick = async () => { ib.disabled = true;
+      try{ const r = await fetch(H.apiUrl() + '/admin/reports?img=' + encodeURIComponent(x.id), {headers: H.authHeader()}), d = await r.json();
+        if(d.img) card.querySelector('.rc-img').innerHTML = '<img alt="" src="' + d.img + '">'; else ib.textContent = 'אין תמונה'; }catch(e){ ib.disabled = false; } };
     const row = H.el('div', 'row');
     const done = H.el('button', 'mini', x.status === 'done' ? '↩️ פתח מחדש' : '✔ טופל');
     done.onclick = () => H.markReport(x.id, x.status === 'done' ? 'open' : 'done');

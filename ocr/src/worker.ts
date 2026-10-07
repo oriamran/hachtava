@@ -8,7 +8,7 @@
    ========================================================== */
 import { verifyGoogle, type User } from "./auth";
 import { loadState, saveState, deleteState, adminList } from "./sync";
-import { sanitizeReport, saveReport, listReports, markReport } from "./reports";
+import { sanitizeReport, saveReport, listReports, markReport, getReportImage } from "./reports";
 import { corsHeaders, json, empty, readJson, safeEq, memLimit } from "./http";
 
 export interface Env {
@@ -144,7 +144,7 @@ export default {
       if (req.method !== "POST") return json({ error: "use POST" }, 405, head);
       const ip = req.headers.get("CF-Connecting-IP") || "?";
       if (!memLimit("report:" + ip, 6, 3_600_000) || !memLimit("report:all", 150, 3_600_000)) return json({ error: HE.tooMany }, 429, head);
-      const r = await readJson(req, 20_000);
+      const r = await readJson(req, 340_000);          /* עד 300KB לתמונה מצורפת + טקסט */
       if (!r.ok) return json({ error: r.error }, r.status, head);
       const rep = sanitizeReport(r.data);
       if (!rep) return json({ error: "empty" }, 400, head);
@@ -157,7 +157,11 @@ export default {
       if (!user) return json({ error: HE.needLogin }, 401, head);
       if (!user.emailVerified || !list(env.ADMIN_EMAILS).includes(user.email.toLowerCase())) return json({ error: HE.noAccess }, 403, head);
       if (!memLimit("admin:" + user.sub, 120, 3_600_000)) return json({ error: HE.tooMany }, 429, head);
-      if (req.method === "GET") return json(await listReports(env), 200, head);
+      if (req.method === "GET") {
+        const imgId = new URL(req.url).searchParams.get("img");
+        if (imgId) { const img = await getReportImage(env, imgId); return json({ img }, img ? 200 : 404, head); }
+        return json(await listReports(env), 200, head);
+      }
       if (req.method === "POST") {
         const r = await readJson(req, 2_000);
         if (!r.ok) return json({ error: r.error }, r.status, head);

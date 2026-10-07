@@ -2,7 +2,8 @@
    דיווחי בעיות מהמשחק.
 
    המשתמש כותב מה קרה, והמשחק מצרף מידע טכני: איזה מסך, איזו גרסה, איזה
-   מכשיר, שגיאות אחרונות. לא נשמרים שם הילד ולא תמונות. אימייל נשמר רק
+   מכשיר, שגיאות אחרונות. לא נשמר שם הילד. תמונת מסך נשמרת רק אם המשתמש
+   צירף אותה בעצמו (JPEG קטן, מפתח ri: נפרד). אימייל נשמר רק
    אם ההורה מחובר וסימן "אפשר לחזור אליי".
    הדיווחים נשמרים ב-KV (קידומת r:) ל-60 יום, ונקראים בלוח הניהול
    או בסקריפט tools/reports.mjs.
@@ -15,6 +16,9 @@ const str = (v: unknown, max: number, d = "") => (typeof v === "string") ? v.rep
 const num = (v: unknown, lo: number, hi: number, d = 0) => (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
 const TTL = 60 * 86400;
 const KINDS = ["bug", "idea", "confusing"];
+export const MAX_IMG = 300_000;                 /* תווי base64 של תמונה מצורפת (כ-220KB) */
+const IMG_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+export const cleanImg = (v: unknown): string => (typeof v === "string" && v.length <= MAX_IMG && IMG_RE.test(v)) ? v : "";
 
 export function sanitizeReport(raw: unknown): Obj | null {
   if (!isObj(raw)) return null;
@@ -43,14 +47,16 @@ export function sanitizeReport(raw: unknown): Obj | null {
   const email = raw.contact === true ? str(raw.email, 80).trim() : "";
   return {
     kind: KINDS.includes(raw.kind as string) ? raw.kind : "bug",
-    text, ctx,
+    text, ctx, img: cleanImg(raw.img),
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : ""
   };
 }
 
 export async function saveReport(env: ReportEnv, rep: Obj): Promise<string> {
   const id = String(Date.now()).padStart(13, "0") + "-" + Math.random().toString(36).slice(2, 7);
-  await env.DATA.put("r:" + id, JSON.stringify({ id, at: Date.now(), status: "new", ...rep }), { expirationTtl: TTL });
+  const { img, ...rest } = rep as Obj & { img?: string };
+  if (img) await env.DATA.put("ri:" + id, img as string, { expirationTtl: TTL });
+  await env.DATA.put("r:" + id, JSON.stringify({ id, at: Date.now(), status: "new", hasImg: !!img, ...rest }), { expirationTtl: TTL });
   return id;
 }
 
@@ -76,8 +82,13 @@ export async function listReports(env: ReportEnv, limit = 60) {
 export async function markReport(env: ReportEnv, id: string, action: string): Promise<boolean> {
   if (!/^\d{13}-[a-z0-9]{1,8}$/.test(id)) return false;
   const key = "r:" + id;
-  if (action === "delete") { await env.DATA.delete(key); return true; }
+  if (action === "delete") { await env.DATA.delete(key); await env.DATA.delete("ri:" + id); return true; }
   const raw = await env.DATA.get(key); if (!raw) return false;
   try { const r = JSON.parse(raw) as Obj; r.status = action === "done" ? "done" : "new"; await env.DATA.put(key, JSON.stringify(r), { expirationTtl: TTL }); return true; }
   catch { return false; }
+}
+
+export async function getReportImage(env: ReportEnv, id: string): Promise<string> {
+  if (!/^\d{13}-[a-z0-9]{1,8}$/.test(id)) return "";
+  return (await env.DATA.get("ri:" + id)) || "";
 }

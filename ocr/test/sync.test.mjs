@@ -101,6 +101,7 @@ ok("non-base64 edits dropped", sanitizeState({ build: { e: "<script>" } }).build
 ok("oversized edits are truncated", sanitizeState({ build: { e: "A".repeat(150000) } }).build.e.length === 100000);
 ok("learned letters kept, junk dropped", sanitizeState({ build: { l: "אב<x>ת1" } }).build.l === "אבת");
 ok("time limits clamped, bad pin dropped", (() => { const l = sanitizeState({ lim: { i: 9999, b: -5, bank: 1e12, pin: "xyz", set: true } }).lim; return l.i === 240 && l.b === 0 && l.bank === 86400 && l.pin === "" && l.set === true; })());
+ok("report keeps a small jpeg, drops other data urls", (() => { const a = sanitizeReport({ text: "abc def", img: "data:image/jpeg;base64,/9j/4AAQ" }), b = sanitizeReport({ text: "abc def", img: "data:text/html;base64,PGI+" }), c = sanitizeReport({ text: "abc def", img: "data:image/jpeg;base64," + "A".repeat(400000) }); return a.img.startsWith("data:image/jpeg") && b.img === "" && c.img === ""; })());
 ok("valid pin hash kept", sanitizeState({ lim: { pin: "a".repeat(64) } }).lim.pin === "a".repeat(64));
 ok("hideWord flag is boolean only", sanitizeState({ hideWord: true }).hideWord === true && sanitizeState({ hideWord: "yes" }).hideWord === false);
 

@@ -3,8 +3,10 @@
    שימוש:  node tools/reports.mjs            כל החדשים
            node tools/reports.mjs --all      כולל מטופלים
            node tools/reports.mjs --done ID  מסמן כמטופל
+           node tools/reports.mjs --img ID   שומר את התמונה המצורפת בקובץ
            node tools/reports.mjs --delete ID מוחק */
 import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const cwd = join(dirname(fileURLToPath(import.meta.url)), '..', 'ocr');
@@ -12,6 +14,12 @@ const NS = 'e858ccd79f9140868096a85bb385cbb7';          /* DATA ב-wrangler.toml
 const wr = (...a) => execFileSync('npx', ['wrangler', ...a, '--namespace-id', NS, '--remote'], {cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']});
 const args = process.argv.slice(2);
 const flag = f => args.indexOf(f), val = f => args[args.indexOf(f) + 1];
+if(flag('--img') >= 0){
+  const id = val('--img'), out = join(dirname(fileURLToPath(import.meta.url)), 'report-' + id + '.jpg');
+  const d = wr('kv', 'key', 'get', 'ri:' + id).trim(), m = d.match(/^data:image\/(\w+);base64,(.+)$/);
+  if(!m){ console.log('אין תמונה'); process.exit(1); }
+  writeFileSync(out, Buffer.from(m[2], 'base64')); console.log(out); process.exit(0);
+}
 if(flag('--done') >= 0 || flag('--delete') >= 0){
   const del = flag('--delete') >= 0, id = val(del ? '--delete' : '--done'), key = 'r:' + id;
   if(del){ wr('kv', 'key', 'delete', key); console.log('נמחק', id); }
@@ -33,5 +41,6 @@ for(const k of keys){
   if(c.errs && c.errs.length) console.log('שגיאות:\n  ' + c.errs.join('\n  '));
   if(c.snap) console.log('על המסך:', c.snap.slice(0, 400));
   if(r.email) console.log('קשר:', r.email);
+  if(r.hasImg) console.log('תמונה מצורפת: node tools/reports.mjs --img ' + r.id);
 }
 console.log('─'.repeat(60)); console.log(shown ? shown + ' דיווחים' : 'אין דיווחים חדשים');
