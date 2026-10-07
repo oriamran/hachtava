@@ -658,9 +658,10 @@ H.vox = (function(){
     let mid = '';
     if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + H.esc(c) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה: האותיות לפי הסדר (אפשר גם מלמעלה למטה)</div>';
     else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + '</div>';
-    box.innerHTML = '<div class="wh-top"><button class="wh-exit" id="vxexit">✕ יציאה</button><span class="wh-coins">🪙 ' + H.state.coins + '</span>' +
+    box.innerHTML = '<div class="wh-top"><button class="wh-exit" id="vxexit">✕ יציאה</button><span class="wh-coins">🪙 ' + H.state.coins + '</span><button class="wh-bug" id="vxbug" aria-label="דווח על בעיה">🐞</button>' +
       '<button class="wh-topic" id="vxundo">↶ בטל</button></div>' + mid;
     H.$('vxexit').onclick = () => { H.sfx.tap(); flush(); H.goBack(); };
+    H.$('vxbug').onclick = () => H.openReport();
     H.$('vxundo').onclick = () => {
       const g = undo.pop(); if(!g) return;
       const keys = new Set();
@@ -789,7 +790,7 @@ H.vox = (function(){
       tap = null; };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist + e.deltaY * .01, 3, 16); }, {passive: false});
-    window.addEventListener('keydown', e => { if(H.screen !== 'voxel') return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = true;
+    window.addEventListener('keydown', e => { if(H.screen !== 'voxel') return; if(e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = true;
       if(k === ' ' || k.startsWith('Arrow')) e.preventDefault();
       if(k >= '1' && k <= '9'){ S.sel = Math.min(S.hot.length - 1, Number(k) - 1); editMode = 'build'; renderBar(); renderTop(); }
       if(k === 'b'){ editMode = editMode === 'build' ? 'break' : 'build'; renderBar(); renderTop(); }
@@ -827,6 +828,7 @@ H.vox = (function(){
   return {
     supported: () => initGL(), open, hunt, flush, state: () => S, cam: () => cam, mode: () => mode,
     reset(){ edits = new Map(); undo = []; generate(); remeshAll(); S.p.x = S0.spawn.x; S.p.y = S0.spawn.y; S.p.z = S0.spawn.z; S.p.vy = 0; save(); renderTop(); },
+    diag: () => ({vmode: mode, edit: editMode, edits: edits.size, tod: S ? +S.tod.toFixed(2) : 0, mobs: S ? S.mobs.length : 0, vqual: S ? +(S.qual || 1).toFixed(2) : 0}),
     mobs: () => S && S.mobs, setBlock: (x, y, z, id) => setBlock(x, y, z, id), get, edits: () => edits, check: checkWord, end(){ flush(); running = false; document.body.classList.remove('inworld'); }
   };
 })();

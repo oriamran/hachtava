@@ -17,6 +17,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
+H.BUILD = '__BUILD__';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 

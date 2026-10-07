@@ -1,6 +1,7 @@
 /* בונה קובץ HTML יחיד ואופליין מתוך src/ */
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -12,7 +13,9 @@ const css = readFileSync(join(src, 'css', 'font.css'), 'utf8').replace('__FONT__
           + '\n' + readFileSync(join(src, 'css', 'app.css'), 'utf8');
 
 const jsFiles = readdirSync(join(src, 'js')).filter(f => f.endsWith('.js')).sort();
-const js = jsFiles.map(f => '/* ===== ' + f + ' ===== */\n' + readFileSync(join(src, 'js', f), 'utf8')).join('\n');
+let stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
+try{ stamp += ' ' + execSync('git rev-parse --short HEAD', {cwd: root, stdio: ['ignore', 'pipe', 'ignore']}).toString().trim(); }catch(e){}
+const js = jsFiles.map(f => '/* ===== ' + f + ' ===== */\n' + readFileSync(join(src, 'js', f), 'utf8')).join('\n').replace('__BUILD__', stamp);
 
 const styleTxt  = '\n' + css + '\n';
 const scriptTxt = '\n' + js + '\n';

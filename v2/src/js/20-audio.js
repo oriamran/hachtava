@@ -15,7 +15,7 @@ H.speak = function(t){
   if(!H.useAudio || !t) return;
   try{
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
+    const u = new SpeechSynthesisUtterance(H.vocalFor ? H.vocalFor(t) : t);       /* מקריאים בניקוד כשהוא ידוע */
     u.lang = 'he-IL'; u.rate = .8; u.pitch = 1.05;
     if(H.voice) u.voice = H.voice;
     speechSynthesis.speak(u);

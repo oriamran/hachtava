@@ -1,3 +1,4 @@
+import { sanitizeReport, saveReport, listReports, markReport } from "../src/reports.ts";
 import { sanitizeState, summarize, saveState, loadState, deleteState, adminList } from "../src/sync.ts";
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = "") => { (cond ? pass++ : fail++); console.log((cond ? "  ✓ " : "  ✗ ") + name + (cond ? "" : "   " + extra)); };
@@ -98,6 +99,20 @@ const vb = sanitizeState({ build: { e: "AAECAw==", hot: [1, 2, "x", 999, 20] } }
 ok("edits string and hot bar kept, bad ids dropped", vb.build.e === "AAECAw==" && JSON.stringify(vb.build.hot) === "[1,2,20]", JSON.stringify(vb.build));
 ok("non-base64 edits dropped", sanitizeState({ build: { e: "<script>" } }).build.e === "");
 ok("oversized edits are truncated", sanitizeState({ build: { e: "A".repeat(90000) } }).build.e.length === 36000);
+
+console.log("problem reports");
+const rp = sanitizeReport({ text: "  המשחק נתקע  ", kind: "weird", contact: true, email: "a@b.co", ctx: { screen: "voxel", game: "blocks", errs: ["x".repeat(900), 5, "ok"], extra: { fps: 30, bad: { z: 1 }, note: "n" }, snap: "s".repeat(9000), ua: "u".repeat(999) } });
+ok("trims text, defaults unknown kind to bug", rp.text === "המשחק נתקע" && rp.kind === "bug");
+ok("keeps screen/game and caps long fields", rp.ctx.screen === "voxel" && rp.ctx.snap.length === 1500 && rp.ctx.ua.length === 200 && rp.ctx.errs[0].length === 240);
+ok("extra keeps only simple values", JSON.stringify(rp.ctx.extra) === '{"fps":30,"note":"n"}', JSON.stringify(rp.ctx.extra));
+ok("email kept only with contact consent and valid format", rp.email === "a@b.co" && sanitizeReport({ text: "abc", email: "a@b.co" }).email === "" && sanitizeReport({ text: "abc", contact: true, email: "nope" }).email === "");
+ok("too-short or non-object reports are refused", sanitizeReport({ text: "a" }) === null && sanitizeReport("x") === null);
+const renv = { DATA: kv() };
+const rid1 = await saveReport(renv, rp); await new Promise(r => setTimeout(r, 3)); const rid2 = await saveReport(renv, sanitizeReport({ text: "עוד בעיה" }));
+const lr = await listReports(renv);
+ok("reports listed newest first", lr.total === 2 && lr.reports[0].id === rid2 && lr.reports[0].status === "new");
+ok("mark done and delete", (await markReport(renv, rid1, "done")) === true && JSON.parse(renv.DATA._m.get("r:" + rid1)).status === "done" && (await markReport(renv, rid2, "delete")) === true && (await listReports(renv)).total === 1);
+ok("bad id refused", (await markReport(renv, "../s:u1", "delete")) === false);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

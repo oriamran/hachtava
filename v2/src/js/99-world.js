@@ -470,7 +470,7 @@ H.world = (function(){
   function renderHud(){
     const box = H.$('worldhud'); if(!box) return;
     const top = '<div class="wh-top"><button class="wh-exit" id="wexit">✕ יציאה</button>' +
-      '<span class="wh-coins">🪙 ' + H.state.coins + '</span>' +
+      '<span class="wh-coins">🪙 ' + H.state.coins + '</span><button class="wh-bug" id="wbug" aria-label="דווח על בעיה">🐞</button>' +
       (mode === 'explore' ? '<button class="wh-topic" id="wtopic">📝 ' + H.esc(H.topic() || 'הכתבה') + ' ▾</button>' : '') + '</div>';
     if(mode === 'hunt' && S){
       box.innerHTML = top + '<div class="wh-word">' + S.need.map((c, i) => '<span class="' + (i < S.idx ? 'got' : (i === S.idx ? 'now' : '')) + '">' + (i < S.idx ? H.esc(c) : '▢') + '</span>').join('') + '</div>' +
@@ -481,6 +481,7 @@ H.world = (function(){
       box.innerHTML = top + '<div class="wh-sub">💎 ' + W.gems + '/' + H.WORLD_GEMS + ' · ' + (W.chest ? '🎁 נפתחה' : '🎁 תיבה מחכה') + ' · 🌱 ' + S.plants.filter(p => p.st >= 3).length + '/' + S.plants.length + '</div>';
     }
     H.$('wexit').onclick = () => { H.sfx.tap(); H.goBack(); };
+    H.$('wbug').onclick = () => H.openReport();
     const tp = H.$('wtopic'); if(tp) tp.onclick = () => { end(); H.chooseTopic(null); };
   }
   function renderPrompt(){
@@ -722,7 +723,7 @@ H.world = (function(){
       tap = null;
     };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-    window.addEventListener('keydown', e => { if(H.screen !== 'world') return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = true; if(k.startsWith('Arrow')) e.preventDefault(); });
+    window.addEventListener('keydown', e => { if(H.screen !== 'world') return; if(e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = true; if(k.startsWith('Arrow')) e.preventDefault(); });
     window.addEventListener('keyup', e => { const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; keys[k] = false; });
     window.addEventListener('blur', () => { for(const k in keys) keys[k] = false; });
     const st = H.$('wstick'), kn = H.$('wknob');
@@ -741,6 +742,7 @@ H.world = (function(){
   return {
     supported(){ return initGL(); },
     open(m, keep){ if(!initGL()) return false; bind(); document.body.classList.add('inworld'); return begin(m || 'explore', keep); },
+    diag: () => ({wmode: mode, wqual: +qual.toFixed(2), items: S ? S.items.length : 0, plants: S ? S.plants.length : 0}),
     hunt, end, state: () => S, cam: () => cam, mode: () => mode, refresh(){ renderHud(); }
   };
 })();

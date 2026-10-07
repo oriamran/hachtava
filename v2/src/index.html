@@ -23,6 +23,17 @@
 
 <button id="backbtn" aria-label="חזרה">✕</button>
 <div id="toasts"></div>
+<div id="reportbox" class="reportbox" style="display:none" role="dialog" aria-label="דיווח על בעיה">
+  <div class="rep-card">
+    <h2>🐞 דיווח על בעיה</h2>
+    <div class="lv-chips" id="repKinds"></div>
+    <textarea id="repText" rows="5" maxlength="1000" placeholder="מה קרה? מה ציפית שיקרה?"></textarea>
+    <label class="rep-contact" id="repContactRow"><input type="checkbox" id="repContact"> אפשר לחזור אליי (נשלח האימייל של החשבון)</label>
+    <p class="note" id="repMsg"></p>
+    <p class="note">נשלח גם מידע טכני: המסך, הגרסה, סוג המכשיר והשגיאות האחרונות. לא נשלחים שם הילד או תמונות.</p>
+    <div class="row"><button class="go" id="repSend" onclick="H.sendReport()">שלח</button><button class="mini" onclick="H.closeReport()">ביטול</button></div>
+  </div>
+</div>
 <div id="confetti"></div>
 <div id="peek" class="peek-word" aria-live="polite"></div>
 
@@ -60,6 +71,7 @@
       <button class="mini tb" onclick="H.startTour()">❓ מדריך</button>
       <button class="mini tb" onclick="H.show('tips')">💡 טיפים</button>
       <button class="mini tb" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
+      <button class="mini tb" onclick="H.openReport()">🐞 דווח</button>
     </nav>
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
