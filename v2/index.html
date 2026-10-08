@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-izP3MCcIH1ULcr6bMvRV45jqknV7s94WSArnbgg6pD4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-b2IOmVmtR08LpZ4BK3gcQiodxuNKFljNfP6wyqbtJt4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1439,7 +1439,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-07 18:49 5a71f97';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-08 04:17 e72f985';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -7072,7 +7072,7 @@ H.vox = (function(){
     p.x = clamp(p.x, 1, NX - 1); p.z = clamp(p.z, 1, NZ - 1);
     if(p.y < -5){ p.x = S0.spawn.x; p.y = S0.spawn.y; p.z = S0.spawn.z; p.vy = 0; }
     S.jump = false;
-    if(collides(p.x, p.y, p.z)) p.y += .25;                                    /* נתקענו בתוך בלוק (למשל אחרי בנייה): עולים */
+    if(collides(p.x, p.y, p.z)){ p.y += .25; S.stuck = (S.stuck || 0) + 1; if(S.stuck > 30){ S.stuck = 0; unstick(); } } else S.stuck = 0;   /* נתקענו בתוך בלוק: עולים, ואם זה לא עוזר, מועברים למקום פנוי */
     const pet = S.pet, d = Math.hypot(p.x - pet.x, p.z - pet.z);
     if(d > 1.8){ const k = Math.min(1, dt * 3); pet.x += (p.x - pet.x) * k * (1 - 1.5 / d); pet.z += (p.z - pet.z) * k * (1 - 1.5 / d); }
     pet.y += (p.y - pet.y) * Math.min(1, dt * 6);
@@ -7160,6 +7160,36 @@ H.vox = (function(){
     if(Math.abs(sx) > Math.abs(cz)) return sx > 0 ? 1 : 3;
     return cz > 0 ? 2 : 0;
   }
+  /* גובה עמידה בעמודה: בלוק מוצק עם שני בלוקים פנויים מעליו (לא מים) */
+  function standAt(xi, zi){
+    if(xi < 1 || zi < 1 || xi >= NX - 1 || zi >= NZ - 1) return null;
+    for(let y = NY - 3; y > 0; y--){ if(SOLID(get(xi, y, zi)) && !SOLID(get(xi, y + 1, zi)) && !SOLID(get(xi, y + 2, zi))) return get(xi, y + 1, zi) === WATER ? null : y + 1; }
+    return null;
+  }
+  /* מעביר את הדמות למקום פנוי הקרוב ביותר (מסלול ספירלה). מחזיר true אם הצליח. */
+  function unstick(){
+    const p = S.p, x0 = Math.floor(p.x), z0 = Math.floor(p.z);
+    for(let r = 1; r <= 16; r++) for(let dz = -r; dz <= r; dz++) for(let dx = -r; dx <= r; dx++){
+      if(Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+      const y = standAt(x0 + dx, z0 + dz); if(y === null) continue;
+      if(collides(x0 + dx + .5, y + .01, z0 + dz + .5)) continue;
+      p.x = x0 + dx + .5; p.z = z0 + dz + .5; p.y = y + .01; p.vy = 0; return true; }
+    return false;
+  }
+  /* אחרי הנחת תבנית: אם הדמות נשארה בתוך המבנה, מוציאים אותה החוצה, בצד של הדלת, ומסובבים את המצלמה לאחור כדי לראות הכול */
+  function evictFromStamp(ax, az, w, d, doorK){
+    const p = S.p; if(p.x < ax - .5 || p.x > ax + w + .5 || p.z < az - .5 || p.z > az + d + .5) return;
+    const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]], order = [doorK, (doorK + 1) % 4, (doorK + 3) % 4, (doorK + 2) % 4], cx = ax + w / 2, cz = az + d / 2;
+    for(const k of order){
+      const dir = dirs[k];
+      for(let off = 2.5; off <= 6; off += 1){
+        const x = cx + dir[0] * (w / 2 + off), z = cz + dir[1] * (d / 2 + off), y = standAt(Math.floor(x), Math.floor(z));
+        if(y === null || collides(x, y + .01, z)) continue;
+        p.x = x; p.z = z; p.y = y + .01; p.vy = 0; cam.yaw = Math.atan2(dir[0], dir[1]); cam.pitch = .5; cam.dist = Math.max(cam.dist, 11); return;
+      }
+    }
+    unstick();
+  }
   function placeStamp(hit){
     const t = TPL[S.stamp]; if(!t) return;
     const R = rotated(t, S.rot || 0);
@@ -7176,6 +7206,7 @@ H.vox = (function(){
     const g = grp, pm = pendingMesh; grp = null; pendingMesh = null;
     if(g.length){ undo.push(g); if(undo.length > 60) undo.shift(); }
     computeLight();
+    evictFromStamp(ax, az, R.w, R.d, (S.rot || 0) % 4);
     const keys = new Set(); pm.forEach(([x, z]) => { for(let dx = -9; dx <= 9; dx += 9) for(let dz = -9; dz <= 9; dz += 9) keys.add(Math.floor((x + dx) / CH) + ',' + Math.floor((z + dz) / CH)); });
     keys.forEach(kk => { const [a, b] = kk.split(',').map(Number); remesh(a, b); });
     H.sfx.tap(); H.toast('🏗️ ' + t.n + ': ' + placed + ' בלוקים (אפשר לבטל)', 'good'); renderTop(); checkWord();
@@ -7489,9 +7520,15 @@ H.vox = (function(){
 
   /* ---------- מצלמה וציור ---------- */
   function camera(){
-    const p = S.p, head = [p.x, p.y + 1.5, p.z], cp = Math.cos(cam.pitch);
-    const dir = [Math.sin(cam.yaw) * cp, Math.sin(cam.pitch), Math.cos(cam.yaw) * cp];
-    let dist = cam.dist; const h = ray(head, dir, dist + .4); if(h) dist = Math.max(1.2, Math.min(dist, h.t - .3));
+    const p = S.p, head = [p.x, p.y + 1.5, p.z], want = cam.dist;
+    const aim = pt => { const cp = Math.cos(pt); return [Math.sin(cam.yaw) * cp, Math.sin(pt), Math.cos(yaw0()) * cp]; };
+    const yaw0 = () => cam.yaw;
+    const trace = pt => { const dir = aim(pt), h = ray(head, dir, want + .4); return {dir, t: h ? h.t : 1e9}; };
+    /* כשקיר או גבעה מאחורי הדמות חוסמים את המצלמה, מגביהים אותה (מסתכלים יותר מלמעלה) לפני שמקרבים. בלי זה בניין שהונח ליד הדמות הפך את המסך לקיר אפור. */
+    let pitch = cam.pitch, r = trace(pitch);
+    for(let k = 1; k <= 7 && r.t < want * .75; k++){ pitch = Math.min(1.45, cam.pitch + k * .17); r = trace(pitch); }
+    if(r.t < want * .75){ pitch = cam.pitch; r = trace(pitch); }
+    const dist = Math.min(want, Math.max(r.t - .3, Math.min(want, 3.5))), dir = r.dir;
     const eye = [head[0] + dir[0] * dist, head[1] + dir[1] * dist, head[2] + dir[2] * dist];
     const asp = cv.width / cv.height, look_ = look(eye, head);
     return {eye, vp: mul(persp(1.0, asp, .2, 520), look_.m), right: look_.right, up: look_.up, fwd: look_.fwd, asp};
@@ -7630,6 +7667,7 @@ H.vox = (function(){
     supported: () => initGL(), open, hunt, flush, state: () => S, cam: () => cam, mode: () => mode,
     reset(){ edits = new Map(); undo = []; generate(); remeshAll(); S.p.x = S0.spawn.x; S.p.y = S0.spawn.y; S.p.z = S0.spawn.z; S.p.vy = 0; save(); renderTop(); },
     diag: () => ({vmode: mode, edit: editMode, edits: edits.size, tod: S ? +S.tod.toFixed(2) : 0, mobs: S ? S.mobs.length : 0, vqual: S ? +(S.qual || 1).toFixed(2) : 0}),
+    stamp(id, x, y, z, rot){ S.stamp = id; S.rot = rot || 0; placeStamp({x, y, z, nx: 0, ny: 1, nz: 0}); },
     mobs: () => S && S.mobs, villages: () => S0.villages || [], setBlock: (x, y, z, id) => setBlock(x, y, z, id), get, edits: () => edits, check: checkWord, end(){ flush(); running = false; document.body.classList.remove('inworld'); }
   };
 })();
