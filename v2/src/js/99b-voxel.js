@@ -753,19 +753,25 @@ H.vox = (function(){
   }
 
   /* ---------- בונים מילה ---------- */
-  function scanWord(word){
+  /* עברית נקראת מימין לשמאל. מילה נחשבת בנויה רק אם, כפי שהיא נראית מהמצלמה עכשיו, האות הראשונה מימין והאחרונה משמאל
+     (או מלמעלה למטה). שורה שנבנתה הפוך לא תתקבל, והילד מקבל הסבר. */
+  function scanWord(word, right){
     const L = word.split('');
     const find = (ch) => { const out = []; edits.forEach((id, i) => { if(id >= LET0 && H.VOX_LETTERS[id - LET0] === ch){ const y = Math.floor(i / (NX * NZ)), r = i % (NX * NZ); out.push([r % NX, y, Math.floor(r / NX)]); } }); return out; };
     const starts = find(L[0]); if(!starts.length) return false;
-    const dirs = [[-1,0,0],[1,0,0],[0,0,-1],[0,0,1],[0,-1,0]];
+    let dirs = [[-1,0,0],[1,0,0],[0,0,-1],[0,0,1],[0,-1,0]];
+    if(right) dirs = dirs.filter(d => d[1] !== 0 || d[0] * right[0] + d[2] * right[2] < -.3);
     return starts.some(s => dirs.some(d => L.every((ch, k) => { const x = s[0] + d[0] * k, y = s[1] + d[1] * k, z = s[2] + d[2] * k; const id = get(x, y, z); return id >= LET0 && H.VOX_LETTERS[id - LET0] === ch; })));
   }
   function checkWord(){
     if(mode !== 'blocks' || !challenge || challenge.done) return;
-    if(scanWord(challenge.letters.join(''))){
+    const w = challenge.letters.join(''), right = S && S.cam ? S.cam.right : null;
+    if(scanWord(w, right)){
       challenge.done = true; const cb = challenge.onDone;
       H.toast('🎉 בנית את המילה!', 'level'); H.confetti && H.confetti(40); H.speak(challenge.word);
       setTimeout(() => cb && cb(true), 1500);
+    } else if(right && scanWord(w, null) && performance.now() - (S.revWarn || 0) > 4000){
+      S.revWarn = performance.now(); H.toast('↩️ המילה בנויה הפוך. בעברית האות הראשונה מימין', 'no');
     }
   }
   function hunt(word, onDone){
@@ -883,7 +889,7 @@ H.vox = (function(){
   function renderTop(){
     const box = H.$('vxhud'); if(!box) return;
     let mid = '';
-    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + (H.state.hideWord ? '▢' : H.esc(c)) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה של אותיות לפי הסדר, מימין לשמאל או מלמעלה למטה</div>';
+    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + (H.state.hideWord ? '▢' : H.esc(c)) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה מימין לשמאל: האות הראשונה מימין. אפשר גם מלמעלה למטה</div>';
     else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + (S.stones && S.stones.length && mode === 'free' ? ' · 📚 ' + S.stones.filter(s => s.done).length + '/' + S.stones.length : '') + '</div>';
     box.innerHTML = '<div class="wh-top"><button class="wh-exit" id="vxexit">✕ יציאה</button><span class="wh-coins">🪙 ' + H.state.coins + '</span><button class="wh-bug" id="vxbug" aria-label="דווח על בעיה">🐞</button>' +
       '<button class="wh-topic" id="vxundo">↶ בטל</button></div>' + mid;

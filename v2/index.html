@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ts5/3CyVM1TpvIbR+PqPI5B1UnZpMcgXMVsHyg83kp4=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cbbFw7ZYyHaBwSUByGFgmqLEwugmX1bHx1xO33aN67Q=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1439,7 +1439,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-08 04:31 07014dd';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-08 04:54 cf7fab6';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -7365,19 +7365,25 @@ H.vox = (function(){
   }
 
   /* ---------- בונים מילה ---------- */
-  function scanWord(word){
+  /* עברית נקראת מימין לשמאל. מילה נחשבת בנויה רק אם, כפי שהיא נראית מהמצלמה עכשיו, האות הראשונה מימין והאחרונה משמאל
+     (או מלמעלה למטה). שורה שנבנתה הפוך לא תתקבל, והילד מקבל הסבר. */
+  function scanWord(word, right){
     const L = word.split('');
     const find = (ch) => { const out = []; edits.forEach((id, i) => { if(id >= LET0 && H.VOX_LETTERS[id - LET0] === ch){ const y = Math.floor(i / (NX * NZ)), r = i % (NX * NZ); out.push([r % NX, y, Math.floor(r / NX)]); } }); return out; };
     const starts = find(L[0]); if(!starts.length) return false;
-    const dirs = [[-1,0,0],[1,0,0],[0,0,-1],[0,0,1],[0,-1,0]];
+    let dirs = [[-1,0,0],[1,0,0],[0,0,-1],[0,0,1],[0,-1,0]];
+    if(right) dirs = dirs.filter(d => d[1] !== 0 || d[0] * right[0] + d[2] * right[2] < -.3);
     return starts.some(s => dirs.some(d => L.every((ch, k) => { const x = s[0] + d[0] * k, y = s[1] + d[1] * k, z = s[2] + d[2] * k; const id = get(x, y, z); return id >= LET0 && H.VOX_LETTERS[id - LET0] === ch; })));
   }
   function checkWord(){
     if(mode !== 'blocks' || !challenge || challenge.done) return;
-    if(scanWord(challenge.letters.join(''))){
+    const w = challenge.letters.join(''), right = S && S.cam ? S.cam.right : null;
+    if(scanWord(w, right)){
       challenge.done = true; const cb = challenge.onDone;
       H.toast('🎉 בנית את המילה!', 'level'); H.confetti && H.confetti(40); H.speak(challenge.word);
       setTimeout(() => cb && cb(true), 1500);
+    } else if(right && scanWord(w, null) && performance.now() - (S.revWarn || 0) > 4000){
+      S.revWarn = performance.now(); H.toast('↩️ המילה בנויה הפוך. בעברית האות הראשונה מימין', 'no');
     }
   }
   function hunt(word, onDone){
@@ -7495,7 +7501,7 @@ H.vox = (function(){
   function renderTop(){
     const box = H.$('vxhud'); if(!box) return;
     let mid = '';
-    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + (H.state.hideWord ? '▢' : H.esc(c)) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה של אותיות לפי הסדר, מימין לשמאל או מלמעלה למטה</div>';
+    if(mode === 'blocks' && challenge) mid = '<div class="wh-word">' + challenge.letters.map(c => '<span>' + (H.state.hideWord ? '▢' : H.esc(c)) + '</span>').join('') + '</div><div class="wh-sub">בנה שורה מימין לשמאל: האות הראשונה מימין. אפשר גם מלמעלה למטה</div>';
     else mid = '<div class="wh-sub">' + (editMode === 'stamp' && TPL[S.stamp] ? '🏗️ תבנית: ' + H.esc(TPL[S.stamp].n) : (editMode === 'build' ? '🔨 בנייה' : '⛏️ שבירה')) + ' · 🧱 ' + edits.size + (S.stones && S.stones.length && mode === 'free' ? ' · 📚 ' + S.stones.filter(s => s.done).length + '/' + S.stones.length : '') + '</div>';
     box.innerHTML = '<div class="wh-top"><button class="wh-exit" id="vxexit">✕ יציאה</button><span class="wh-coins">🪙 ' + H.state.coins + '</span><button class="wh-bug" id="vxbug" aria-label="דווח על בעיה">🐞</button>' +
       '<button class="wh-topic" id="vxundo">↶ בטל</button></div>' + mid;
