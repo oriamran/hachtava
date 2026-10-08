@@ -430,6 +430,8 @@ H.vox = (function(){
 
   /* ---------- קרן (DDA) ---------- */
   const RAYABLE = id => id !== AIR && id !== WATER;
+  /* מה חוסם את המצלמה: לא עלים וזכוכית, כדי שלא תקפוץ כשמסובבים בין עצים */
+  const CAMSOLID = id => SOLID(id) && id !== 6 && id !== 24 && id !== 9;
   function ray(o, d, maxD, plants){
     let x = Math.floor(o[0]), y = Math.floor(o[1]), z = Math.floor(o[2]);
     const sx = d[0] > 0 ? 1 : -1, sy = d[1] > 0 ? 1 : -1, sz = d[2] > 0 ? 1 : -1;
@@ -437,7 +439,7 @@ H.vox = (function(){
     let tx = d[0] ? ((d[0] > 0 ? x + 1 - o[0] : o[0] - x) * tdx) : 1e9, ty = d[1] ? ((d[1] > 0 ? y + 1 - o[1] : o[1] - y) * tdy) : 1e9, tz = d[2] ? ((d[2] > 0 ? z + 1 - o[2] : o[2] - z) * tdz) : 1e9;
     let nx = 0, ny = 0, nz = 0, t = 0;
     for(let i = 0; i < 200 && t <= maxD; i++){
-      if((plants ? RAYABLE : SOLID)(get(x, y, z)) && !(x < 0 || z < 0 || x >= NX || z >= NZ)) return {x, y, z, nx, ny, nz, t};
+      if((plants === 'cam' ? CAMSOLID : (plants ? RAYABLE : SOLID))(get(x, y, z)) && !(x < 0 || z < 0 || x >= NX || z >= NZ)) return {x, y, z, nx, ny, nz, t};
       if(tx < ty && tx < tz){ x += sx; t = tx; tx += tdx; nx = -sx; ny = 0; nz = 0; }
       else if(ty < tz){ y += sy; t = ty; ty += tdy; nx = 0; ny = -sy; nz = 0; }
       else { z += sz; t = tz; tz += tdz; nx = 0; ny = 0; nz = -sz; }
@@ -876,12 +878,25 @@ H.vox = (function(){
       row('🏗️', 'תבניות בנייה', 'בלחיצה על ⋯ בוחרים בית, מגדל או גשר ולוחצים על הקרקע. הכפתור ↻ מסובב אותה.') +
       row('📚', 'אבני למידה', 'בעולם מפוזרות ' + STONES + ' אבני למידה 📚, ' + (S && S.stones ? S.stones.filter(s => s.done).length : 0) + '/' + STONES + ' נפתרו. גש אליהן ופתור: מילה, אות חסרה או זיכרון. על כל פתרון 3 🪙, ובסוף בונוס ואות חדשה.') +
       row('🐑', 'חיות', 'לחץ על חיה כדי לשמוע את שמה בניקוד ולראות אותו.') +
+      row('🆘', 'נתקעת בתוך בית?', 'הכפתור מוציא אותך החוצה, למקום פתוח קרוב.') +
       row('🔭', 'לראות את כל העולם', 'כפתור הטלסקופ מרחיק את המצלמה. אפשר גם לצבוט עם שתי אצבעות.') +
       row('🌗', 'זמן ביום', 'מחליף בין צהריים, שקיעה, לילה וזריחה. בלילה מנורות 💡 מאירות.') +
       row('⬆', 'קפיצה ותנועה', 'הג׳ויסטיק מזיז, החץ קופץ. גרור על המסך כדי לסובב את המצלמה.') +
       '<div class="row" style="margin-top:10px"><button class="go" id="vxlearn">🎓 משחק אותיות: פתח אותיות חדשות</button></div>';
     H.$('vxpclose').onclick = () => { pal.style.display = 'none'; };
     H.$('vxlearn').onclick = () => { pal.style.display = 'none'; learnLetters(); };
+  }
+  /* "אני תקוע": מעבירים את הדמות למקום פתוח (שמיים מעל הראש) קרוב, בגובה הקרקע ולא על גג */
+  function getOut(){
+    const p = S.p, x0 = Math.floor(p.x), z0 = Math.floor(p.z);
+    for(let r = 1; r <= 22; r++) for(let dz = -r; dz <= r; dz++) for(let dx = -r; dx <= r; dx++){
+      if(Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+      const x = x0 + dx, z = z0 + dz, y = standAt(x, z);
+      if(y === null || y > p.y + 1.5 || y <= topY[z * NX + x] || collides(x + .5, y + .01, z + .5)) continue;
+      p.x = x + .5; p.z = z + .5; p.y = y + .01; p.vy = 0; S.camS = null; H.toast('🚪 הוצאתי אותך החוצה'); return;
+    }
+    if(!unstick()){ p.x = S0.spawn.x; p.y = S0.spawn.y; p.z = S0.spawn.z; p.vy = 0; }
+    S.camS = null;
   }
   function learnLetters(){ flush(); running = false; H.startRound('letters', undefined, undefined, {origin: 'voxel'}); }
 
@@ -936,14 +951,18 @@ H.vox = (function(){
   /* ---------- מצלמה וציור ---------- */
   function camera(){
     const p = S.p, head = [p.x, p.y + 1.5, p.z], want = cam.dist;
-    const aim = pt => { const cp = Math.cos(pt); return [Math.sin(cam.yaw) * cp, Math.sin(pt), Math.cos(yaw0()) * cp]; };
-    const yaw0 = () => cam.yaw;
-    const trace = pt => { const dir = aim(pt), h = ray(head, dir, want + .4); return {dir, t: h ? h.t : 1e9}; };
-    /* כשקיר או גבעה מאחורי הדמות חוסמים את המצלמה, מגביהים אותה (מסתכלים יותר מלמעלה) לפני שמקרבים. בלי זה בניין שהונח ליד הדמות הפך את המסך לקיר אפור. */
-    let pitch = cam.pitch, r = trace(pitch);
-    for(let k = 1; k <= 7 && r.t < want * .75; k++){ pitch = Math.min(1.45, cam.pitch + k * .17); r = trace(pitch); }
-    if(r.t < want * .75){ pitch = cam.pitch; r = trace(pitch); }
-    const dist = Math.min(want, Math.max(r.t - .3, Math.min(want, 3.5))), dir = r.dir;
+    const aim = pt => { const cp = Math.cos(pt); return [Math.sin(cam.yaw) * cp, Math.sin(pt), Math.cos(cam.yaw) * cp]; };
+    const trace = pt => { const dir = aim(pt), h = ray(head, dir, want + .4, 'cam'); return {t: h ? h.t : 1e9}; };
+    /* כשקיר או גבעה מאחורי הדמות חוסמים את המצלמה, מגביהים אותה (מסתכלים יותר מלמעלה) לפני שמקרבים */
+    let tp = cam.pitch, r = trace(tp);
+    for(let k = 1; k <= 7 && r.t < want * .75; k++){ tp = Math.min(1.45, cam.pitch + k * .17); r = trace(tp); }
+    if(r.t < want * .75){ tp = cam.pitch; r = trace(tp); }
+    const td = Math.min(want, Math.max(r.t - .3, Math.min(want, 3.5)));
+    /* החלקה: מתקרבים מהר ומתרחקים לאט, כדי שלא תהיה קפיצה כשמסובבים ליד קיר */
+    const cs = S.camS || (S.camS = {d: td, p: tp});
+    cs.d += (td - cs.d) * (td < cs.d ? .4 : .08);
+    cs.p += (tp - cs.p) * .18;
+    const dir = aim(cs.p), dist = cs.d;
     const eye = [head[0] + dir[0] * dist, head[1] + dir[1] * dist, head[2] + dir[2] * dist];
     const asp = cv.width / cv.height, look_ = look(eye, head);
     return {eye, vp: mul(persp(1.0, asp, .2, 520), look_.m), right: look_.right, up: look_.up, fwd: look_.fwd, asp};
@@ -1056,6 +1075,7 @@ H.vox = (function(){
     H.$('vxzoom').addEventListener('click', () => { H.sfx.tap();
       if(cam.dist > 20){ cam.dist = S.zoomBack || 8; cam.pitch = S.pitchBack || .45; H.toast('🔭 חזרה לדמות'); }
       else { S.zoomBack = cam.dist; S.pitchBack = cam.pitch; cam.dist = 90; cam.pitch = 1.1; H.toast('🔭 רואים את כל העולם · לחץ שוב לחזור'); } });
+    H.$('vxout').addEventListener('click', () => { H.sfx.tap(); getOut(); });
     H.$('vxhelp').addEventListener('click', () => { H.sfx.tap(); openHelp(); });
     H.$('vxrot').addEventListener('click', () => { S.rot = ((S.rot || 0) + 1) % 4; H.sfx.tap(); H.toast('↻ סיבוב'); });
   }
