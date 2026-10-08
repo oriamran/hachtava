@@ -27,6 +27,11 @@ H.openReport = function(){
   H.$('repContactRow').style.display = (H.signedIn && H.signedIn()) ? '' : 'none';
   H.$('repContact').checked = false; H.$('repSend').disabled = false;
   H.repKind = 'bug'; H.renderRepKinds(); H.repImg = ''; H.renderRepImg();
+  /* מתוך עולם תלת־ממדי: מצרפים אוטומטית תמונה של מה שרואים (אפשר להסיר) */
+  try{
+    const w = H.screen === 'world' ? H.world : (H.screen === 'voxel' ? H.vox : null), shot = w && w.snap ? w.snap() : '';
+    if(shot) H.shrinkImage(shot, out => { if(out && !H.repImg){ H.repImg = out; H.renderRepImg(); } });
+  }catch(e){}
   setTimeout(() => H.$('repText').focus(), 60);
 };
 H.renderRepKinds = function(){

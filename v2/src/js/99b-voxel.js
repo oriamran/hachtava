@@ -1073,6 +1073,7 @@ H.vox = (function(){
     return true;
   }
   return {
+    snap(){ try{ if(!S || !cv) return ''; draw(); return cv.toDataURL('image/jpeg', .8); }catch(e){ return ''; } },
     supported: () => initGL(), open, hunt, flush, state: () => S, cam: () => cam, mode: () => mode,
     reset(){ edits = new Map(); undo = []; generate(); remeshAll(); S.p.x = S0.spawn.x; S.p.y = S0.spawn.y; S.p.z = S0.spawn.z; S.p.vy = 0; save(); renderTop(); },
     diag: () => ({vmode: mode, edit: editMode, edits: edits.size, tod: S ? +S.tod.toFixed(2) : 0, mobs: S ? S.mobs.length : 0, vqual: S ? +(S.qual || 1).toFixed(2) : 0}),

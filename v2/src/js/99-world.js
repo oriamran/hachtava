@@ -278,10 +278,19 @@ H.world = (function(){
     /* קרקע: נורמל וצבע לכל קודקוד, כדי שההצללה תהיה רכה וצבע משתנה בהדרגה (בלי "משבצות") */
     const sand = [.94, .86, .62];
     const nz2 = (x, z) => .5 + .5 * Math.sin(x * .55 + 1.3) * Math.sin(z * .47 + .4);
+    /* שבילי עפר מהכיכר אל כל שער, קצת מתפתלים */
+    const trailAt = (x, z) => { let m = 0;
+      for(let i = 0; i < PADS.length; i++){ const q = PADS[i], L = Math.hypot(q.x, q.z), ux = q.x / L, uz = q.z / L, t = x * ux + z * uz;
+        if(t < 2.6 || t > L - 1.4) continue;
+        const d = Math.abs(-x * uz + z * ux + Math.sin(t * .45 + i * 2) * .5); m = Math.max(m, smooth(1.25, .55, d)); }
+      return m; };
     const vcol = (x, z, h) => {
       const rr = Math.hypot(x, z), n = nz2(x, z);
       let col = [g[0] * (.94 + .1 * n) * (1 + Math.max(0, h) * .05), g[1] * (.94 + .1 * n) * (1 + Math.max(0, h) * .045), g[2] * (.94 + .1 * n)];
+      const n2 = .5 + .5 * Math.sin(x * .21 - z * .17 + 2) * Math.cos(z * .26 + x * .09);       /* כתמי דשא בהירים וכהים */
+      col = mix3(col, [col[0] * 1.1, col[1] * 1.08, col[2] * .85], n2 * .55);
       col = mix3(col, rock, smooth(2.2, 3.5, h));
+      col = mix3(col, [.84, .72, .5], trailAt(x, z) * .85 * (1 - smooth(R - 8, R - 6.2, rr)));
       return mix3(col, sand, Math.max(smooth(R - 8, R - 6.2, rr), smooth(-.1, -.45, h)));
     };
     const vnorm = (x, z) => { const e = .4, dx = (hgt(x + e, z) - hgt(x - e, z)) / (2 * e), dz = (hgt(x, z + e) - hgt(x, z - e)) / (2 * e), l = Math.hypot(dx, 1, dz); return [-dx / l, 1 / l, -dz / l]; };
@@ -377,6 +386,17 @@ H.world = (function(){
       if(y < .08 || near(x, z, 1.1)) continue;
       mesh.cyl(x, y, z, .025, .28, 4, [.3, .65, .3]);
       mesh.ball(x, y + .33, z, .09, [[1,.5,.6],[1,.85,.3],[.8,.6,1],[1,1,1]][i % 4], 2, 4);
+    }
+    for(let c = 0; c < 10; c++){      /* שדות פרחים בכתמי צבע */
+      const a = rnd() * 6.2832, r = 5 + rnd() * (R - 12), cx = Math.cos(a) * r, cz = Math.sin(a) * r;
+      if(near(cx, cz, 2.2)) continue;
+      const pair = [[[1,.45,.6],[1,.8,.85]], [[1,.85,.25],[1,.95,.6]], [[.65,.5,1],[.85,.78,1]], [[1,.55,.25],[1,.8,.4]], [[.4,.7,1],[.8,.9,1]]][c % 5];
+      for(let k = 0; k < 16; k++){
+        const aa = rnd() * 6.2832, rr = Math.sqrt(rnd()) * 1.9, x = cx + Math.cos(aa) * rr, z = cz + Math.sin(aa) * rr, y = hgt(x, z);
+        if(y < .08 || near(x, z, .9)) continue;
+        mesh.cyl(x, y, z, .022, .22 + rnd() * .16, 4, [.3, .65, .3]);
+        mesh.ball(x, y + .3 + rnd() * .12, z, .1 + rnd() * .04, pair[k % 2], 2, 4);
+      }
     }
     /* עומק: הרים רחוקים באובך, ואיים קטנים בתוך המים */
     const haze = th.sky, mt = [haze[0] * .55 + .2, haze[1] * .55 + .22, haze[2] * .5 + .3];
@@ -748,6 +768,7 @@ H.world = (function(){
     supported(){ return initGL(); },
     open(m, keep){ if(!initGL()) return false; bind(); document.body.classList.add('inworld'); return begin(m || 'explore', keep); },
     diag: () => ({wmode: mode, wqual: +qual.toFixed(2), items: S ? S.items.length : 0, plants: S ? S.plants.length : 0}),
+    snap(){ try{ if(!S || !cv) return ''; draw(); return cv.toDataURL('image/jpeg', .8); }catch(e){ return ''; } },
     hunt, end, state: () => S, cam: () => cam, mode: () => mode, refresh(){ renderHud(); }
   };
 })();
