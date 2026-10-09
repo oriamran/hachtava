@@ -42,8 +42,33 @@ const csp = [
   "manifest-src 'self'",
   "object-src 'none'",
   "base-uri 'none'",
-  "form-action 'none'"
+  "form-action 'none'",
+  "upgrade-insecure-requests"
 ].join('; ');
+
+/* בדיקת אבטחה בזמן בנייה: אם מישהו מוסיף דפוס מסוכן, הבנייה נכשלת ולא נפרסת.
+   אלה בדיוק הדברים שה-CSP כבר חוסם או שמרחיבים את משטח התקיפה. */
+{
+  const htmlSrc = readFileSync(join(src, 'index.html'), 'utf8');
+  const BAD = [
+    [/\son(click|change|input|submit|error|load|focus|blur|key\w+|mouse\w+|touch\w+)\s*=/i, 'מאזין אירועים בתוך HTML (השתמש ב-data-act)'],
+    [/javascript:/i, 'כתובת javascript:'],
+    [/\beval\s*\(/, 'eval'],
+    [/new\s+Function\s*\(/, 'new Function'],
+    [/document\.write\s*\(/, 'document.write'],
+    [/\.outerHTML\s*=/, 'השמה ל-outerHTML'],
+    [/insertAdjacentHTML/, 'insertAdjacentHTML (השתמש ב-H.el או בקידוד עם H.esc)'],
+    [/<script[^>]*\ssrc=["']http:\/\//i, 'סקריפט ב-http'],
+    [/target=["']_blank["'](?![^>]*rel=["'][^"']*noopener)/i, 'target=_blank בלי rel=noopener'],
+    [/\bsrc=["']http:\/\//i, 'משאב ב-http לא מאובטח']
+  ];
+  const problems = [];
+  const scan = (name, text) => text.split('\n').forEach((line, i) => BAD.forEach(([re, why]) => { if(re.test(line)) problems.push(name + ':' + (i + 1) + '  ' + why); }));
+  scan('src/index.html', htmlSrc);
+  jsFiles.forEach(f => { if(!/^98[c-d]?-/.test(f) && f !== '98-models.js') scan('src/js/' + f, readFileSync(join(src, 'js', f), 'utf8')); });
+  if(!csp.includes("script-src-attr 'none'") || /script-src[^;]*unsafe-inline/.test(csp) || /script-src[^;]*unsafe-eval/.test(csp)) problems.push('ה-CSP הוחלש');
+  if(problems.length){ console.error('בדיקת אבטחה נכשלה:\n  ' + problems.join('\n  ')); process.exit(1); }
+}
 
 const html = readFileSync(join(src, 'index.html'), 'utf8')
   .replace('<!--CSP-->', '<meta http-equiv="Content-Security-Policy" content="' + csp + '">')

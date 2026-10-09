@@ -21,6 +21,7 @@ export interface Env {
   ALLOWED_EMAILS?: string;      /* ואם מוגדר — רק החשבונות האלה */
   ADMIN_EMAILS?: string;        /* מי רשאי לראות את לוח הניהול. סוד, לא בגיט */
   RATE: KVNamespace;            /* מכסות ומגבלות קצב */
+  RL?: { limit(o: { key: string }): Promise<{ success: boolean }> };   /* אופציונלי: Cloudflare Rate Limiting, מגבלה אמיתית בין מופעים. ראו wrangler.toml */
   DATA: KVNamespace;            /* התקדמות המשתמשים */
 }
 
@@ -120,6 +121,8 @@ async function handle(req: Request, env: Env): Promise<Response> {
     if (!origin || !origins.includes(origin))
       return json({ error: "origin not allowed" }, 403, head);
     if (req.method === "OPTIONS") return empty(204, head);
+    /* אם הוגדר ה-binding: מגבלה לכל כתובת, משותפת בין כל מופעי השרת ובלי כתיבות ל-KV */
+    if (env.RL && !(await env.RL.limit({ key: ipOf(req) })).success) return json({ error: HE.tooMany }, 429, head);
 
     /* ---- התקדמות: קריאה, שמירה ומחיקה. דורש התחברות. ---- */
     if (path === "/sync") {

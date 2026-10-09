@@ -15,6 +15,14 @@ id = "e858ccd79f9140868096a85bb385cbb7"
 binding = "RATE"
 id = "98901eac17944c2293f979350b516917"
 
+# הגבלת קצב אמיתית לכל כתובת IP, משותפת בין מופעי השרת. לא חובה, והקוד עובד גם בלעדיה.
+# להפעלה: מוציאים מההערה ופורסים. (60 בקשות לדקה לכל כתובת)
+# [[unsafe.bindings]]
+# name = "RL"
+# type = "ratelimit"
+# namespace_id = "1001"
+# simple = { limit = 60, period = 60 }
+
 [vars]
 # מתג ראשי לסריקה. "false" = מושבת לכולם. להפעלה: "true" ואז wrangler deploy.
 SCANS_ENABLED = "false"

@@ -37,7 +37,7 @@ H.game({
     H.run.picked = true;
     if(ok){
       H.right(); btn.classList.add('right');
-      H.$('misword').querySelector('.gap').outerHTML = '<span>' + H.run.answer + '</span>';
+      { const sp = document.createElement('span'); sp.textContent = H.run.answer; H.$('misword').querySelector('.gap').replaceWith(sp); }
       H.$('misfb').innerHTML = '<span class="ok">🎉 יפה!</span>';
     } else {
       H.wrong(); btn.classList.add('wrongpick');

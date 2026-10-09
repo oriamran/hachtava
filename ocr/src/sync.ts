@@ -21,9 +21,10 @@ type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 const num = (v: unknown, lo: number, hi: number, d = 0) =>
   (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
-const str = (v: unknown, max: number, d = "") => (typeof v === "string") ? v.slice(0, max) : d;
+/* בלי < ו-> במחרוזות מצב: הלקוח כבר מנקה אותם, וכאן זו שכבה שנייה למקרה שמישהו שולח ישירות. הלוח מקודד בכל מקרה. */
+const str = (v: unknown, max: number, d = "") => (typeof v === "string") ? v.replace(/[<>]/g, "").slice(0, max) : d;
 const strList = (v: unknown, n: number, max: number) =>
-  Array.isArray(v) ? v.filter(x => typeof x === "string").slice(0, n).map(x => (x as string).slice(0, max)) : [];
+  Array.isArray(v) ? v.filter(x => typeof x === "string").slice(0, n).map(x => (x as string).replace(/[<>]/g, "").slice(0, max)) : [];
 
 /* רשימה לבנה. כל מפתח אחר נזרק, וכל ערך מקבל סוג וגבולות. */
 export function sanitizeState(raw: unknown): Obj | null {
@@ -83,7 +84,7 @@ export function sanitizeState(raw: unknown): Obj | null {
   /* עולם הבנייה: שינויים בבסיס64 (מוגבל בגודל) ושורת בלוקים קצרה */
   const lm = isObj(raw.lim) ? raw.lim : {}, ni = (v: unknown, hi: number) => Math.round(num(v, 0, hi, 0));
   s.lim = { i: ni(lm.i, 240), b: ni(lm.b, 240), bank: ni(lm.bank, 86400), d: str(lm.d, 10), ui: ni(lm.ui, 86400), ub: ni(lm.ub, 86400), earn: ni(lm.earn, 86400), set: lm.set === true,
-            pin: (typeof lm.pin === "string" && /^[0-9a-f]{64}$/.test(lm.pin)) ? lm.pin : "" };
+            pin: (typeof lm.pin === "string" && /^([0-9a-f]{32}\.)?[0-9a-f]{64}$/.test(lm.pin)) ? lm.pin : "" };
   const bd = isObj(raw.build) ? raw.build : {};
   s.build = { e: (typeof bd.e === "string" && /^[A-Za-z0-9+/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : "",
               hot: Array.isArray(bd.hot) ? bd.hot.filter((n): n is number => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [],

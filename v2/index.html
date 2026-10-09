@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ruDoVkdg81ehV6u9RemPJEyxGIxDNpuEpuiWMFxB1AE=' https://accounts.google.com/gsi/client; script-src-attr 'none'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gEcTXTzSkiMjSiKtSyMFPiAk2xJCVOJ4xexufSOt3+Q=' https://accounts.google.com/gsi/client; script-src-attr 'none'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -1439,7 +1439,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-09 12:17 c91a52c';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-09 12:24 aa002fe';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -1755,6 +1755,16 @@ H.errLog = [];
   window.addEventListener('unhandledrejection', e => add('promise: ' + (e.reason && e.reason.message || e.reason)));
 })();
 
+/* הגנה מהטמעה באתר זר (clickjacking). GitHub Pages לא מאפשר כותרת frame-ancestors, ובתגית meta היא לא נתמכת,
+   אז אם הדף נטען בתוך מסגרת של מקור אחר, מסתירים אותו. הטמעה באותו מקור מותרת. */
+try{
+  if(window.top !== window.self){
+    let same = false;
+    try{ same = window.top.location.origin === location.origin; }catch(e){ same = false; }
+    if(!same) document.documentElement.style.display = 'none';
+  }
+}catch(e){ document.documentElement.style.display = 'none'; }
+
 /* ===== 01-safe.js ===== */
 /* ==========================================================
    ניקוי קלט. כל מה שנכנס למצב המשחק ממקור שאינו הקוד עצמו עובר
@@ -1823,7 +1833,7 @@ H.cleanState = function(raw){
   s.world = {d: T(wd.d, 12), gems: num(wd.gems, 0, 50), chest: wd.chest === true};
   const lm = isO(raw.lim) ? raw.lim : {}, ni = (v, hi) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(0, Math.round(v))) : 0;
   s.lim = {i: ni(lm.i, 240), b: ni(lm.b, 240), bank: ni(lm.bank, 86400), d: T(lm.d, 10), ui: ni(lm.ui, 86400), ub: ni(lm.ub, 86400), earn: ni(lm.earn, 86400), set: lm.set === true,
-           pin: (typeof lm.pin === 'string' && /^[0-9a-f]{64}$/.test(lm.pin)) ? lm.pin : ''};
+           pin: (typeof lm.pin === 'string' && /^([0-9a-f]{32}\.)?[0-9a-f]{64}$/.test(lm.pin)) ? lm.pin : ''};
   const bd = isO(raw.build) ? raw.build : {};
   s.build = {e: (typeof bd.e === 'string' && /^[A-Za-z0-9+\/=]*$/.test(bd.e)) ? bd.e.slice(0, 100000) : '', hot: Array.isArray(bd.hot) ? bd.hot.filter(n => Number.isInteger(n) && n > 0 && n < 200).slice(0, 9) : [], l: (typeof bd.l === 'string' ? bd.l.replace(/[^\u05d0-\u05ea]/g, '') : '').slice(0, 30)};
   s.stars = {};
@@ -2189,7 +2199,7 @@ H.finish = function(opt){
 };
 
 /* ---------- אירועים בלי קוד בתוך ה-HTML ----------
-   אין יותר onclick="..." בדף, ולכן מדיניות האבטחה (CSP) אוסרת קוד מוטמע בתכונות.
+   אין יותר מאזיני אירועים בתוך ה-HTML, ולכן מדיניות האבטחה (CSP) אוסרת קוד מוטמע בתכונות.
    כפתור מצהיר על פעולה ב-data-act (עם data-arg אופציונלי) ורק פעולות מהרשימה הזו רצות.
    כך גם אם איכשהו יוזרק HTML לדף, הוא לא יכול להריץ קוד, ורק ללחוץ על כפתורים שהמשתמש עצמו רואה. */
 H.ACTS = new Set(['applySettings','approvePack','clearPhoto','closeReport','copyBackup','cycleNikud','deleteAccount','doInstall','downloadBackup','endTour','exportAll','exportLight','finishNikud','finishOnboard','importBackup','introNext','introSay','login','nextTour','openAdmin','openLibrary','openNikud','openPlan','openReport','openSettings','openVoxel','openWorld','prevTour','readPhoto','removePack','resetHand','resetWords','sendReport','show','signOut','startChallenge','startTour','syncNow','togglePhoto']);
@@ -2646,7 +2656,7 @@ H.game({
     H.run.picked = true;
     if(ok){
       H.right(); btn.classList.add('right');
-      H.$('misword').querySelector('.gap').outerHTML = '<span>' + H.run.answer + '</span>';
+      { const sp = document.createElement('span'); sp.textContent = H.run.answer; H.$('misword').querySelector('.gap').replaceWith(sp); }
       H.$('misfb').innerHTML = '<span class="ok">🎉 יפה!</span>';
     } else {
       H.wrong(); btn.classList.add('wrongpick');
@@ -8180,6 +8190,35 @@ H.pinHash = async function(code){
     return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
   }catch(e){ let h = 5381; for(let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0; return ('0000000000000000000000000000000000000000000000000000000000000000' + h.toString(16)).slice(-64); }
 };
+/* גיבוב קוד ההורים: PBKDF2 עם מלח אקראי (פורמט "מלח.גיבוב", שניהם הקסה). קוד של 4 ספרות הוא תמיד חלש מול תקיפה לא מקוונת,
+   אבל המלח והאיטיות מונעים טבלאות מוכנות, ומגבלת הניסיונות למטה עוצרת ניחושים בכפתורים. */
+const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+const unhex = s => Uint8Array.from(s.match(/../g) || [], h => parseInt(h, 16));
+const pbk = async (code, salt) => {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveBits']);
+  return hex(await crypto.subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 150000}, k, 256));
+};
+H.pinMake = async function(code){
+  try{ const salt = crypto.getRandomValues(new Uint8Array(16)); return hex(salt) + '.' + await pbk(code, salt); }
+  catch(e){ return H.pinHash(code); }                       /* בלי crypto.subtle (דף לא מאובטח): הגיבוב הישן */
+};
+H.pinCheck = async function(code, stored){
+  if(stored.includes('.')){
+    const [s, h] = stored.split('.');
+    try{ const x = await pbk(code, unhex(s)); let d = x.length ^ h.length; for(let i = 0; i < x.length; i++) d |= x.charCodeAt(i) ^ (h.charCodeAt(i) || 0); return d === 0; }catch(e){ return false; }
+  }
+  return (await H.pinHash(code)) === stored;                 /* פורמט ישן: נבדק, ובכניסה מוצלחת משודרג */
+};
+/* מגבלת ניחושים: אחרי 5 טעויות נעילה של 30 שניות, שמוכפלת עם כל סבב, עד רבע שעה. נשמרת במכשיר, כדי שרענון לא יאפס. */
+const FAIL_KEY = 'hachtava_pin_fail';
+const failState = () => { try{ return JSON.parse(localStorage.getItem(FAIL_KEY) || '{}'); }catch(e){ return {}; } };
+H.pinLockLeft = () => Math.max(0, Math.ceil(((failState().until || 0) - Date.now()) / 1000));
+H.pinFailed = function(){
+  const f = failState(); f.n = (f.n || 0) + 1;
+  if(f.n % 5 === 0) f.until = Date.now() + Math.min(900, 30 * Math.pow(2, f.n / 5 - 1)) * 1000;
+  try{ localStorage.setItem(FAIL_KEY, JSON.stringify(f)); }catch(e){}
+};
+H.pinOk = function(){ try{ localStorage.removeItem(FAIL_KEY); }catch(e){} };
 H.parentUntil = 0;
 H.parentOpen = () => Date.now() < H.parentUntil;
 /* חלון קוד: onOk נקרא רק אחרי קוד נכון (או אחרי בחירת קוד חדש). */
@@ -8208,10 +8247,16 @@ H.askPin = function(onOk, opts){
     if(step === 'new'){ first = code; code = ''; step = 'again'; return paint(); }
     if(step === 'again'){
       if(code !== first){ code = ''; first = ''; step = 'new'; return paint('הקודים לא זהים. נסה שוב', true); }
-      L.pin = await H.pinHash(code); H.save(); H.parentUntil = Date.now() + 10 * 60000; close(); H.toast('🔒 קוד ההורים נקבע', 'good'); return onOk();
+      L.pin = await H.pinMake(code); H.pinOk(); H.save(); H.parentUntil = Date.now() + 10 * 60000; close(); H.toast('🔒 קוד ההורים נקבע', 'good'); return onOk();
     }
-    if(await H.pinHash(code) === L.pin){ H.parentUntil = Date.now() + 10 * 60000; close(); return onOk(); }
-    code = ''; H.sfx.bad(); paint('קוד שגוי', true);
+    const wait = H.pinLockLeft();
+    if(wait > 0){ code = ''; return paint('יותר מדי ניסיונות. נסו שוב בעוד ' + wait + ' שניות', true); }
+    if(await H.pinCheck(code, L.pin)){
+      H.pinOk(); if(!L.pin.includes('.')){ L.pin = await H.pinMake(code); H.save(); }       /* שדרוג לפורמט עם מלח */
+      H.parentUntil = Date.now() + 10 * 60000; close(); return onOk();
+    }
+    H.pinFailed(); code = ''; H.sfx.bad();
+    const w2 = H.pinLockLeft(); paint(w2 > 0 ? 'יותר מדי ניסיונות. נסו שוב בעוד ' + w2 + ' שניות' : 'קוד שגוי', true);
   };
   const key = k => {
     if(k === '⌫') code = code.slice(0, -1);

@@ -108,6 +108,35 @@ H.pinHash = async function(code){
     return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
   }catch(e){ let h = 5381; for(let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0; return ('0000000000000000000000000000000000000000000000000000000000000000' + h.toString(16)).slice(-64); }
 };
+/* גיבוב קוד ההורים: PBKDF2 עם מלח אקראי (פורמט "מלח.גיבוב", שניהם הקסה). קוד של 4 ספרות הוא תמיד חלש מול תקיפה לא מקוונת,
+   אבל המלח והאיטיות מונעים טבלאות מוכנות, ומגבלת הניסיונות למטה עוצרת ניחושים בכפתורים. */
+const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+const unhex = s => Uint8Array.from(s.match(/../g) || [], h => parseInt(h, 16));
+const pbk = async (code, salt) => {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveBits']);
+  return hex(await crypto.subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 150000}, k, 256));
+};
+H.pinMake = async function(code){
+  try{ const salt = crypto.getRandomValues(new Uint8Array(16)); return hex(salt) + '.' + await pbk(code, salt); }
+  catch(e){ return H.pinHash(code); }                       /* בלי crypto.subtle (דף לא מאובטח): הגיבוב הישן */
+};
+H.pinCheck = async function(code, stored){
+  if(stored.includes('.')){
+    const [s, h] = stored.split('.');
+    try{ const x = await pbk(code, unhex(s)); let d = x.length ^ h.length; for(let i = 0; i < x.length; i++) d |= x.charCodeAt(i) ^ (h.charCodeAt(i) || 0); return d === 0; }catch(e){ return false; }
+  }
+  return (await H.pinHash(code)) === stored;                 /* פורמט ישן: נבדק, ובכניסה מוצלחת משודרג */
+};
+/* מגבלת ניחושים: אחרי 5 טעויות נעילה של 30 שניות, שמוכפלת עם כל סבב, עד רבע שעה. נשמרת במכשיר, כדי שרענון לא יאפס. */
+const FAIL_KEY = 'hachtava_pin_fail';
+const failState = () => { try{ return JSON.parse(localStorage.getItem(FAIL_KEY) || '{}'); }catch(e){ return {}; } };
+H.pinLockLeft = () => Math.max(0, Math.ceil(((failState().until || 0) - Date.now()) / 1000));
+H.pinFailed = function(){
+  const f = failState(); f.n = (f.n || 0) + 1;
+  if(f.n % 5 === 0) f.until = Date.now() + Math.min(900, 30 * Math.pow(2, f.n / 5 - 1)) * 1000;
+  try{ localStorage.setItem(FAIL_KEY, JSON.stringify(f)); }catch(e){}
+};
+H.pinOk = function(){ try{ localStorage.removeItem(FAIL_KEY); }catch(e){} };
 H.parentUntil = 0;
 H.parentOpen = () => Date.now() < H.parentUntil;
 /* חלון קוד: onOk נקרא רק אחרי קוד נכון (או אחרי בחירת קוד חדש). */
@@ -136,10 +165,16 @@ H.askPin = function(onOk, opts){
     if(step === 'new'){ first = code; code = ''; step = 'again'; return paint(); }
     if(step === 'again'){
       if(code !== first){ code = ''; first = ''; step = 'new'; return paint('הקודים לא זהים. נסה שוב', true); }
-      L.pin = await H.pinHash(code); H.save(); H.parentUntil = Date.now() + 10 * 60000; close(); H.toast('🔒 קוד ההורים נקבע', 'good'); return onOk();
+      L.pin = await H.pinMake(code); H.pinOk(); H.save(); H.parentUntil = Date.now() + 10 * 60000; close(); H.toast('🔒 קוד ההורים נקבע', 'good'); return onOk();
     }
-    if(await H.pinHash(code) === L.pin){ H.parentUntil = Date.now() + 10 * 60000; close(); return onOk(); }
-    code = ''; H.sfx.bad(); paint('קוד שגוי', true);
+    const wait = H.pinLockLeft();
+    if(wait > 0){ code = ''; return paint('יותר מדי ניסיונות. נסו שוב בעוד ' + wait + ' שניות', true); }
+    if(await H.pinCheck(code, L.pin)){
+      H.pinOk(); if(!L.pin.includes('.')){ L.pin = await H.pinMake(code); H.save(); }       /* שדרוג לפורמט עם מלח */
+      H.parentUntil = Date.now() + 10 * 60000; close(); return onOk();
+    }
+    H.pinFailed(); code = ''; H.sfx.bad();
+    const w2 = H.pinLockLeft(); paint(w2 > 0 ? 'יותר מדי ניסיונות. נסו שוב בעוד ' + w2 + ' שניות' : 'קוד שגוי', true);
   };
   const key = k => {
     if(k === '⌫') code = code.slice(0, -1);

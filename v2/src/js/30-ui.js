@@ -148,7 +148,7 @@ H.finish = function(opt){
 };
 
 /* ---------- אירועים בלי קוד בתוך ה-HTML ----------
-   אין יותר onclick="..." בדף, ולכן מדיניות האבטחה (CSP) אוסרת קוד מוטמע בתכונות.
+   אין יותר מאזיני אירועים בתוך ה-HTML, ולכן מדיניות האבטחה (CSP) אוסרת קוד מוטמע בתכונות.
    כפתור מצהיר על פעולה ב-data-act (עם data-arg אופציונלי) ורק פעולות מהרשימה הזו רצות.
    כך גם אם איכשהו יוזרק HTML לדף, הוא לא יכול להריץ קוד, ורק ללחוץ על כפתורים שהמשתמש עצמו רואה. */
 H.ACTS = new Set(['applySettings','approvePack','clearPhoto','closeReport','copyBackup','cycleNikud','deleteAccount','doInstall','downloadBackup','endTour','exportAll','exportLight','finishNikud','finishOnboard','importBackup','introNext','introSay','login','nextTour','openAdmin','openLibrary','openNikud','openPlan','openReport','openSettings','openVoxel','openWorld','prevTour','readPhoto','removePack','resetHand','resetWords','sendReport','show','signOut','startChallenge','startTour','syncNow','togglePhoto']);
