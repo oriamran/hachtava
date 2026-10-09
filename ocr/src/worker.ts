@@ -27,6 +27,8 @@ export interface Env {
 const MAX_BODY      = 9_000_000;   /* גוף בקשת סריקה, base64 מנופח ב-33% */
 const MAX_SYNC_BODY = 250_000;
 const MAX_BYTES     = 6_000_000;   /* תמונה אחרי הקטנה בצד הלקוח */
+const REPORTS_PER_DAY = 120;        /* דיווחים ליום, לכולם */
+const REPORT_IMGS_PER_DAY = 30;     /* מתוכם עם תמונה (עד 300KB כל אחת) */
 const RATE_PER_HOUR = 20;          /* הגנה מפני ניצול, לפי כתובת IP */
 const FREE_PER_MONTH = 3;          /* מכסת הסריקות החופשית, לכל מכשיר */
 
@@ -70,7 +72,7 @@ const SCHEMA = {
 /* כשהמודל לא נמצא, עדיף להגיד אילו כן זמינים מאשר "404" */
 async function modelHint(key: string): Promise<string> {
   try {
-    const r = await fetch(`${BASE}/models?key=${key}`);
+    const r = await fetch(`${BASE}/models`, { headers: { "x-goog-api-key": key } });
     if (!r.ok) return "";
     const d = await r.json() as { models?: { name?: string; supportedGenerationMethods?: string[] }[] };
     const names = (d.models || [])
@@ -92,8 +94,19 @@ const HE = {
   noAccess:  "אין הרשאה"
 };
 
+/* כל חריגה לא צפויה מחזירה תשובה כללית. אף פעם לא stack, לא הודעת שגיאה פנימית ולא נתוני משתמש. הלוג מכיל רק את סוג השגיאה. */
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
+    try { return await handle(req, env); }
+    catch (e) {
+      console.error("unhandled", e instanceof Error ? e.name : typeof e);
+      const origins = (env.ALLOWED_ORIGINS || "").split(",").map(s => s.trim()).filter(Boolean);
+      return json({ error: "server error" }, 500, corsHeaders(req.headers.get("Origin"), origins));
+    }
+  }
+};
+
+async function handle(req: Request, env: Env): Promise<Response> {
     const origins = (env.ALLOWED_ORIGINS || "").split(",").map(s => s.trim()).filter(Boolean);
     const origin  = req.headers.get("Origin");
     const head    = corsHeaders(origin, origins);
@@ -148,7 +161,17 @@ export default {
       if (!r.ok) return json({ error: r.error }, r.status, head);
       const rep = sanitizeReport(r.data);
       if (!rep) return json({ error: "empty" }, 400, head);
-      return json({ ok: true, id: await saveReport(env, rep) }, 200, head);
+      /* תקרה יומית משותפת (ב-KV, לא בזיכרון של מופע אחד): מי שמזייף כותרת Origin ושולח אלפי דיווחים
+         לא יכול למלא את האחסון או לשרוף את מכסת הכתיבות היומית שבה תלוי הסנכרון של כולם. */
+      const day = new Date().toISOString().slice(0, 10), nKey = "rep:" + day, iKey = "repimg:" + day;
+      const nDay = parseInt((await env.RATE.get(nKey)) || "0", 10);
+      if (nDay >= REPORTS_PER_DAY) return json({ error: HE.tooMany }, 429, head);
+      let withImg = false;
+      if (rep.img) { const iDay = parseInt((await env.RATE.get(iKey)) || "0", 10); if (iDay >= REPORT_IMGS_PER_DAY) rep.img = ""; else withImg = true; }
+      const id = await saveReport(env, rep);
+      await env.RATE.put(nKey, String(nDay + 1), { expirationTtl: 172_800 });
+      if (withImg) await env.RATE.put(iKey, String(parseInt((await env.RATE.get(iKey)) || "0", 10) + 1), { expirationTtl: 172_800 });
+      return json({ ok: true, id }, 200, head);
     }
 
     /* ---- קריאה וניהול של דיווחים: מנהלים בלבד ---- */
@@ -177,8 +200,7 @@ export default {
       return scan(req, env, head);
     }
     return json({ error: "not found" }, 404, head);
-  }
-};
+}
 
 async function scan(req: Request, env: Env, head: Record<string, string>): Promise<Response> {
   const origin = req.headers.get("Origin");
@@ -259,9 +281,9 @@ async function scan(req: Request, env: Env, head: Record<string, string>): Promi
     for (const model of models) {
       usedModel = model;
       try {
-        res = await fetch(`${BASE}/models/${model}:generateContent?key=${env.GOOGLE_API_KEY}`, {
+        res = await fetch(`${BASE}/models/${encodeURIComponent(model)}:generateContent`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-goog-api-key": env.GOOGLE_API_KEY },
           body: payload
         });
       } catch {

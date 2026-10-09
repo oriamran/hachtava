@@ -126,7 +126,7 @@ H.renderReports = function(d){
   const body = H.$('admbody'), list = Array.isArray(d.reports) ? d.reports : [];
   const open = list.filter(x => x.status !== 'done').length;
   H.$('admsum').innerHTML = '<div class="statbox"><b>' + (d.total || 0) + '</b><small>דיווחים</small></div><div class="statbox"><b>' + open + '</b><small>פתוחים</small></div>';
-  body.innerHTML = '<div class="row"><button class="mini" onclick="H.openAdmin()">👥 משתמשים</button></div>';
+  body.innerHTML = '<div class="row"><button class="mini" data-act="openAdmin">👥 משתמשים</button></div>';
   if(!list.length){ body.innerHTML += '<p class="note">אין דיווחים.</p>'; return; }
   const KI = {bug: '🐞', confusing: '❓', idea: '💡'};
   list.forEach(x => {

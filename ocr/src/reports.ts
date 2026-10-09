@@ -15,10 +15,17 @@ const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !
 const str = (v: unknown, max: number, d = "") => (typeof v === "string") ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").slice(0, max) : d;
 const num = (v: unknown, lo: number, hi: number, d = 0) => (typeof v === "number" && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
 const TTL = 60 * 86400;
+const IMG_TTL = 30 * 86400;                   /* תמונות נמחקות מוקדם יותר מהטקסט */
 const KINDS = ["bug", "idea", "confusing"];
 export const MAX_IMG = 300_000;                 /* תווי base64 של תמונה מצורפת (כ-220KB) */
 const IMG_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
-export const cleanImg = (v: unknown): string => (typeof v === "string" && v.length <= MAX_IMG && IMG_RE.test(v)) ? v : "";
+/* בודקים גם את הבייטים הראשונים (JPEG / PNG / WebP), לא רק את הכותרת שהלקוח כתב */
+const MAGIC: Record<string, string> = { jpeg: "/9j/", png: "iVBORw0KGgo", webp: "UklGR" };
+export const cleanImg = (v: unknown): string => {
+  if (typeof v !== "string" || v.length > MAX_IMG || !IMG_RE.test(v)) return "";
+  const m = /^data:image\/(jpeg|png|webp);base64,(.*)$/.exec(v);
+  return m && m[2].startsWith(MAGIC[m[1]]) ? v : "";
+};
 
 export function sanitizeReport(raw: unknown): Obj | null {
   if (!isObj(raw)) return null;
@@ -55,7 +62,7 @@ export function sanitizeReport(raw: unknown): Obj | null {
 export async function saveReport(env: ReportEnv, rep: Obj): Promise<string> {
   const id = String(Date.now()).padStart(13, "0") + "-" + Math.random().toString(36).slice(2, 7);
   const { img, ...rest } = rep as Obj & { img?: string };
-  if (img) await env.DATA.put("ri:" + id, img as string, { expirationTtl: TTL });
+  if (img) await env.DATA.put("ri:" + id, img as string, { expirationTtl: IMG_TTL });
   await env.DATA.put("r:" + id, JSON.stringify({ id, at: Date.now(), status: "new", hasImg: !!img, ...rest }), { expirationTtl: TTL });
   return id;
 }

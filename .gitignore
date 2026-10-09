@@ -6,3 +6,11 @@ hachtava-artifact.html
 
 # claude.ai artifact build of v2, not part of the site
 v2/artifact.html
+
+# מצב מקומי של wrangler, סודות מקומיים ותמונות מדיווחים
+.wrangler/
+ocr/.wrangler/
+.dev.vars
+ocr/.dev.vars
+.env*
+tools/report-*.jpg

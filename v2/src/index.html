@@ -30,10 +30,10 @@
     <textarea id="repText" rows="5" maxlength="1000" placeholder="מה קרה? מה ציפית שיקרה?"></textarea>
     <label class="rep-contact" id="repContactRow"><input type="checkbox" id="repContact"> אפשר לחזור אליי (נשלח האימייל של החשבון)</label>
     <div id="repImgBox"></div>
-    <input type="file" id="repFile" accept="image/*" style="display:none" onchange="H.pickRepFile(this)">
+    <input type="file" id="repFile" accept="image/*" style="display:none" data-onchange="pickRepFile">
     <p class="note" id="repMsg"></p>
     <p class="note">צילום מסך עוזר לנו מאוד. אפשר לצלם במכשיר (בטלפון: כפתורי ההפעלה והווליום יחד) ולצרף כאן. התמונה נשלחת רק אם צירפתם, ורק לצוות. נשלח גם מידע טכני: המסך, הגרסה, סוג המכשיר והשגיאות האחרונות. לא נשלח שם הילד.</p>
-    <div class="row"><button class="go" id="repSend" onclick="H.sendReport()">שלח</button><button class="mini" onclick="H.closeReport()">ביטול</button></div>
+    <div class="row"><button class="go" id="repSend" data-act="sendReport">שלח</button><button class="mini" data-act="closeReport">ביטול</button></div>
   </div>
 </div>
 <div id="confetti"></div>
@@ -62,22 +62,22 @@
     <p class="sub">ואיזה צבע?</p>
     <div id="ob-rings" class="obrings"></div>
     <label class="lbl">איך קוראים לך?<input id="ob-name" placeholder="לא חובה" maxlength="14"></label>
-    <div class="row"><button class="go" onclick="H.finishOnboard()">יאללה, מתחילים! 🚀</button></div>
+    <div class="row"><button class="go" data-act="finishOnboard">יאללה, מתחילים! 🚀</button></div>
   </section>
 
   <!-- ============ בית ============ -->
   <section class="screen on" id="s-home">
     <nav class="homenav" aria-label="תפריט">
-      <button class="mini tb" onclick="H.openLibrary()">📚 מאגר מילים</button>
-      <button class="mini tb" onclick="H.openSettings()">⚙️ הורים</button>
-      <button class="mini tb" onclick="H.startTour()">❓ מדריך</button>
-      <button class="mini tb" onclick="H.show('pguide')">👨‍👩‍👧 מדריך להורים</button>
-      <button class="mini tb" onclick="H.show('tips')">💡 טיפים</button>
-      <button class="mini tb" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
-      <button class="mini tb" onclick="H.openReport()">🐞 דווח</button>
+      <button class="mini tb" data-act="openLibrary">📚 מאגר מילים</button>
+      <button class="mini tb" data-act="openSettings">⚙️ הורים</button>
+      <button class="mini tb" data-act="startTour">❓ מדריך</button>
+      <button class="mini tb" data-act="show" data-arg="pguide">👨‍👩‍👧 מדריך להורים</button>
+      <button class="mini tb" data-act="show" data-arg="tips">💡 טיפים</button>
+      <button class="mini tb" id="homeadmin" data-act="openAdmin" style="display:none">📊 ניהול</button>
+      <button class="mini tb" data-act="openReport">🐞 דווח</button>
     </nav>
     <div class="betanote" id="betanote">🚧 <b>האפליקציה בהרצה.</b> לכן יכולות להתגלות בעיות ובאגים, ואנו מתנצלים על כך. נתקלתם במשהו? נשמח שתצלמו מסך עם הבעיה ותדווחו עליה.
-      <div><button class="mini" onclick="H.openReport()">🐞 דווחו על בעיה</button></div></div>
+      <div><button class="mini" data-act="openReport">🐞 דווחו על בעיה</button></div></div>
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
 
@@ -86,8 +86,8 @@
       <div id="homeg" class="gbtn"></div>
       <div class="homeacc-row">
         <span id="homeemail" class="homeemail" style="display:none"></span>
-        <button class="mini" id="homesignin" onclick="H.login()">🔐 התחבר עם גוגל</button>
-        <button class="mini" id="homesignout" onclick="H.signOut()" disabled>🚪 התנתק</button>
+        <button class="mini" id="homesignin" data-act="login">🔐 התחבר עם גוגל</button>
+        <button class="mini" id="homesignout" data-act="signOut" disabled>🚪 התנתק</button>
       </div>
     </div>
 
@@ -97,7 +97,7 @@
       <div class="lv-chips" id="lvchips"></div>
       <p class="lv-hint" id="lvhint"></p>
       <div class="lv-toggles">
-        <button class="mini" id="tgNikud" onclick="H.cycleNikud()"></button>
+        <button class="mini" id="tgNikud" data-act="cycleNikud"></button>
         <span class="seg2" role="group" aria-label="סוג כתב">
           <button class="mini on" id="ktbtn">✏️ כתב</button><button class="mini" id="dfbtn">🔤 דפוס</button>
         </span>
@@ -105,10 +105,10 @@
     </div>
 
     <div class="tiles">
-      <button class="menu wide plan" id="planbtn" onclick="H.openPlan()"></button>
-      <button class="menu wide chal" id="chalbtn" onclick="H.startChallenge()"></button>
-      <button class="menu wide world" id="worldbtn" onclick="H.openWorld()"></button>
-      <button class="menu wide voxel" id="voxbtn" onclick="H.openVoxel()"></button>
+      <button class="menu wide plan" id="planbtn" data-act="openPlan"></button>
+      <button class="menu wide chal" id="chalbtn" data-act="startChallenge"></button>
+      <button class="menu wide world" id="worldbtn" data-act="openWorld"></button>
+      <button class="menu wide voxel" id="voxbtn" data-act="openVoxel"></button>
       <button class="menu big-map" data-go="map">
         <span class="m-e">🗺️</span><b>המסע</b><small>תחנות שנפתחות אחת אחרי השנייה</small>
       </button>
@@ -123,7 +123,7 @@
       </button>
     </div>
 
-    <button class="menu wide install" id="installbtn" style="display:none" onclick="H.doInstall()">
+    <button class="menu wide install" id="installbtn" style="display:none" data-act="doInstall">
       <span class="m-e">📲</span><b>התקן על המסך</b><small>כדי שההתקדמות תישמר ויהיה קל לחזור</small>
     </button>
   </section>
@@ -185,7 +185,7 @@
     <p class="sub">מצא את המילים: לחץ על האות הראשונה ואז על האחרונה</p>
     <div id="searchlist" class="searchlist"></div>
     <div id="searchgrid" class="searchgrid"></div>
-    <div class="row"><button class="mini" onclick="H.byId('search').hint()">💡 רמז</button></div>
+    <div class="row"><button class="mini" data-gact="search:hint">💡 רמז</button></div>
   </section>
 
   <!-- ============ תפוס את הטעות ============ -->
@@ -214,8 +214,8 @@
       <div id="flslots" class="slots"></div>
       <div id="flpool" class="pool"></div>
       <div class="row">
-        <button class="go" onclick="H.byId('flash').check()">✅ בדיקה</button>
-        <button class="mini" onclick="H.byId('flash').peek()">👀 הבזק שוב</button>
+        <button class="go" data-gact="flash:check">✅ בדיקה</button>
+        <button class="mini" data-gact="flash:peek">👀 הבזק שוב</button>
       </div>
     </div>
     <div id="flashfb" class="fb"></div>
@@ -271,8 +271,8 @@
       <button class="mini" id="writeclear">🧹 נקה</button>
     </div>
     <div class="row" id="selfmark" style="display:none">
-      <button class="go" onclick="H.byId('selfcheck').selfMark(true)">✅ כתבתי נכון</button>
-      <button class="mini" onclick="H.byId('selfcheck').selfMark(false)">❌ טעיתי</button>
+      <button class="go" data-gact="selfcheck:selfMark:1">✅ כתבתי נכון</button>
+      <button class="mini" data-gact="selfcheck:selfMark:0">❌ טעיתי</button>
     </div>
     <p class="note">כתוב גם במחברת — האצבע על המסך זו רק הבדיקה.</p>
   </section>
@@ -368,10 +368,10 @@
     <p class="sub">מילה חדשה <b id="intro-n"></b></p>
     <div class="introcard">
       <div id="intro-w" class="introword"></div>
-      <button class="mini" onclick="H.introSay()">🔊 שמע</button>
+      <button class="mini" data-act="introSay">🔊 שמע</button>
       <p id="intro-hint" class="introhint"></p>
     </div>
-    <div class="row"><button class="go" id="intro-next" onclick="H.introNext()">הבא ➜</button></div>
+    <div class="row"><button class="go" id="intro-next" data-act="introNext">הבא ➜</button></div>
   </section>
 
   <!-- ============ מדריך להורים ============ -->
@@ -439,9 +439,9 @@
     </div>
     <div id="tour-dots" class="tour-dots"></div>
     <div class="row">
-      <button class="mini" id="tour-skip" onclick="H.endTour()">דלג</button>
-      <button class="mini" id="tour-prev" onclick="H.prevTour()">הקודם</button>
-      <button class="go" id="tour-next" onclick="H.nextTour()">הבא</button>
+      <button class="mini" id="tour-skip" data-act="endTour">דלג</button>
+      <button class="mini" id="tour-prev" data-act="prevTour">הקודם</button>
+      <button class="go" id="tour-next" data-act="nextTour">הבא</button>
     </div>
   </section>
 
@@ -463,19 +463,19 @@
   <section class="screen" id="s-nikud">
     <h2>ניקוד ✏️</h2>
     <p class="sub">בחר מילה, בחר אות, ואז בחר לה תנועה</p>
-    <div class="photowrap" id="photowrap2" style="display:none" onclick="H.togglePhoto()">
+    <div class="photowrap" id="photowrap2" style="display:none" data-act="togglePhoto">
       <img alt="דף ההכתבה">
     </div>
     <div id="nk-draft" class="draftbox" style="display:none">
       <b>⚠️ חבילה מוכנה, לא נבדקה</b>
       <p>עבור על כל מילה למטה. אם משהו לא נכון, תקן אותו. כשהכול תקין, אשר.</p>
-      <button class="go" onclick="H.approvePack()">✅ אישרתי, המילים תקינות</button>
+      <button class="go" data-act="approvePack">✅ אישרתי, המילים תקינות</button>
     </div>
     <div id="nk-words" class="nkwords"></div>
     <div id="nk-preview" class="nkpreview"></div>
     <div id="nk-letters" class="nkletters"></div>
     <div id="nk-pad" class="nkpad"></div>
-    <div class="row"><button class="go" onclick="H.finishNikud()">✔️ סיימתי</button></div>
+    <div class="row"><button class="go" data-act="finishNikud">✔️ סיימתי</button></div>
   </section>
 
   <!-- ============ לוח ניהול ============ -->
@@ -489,7 +489,7 @@
   <!-- ============ הורים ============ -->
   <section class="screen" id="s-settings">
     <h2>מסך הורים ⚙️</h2>
-    <div class="row"><button class="mini" onclick="H.show('pguide')">📘 איך מוסיפים מילים ואיך משתמשים</button></div>
+    <div class="row"><button class="mini" data-act="show" data-arg="pguide">📘 איך מוסיפים מילים ואיך משתמשים</button></div>
     <div class="row"><button class="mini" data-go="report">📊 דוח התקדמות</button></div>
     <div id="timebox" class="timebox"></div>
     <label class="lbl">חבילות מילים</label>
@@ -504,14 +504,14 @@
     <label class="lbl">צילום דף ההכתבה</label>
     <p class="note" id="photohint" style="text-align:start">צלם את הדף והוא יישאר על המסך בזמן שאתה מקליד.</p>
     <div class="row">
-      <label class="mini photobtn">📷 צלם או בחר<input type="file" accept="image/*" capture="environment" onchange="H.pickPhoto(this)"></label>
-      <button class="mini" onclick="H.clearPhoto()">🗑️ הסר צילום</button>
+      <label class="mini photobtn">📷 צלם או בחר<input type="file" accept="image/*" capture="environment" data-onchange="pickPhoto"></label>
+      <button class="mini" data-act="clearPhoto">🗑️ הסר צילום</button>
     </div>
-    <div class="photowrap" id="photowrap" style="display:none" onclick="H.togglePhoto()">
+    <div class="photowrap" id="photowrap" style="display:none" data-act="togglePhoto">
       <img alt="דף ההכתבה">
       <span class="phototip">הקש להגדלה</span>
     </div>
-    <button class="go soonbtn" id="ocrbtn" disabled onclick="H.readPhoto()">🔍 קרא את המילים מהצילום <span class="soon">בקרוב</span></button>
+    <button class="go soonbtn" id="ocrbtn" disabled data-act="readPhoto">🔍 קרא את המילים מהצילום <span class="soon">בקרוב</span></button>
     <p class="note" id="ocrmsg"></p>
     <p class="note" id="quotamsg" style="display:none"></p>
     <div class="upgrade" id="upgradebox" style="display:none">
@@ -525,23 +525,23 @@
     <label class="lbl">מילים — אחת בכל שורה</label>
     <div id="nikpad" class="nikpad"></div>
     <textarea id="wordsIn" rows="10"></textarea>
-    <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button>
-      <button class="mini" onclick="H.openLibrary()">📚 ספריית מילים</button></div>
+    <div class="row"><button class="go" data-act="openNikud">✏️ נקד את המילים</button>
+      <button class="mini" data-act="openLibrary">📚 ספריית מילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
 
     <h3>חשבון וסנכרון</h3>
     <div id="accbox">
-      <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ברירת מחדל מוגדרת" onchange="H.setClientId(this.value)"></label>
+      <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ברירת מחדל מוגדרת" data-onchange="setClientId"></label>
       <div class="row accrow">
-        <button class="go" id="loginbtn" onclick="H.login()">🔐 התחבר עם גוגל</button>
-        <button class="mini" id="signoutbtn" onclick="H.signOut()" disabled>🚪 התנתק</button>
+        <button class="go" id="loginbtn" data-act="login">🔐 התחבר עם גוגל</button>
+        <button class="mini" id="signoutbtn" data-act="signOut" disabled>🚪 התנתק</button>
       </div>
       <div id="gbtn" class="gbtn"></div>
       <p class="note" id="accmsg" style="text-align:start"></p>
       <div class="row">
-        <button class="mini" id="syncnow" style="display:none" onclick="H.syncNow()">🔄 סנכרן עכשיו</button>
-        <button class="mini" id="adminbtn" style="display:none" onclick="H.openAdmin()">📊 לוח ניהול</button>
-        <button class="mini" id="delbtn" style="display:none" onclick="H.deleteAccount()">🗑️ מחק את הנתונים שלי</button>
+        <button class="mini" id="syncnow" style="display:none" data-act="syncNow">🔄 סנכרן עכשיו</button>
+        <button class="mini" id="adminbtn" style="display:none" data-act="openAdmin">📊 לוח ניהול</button>
+        <button class="mini" id="delbtn" style="display:none" data-act="deleteAccount">🗑️ מחק את הנתונים שלי</button>
       </div>
       <p class="note" style="text-align:start">כשמתחברים נשמרים בשרת: האימייל שלך, והתקדמות המשחק (נקודות, מילים, כמה פעמים נכנסו וכמה זמן). לא נשמרים שם הילד, תמונות או כל פרט אחר. אפשר למחוק הכול בכל רגע בכפתור למעלה.</p>
       <p class="note" style="text-align:start">ההתחברות היא להורה בלבד. הילד לא מתחבר, והמשחק עובד גם בלי חשבון.</p>
@@ -550,26 +550,26 @@
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
     <div class="row">
-      <button class="mini" onclick="H.exportAll()">📤 צור קוד גיבוי</button>
-      <button class="mini" onclick="H.exportLight()">📱 קוד למכשיר חדש</button>
+      <button class="mini" data-act="exportAll">📤 צור קוד גיבוי</button>
+      <button class="mini" data-act="exportLight">📱 קוד למכשיר חדש</button>
     </div>
     <textarea id="backupOut" rows="3" readonly style="display:none"></textarea>
     <p class="note" id="backupInfo"></p>
     <div class="row">
-      <button class="mini" onclick="H.copyBackup()">📋 העתק</button>
-      <button class="mini" onclick="H.downloadBackup()">⬇️ הורד קובץ</button>
+      <button class="mini" data-act="copyBackup">📋 העתק</button>
+      <button class="mini" data-act="downloadBackup">⬇️ הורד קובץ</button>
     </div>
     <label class="lbl">שחזור — הדבק כאן קוד גיבוי</label>
     <textarea id="backupIn" rows="3" placeholder="Z...."></textarea>
     <div class="row">
-      <button class="mini" onclick="H.importBackup()">♻️ שחזר</button>
-      <button class="mini" onclick="H.resetHand()">🧽 אפס פרופיל כתב</button>
+      <button class="mini" data-act="importBackup">♻️ שחזר</button>
+      <button class="mini" data-act="resetHand">🧽 אפס פרופיל כתב</button>
     </div>
 
     <div class="row">
-      <button class="go" onclick="H.applySettings()">💾 שמור</button>
-      <button class="mini" onclick="H.resetWords()">ברירת מחדל</button>
-      <button class="mini" onclick="H.removePack()">🗑️ מחק חבילה</button>
+      <button class="go" data-act="applySettings">💾 שמור</button>
+      <button class="mini" data-act="resetWords">ברירת מחדל</button>
+      <button class="mini" data-act="removePack">🗑️ מחק חבילה</button>
     </div>
   </section>
 

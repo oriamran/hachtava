@@ -41,7 +41,7 @@ H.game({
       H.$('misfb').innerHTML = '<span class="ok">🎉 יפה!</span>';
     } else {
       H.wrong(); btn.classList.add('wrongpick');
-      H.$('misfb').innerHTML = '<span class="no">לא… הנכונה היא ' + H.run.answer + '</span>';
+      H.$('misfb').innerHTML = '<span class="no">לא… הנכונה היא ' + H.esc(H.run.answer) + '</span>';
     }
     setTimeout(() => { H.run.picked = false; this.next(); }, ok ? 850 : 1800);
   }

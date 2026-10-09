@@ -30,7 +30,7 @@ H.game({
       bar.classList.toggle('low', r.left < 8);
       if(r.left <= 0){
         H.wrong();
-        H.$('anafb').innerHTML = '<span class="no">נגמר הזמן! המילה: <b>' + r.word + '</b></span>';
+        H.$('anafb').innerHTML = '<span class="no">נגמר הזמן! המילה: <b>' + H.esc(r.word) + '</b></span>';
         clearInterval(r.clock);
         setTimeout(() => this.next(), 1900);
         return;
@@ -71,7 +71,7 @@ H.game({
       setTimeout(() => this.next(), 900);
     } else {
       H.wrong();
-      H.$('anafb').innerHTML = '<span class="no">לא בדיוק — <b>' + r.word + '</b></span>';
+      H.$('anafb').innerHTML = '<span class="no">לא בדיוק — <b>' + H.esc(r.word) + '</b></span>';
       setTimeout(() => this.next(), 1800);
     }
   },

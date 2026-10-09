@@ -54,7 +54,7 @@ H.game({
     }
   },
   hint(){
-    H.$('buildfb').innerHTML = '<span class="peek">' + H.run.word + '</span>';
+    H.$('buildfb').innerHTML = '<span class="peek">' + H.esc(H.run.word) + '</span>';
     setTimeout(() => { const f = H.$('buildfb'); if(f.querySelector('.peek')) f.textContent = ''; }, 2200);
   }
 });

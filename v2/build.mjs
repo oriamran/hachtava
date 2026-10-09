@@ -24,13 +24,13 @@ const sha = t => "'sha256-" + createHash('sha256').update(t, 'utf8').digest('bas
 /* מדיניות אבטחת תוכן. רק הסקריפט והעיצוב שלנו (לפי גיבוב) רשאים לרוץ,
    כך שגם אם טקסט זדוני יתגנב לדף, אי אפשר יהיה להריץ ממנו קוד חיצוני
    או לשלוח נתונים החוצה. הכתובת היחידה שהדף רשאי לפנות אליה היא השרת שלנו.
-   מגבלה ידועה: מטא־תג אינו יכול לכלול frame-ancestors, ו-onclick בתוך ה-HTML
-   מחייב script-src-attr 'unsafe-inline'. מעבר ל-GitHub Pages אינו מאפשר כותרות. */
+   אין קוד מוטמע בתכונות HTML (onclick וכו'), ולכן script-src-attr 'none'.
+   מגבלה ידועה: מטא־תג אינו יכול לכלול frame-ancestors. מעבר ל-GitHub Pages אינו מאפשר כותרות. */
 const API = 'https://hachtava-ocr.milim1.workers.dev';
 const csp = [
   "default-src 'none'",
   "script-src " + sha(scriptTxt) + " https://accounts.google.com/gsi/client",
-  "script-src-attr 'unsafe-inline'",
+  "script-src-attr 'none'",
   /* הגיבוב השני הוא בלוק העיצוב שגוגל מזריקה לדף בעצמה כשהכפתור נטען.
      אם גוגל תשנה אותו, הכפתור עדיין יופיע, רק בלי העיצוב הזה — בדוק בקונסול. */
   "style-src " + sha(styleTxt) + " 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style",

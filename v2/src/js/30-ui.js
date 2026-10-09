@@ -146,3 +146,26 @@ H.finish = function(opt){
   if((opt.stars||0) >= 3) H.confetti(60);
   H.show('end');
 };
+
+/* ---------- אירועים בלי קוד בתוך ה-HTML ----------
+   אין יותר onclick="..." בדף, ולכן מדיניות האבטחה (CSP) אוסרת קוד מוטמע בתכונות.
+   כפתור מצהיר על פעולה ב-data-act (עם data-arg אופציונלי) ורק פעולות מהרשימה הזו רצות.
+   כך גם אם איכשהו יוזרק HTML לדף, הוא לא יכול להריץ קוד, ורק ללחוץ על כפתורים שהמשתמש עצמו רואה. */
+H.ACTS = new Set(['applySettings','approvePack','clearPhoto','closeReport','copyBackup','cycleNikud','deleteAccount','doInstall','downloadBackup','endTour','exportAll','exportLight','finishNikud','finishOnboard','importBackup','introNext','introSay','login','nextTour','openAdmin','openLibrary','openNikud','openPlan','openReport','openSettings','openVoxel','openWorld','prevTour','readPhoto','removePack','resetHand','resetWords','sendReport','show','signOut','startChallenge','startTour','syncNow','togglePhoto']);
+H.GACTS = new Set(['search:hint', 'flash:check', 'flash:peek', 'selfcheck:selfMark']);
+H.CHANGES = {pickPhoto: el => H.pickPhoto(el), pickRepFile: el => H.pickRepFile(el), setClientId: el => H.setClientId(el.value)};
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-act],[data-gact]') : null;
+  if(!el || el.disabled) return;
+  if(el.dataset.act){
+    const f = H[el.dataset.act];
+    if(H.ACTS.has(el.dataset.act) && typeof f === 'function') f.call(H, el.dataset.arg);
+  } else if(el.dataset.gact){
+    const [gid, fn, arg] = el.dataset.gact.split(':');
+    if(H.GACTS.has(gid + ':' + fn)){ const g = H.byId(gid); if(g && typeof g[fn] === 'function') g[fn](arg === undefined ? undefined : arg === '1'); }
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target, k = el && el.dataset && el.dataset.onchange;
+  if(k && H.CHANGES[k]) H.CHANGES[k](el);
+});

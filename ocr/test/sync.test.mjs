@@ -102,6 +102,7 @@ ok("oversized edits are truncated", sanitizeState({ build: { e: "A".repeat(15000
 ok("learned letters kept, junk dropped", sanitizeState({ build: { l: "אב<x>ת1" } }).build.l === "אבת");
 ok("time limits clamped, bad pin dropped", (() => { const l = sanitizeState({ lim: { i: 9999, b: -5, bank: 1e12, pin: "xyz", set: true } }).lim; return l.i === 240 && l.b === 0 && l.bank === 86400 && l.pin === "" && l.set === true; })());
 ok("report keeps a small jpeg, drops other data urls", (() => { const a = sanitizeReport({ text: "abc def", img: "data:image/jpeg;base64,/9j/4AAQ" }), b = sanitizeReport({ text: "abc def", img: "data:text/html;base64,PGI+" }), c = sanitizeReport({ text: "abc def", img: "data:image/jpeg;base64," + "A".repeat(400000) }); return a.img.startsWith("data:image/jpeg") && b.img === "" && c.img === ""; })());
+ok("report image: magic bytes must match", (() => { const good = "data:image/png;base64,iVBORw0KGgoAAAA", fake = "data:image/png;base64,PGh0bWw+PHNjcmlwdD4="; return sanitizeReport({ text: "abc def", img: good }).img === good && sanitizeReport({ text: "abc def", img: fake }).img === ""; })());
 ok("valid pin hash kept", sanitizeState({ lim: { pin: "a".repeat(64) } }).lim.pin === "a".repeat(64));
 ok("hideWord flag is boolean only", sanitizeState({ hideWord: true }).hideWord === true && sanitizeState({ hideWord: "yes" }).hideWord === false);
 

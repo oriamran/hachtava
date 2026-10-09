@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#7cc6f0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CUnXrT3HbZWgHniEk7BYI0X68IfKeoMLGI8ZL+/CRXY=' https://accounts.google.com/gsi/client; script-src-attr 'unsafe-inline'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ruDoVkdg81ehV6u9RemPJEyxGIxDNpuEpuiWMFxB1AE=' https://accounts.google.com/gsi/client; script-src-attr 'none'; style-src 'sha256-5XD59zPCeXtSeY/CsaPI0gPbtE4JmZarn12yvXMJAvg=' 'sha256-bPYX3s9ZtkBLGfQigE2LegGDbGe5nQ/S37hvxd2mbUk=' https://accounts.google.com/gsi/style; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'self' https://hachtava-ocr.milim1.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- התקנה למסך הבית. הקובץ הבודד עובד גם בלי אלה, הם פשוט לא יימצאו. -->
 <link rel="manifest" href="manifest.json">
@@ -874,10 +874,10 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <textarea id="repText" rows="5" maxlength="1000" placeholder="מה קרה? מה ציפית שיקרה?"></textarea>
     <label class="rep-contact" id="repContactRow"><input type="checkbox" id="repContact"> אפשר לחזור אליי (נשלח האימייל של החשבון)</label>
     <div id="repImgBox"></div>
-    <input type="file" id="repFile" accept="image/*" style="display:none" onchange="H.pickRepFile(this)">
+    <input type="file" id="repFile" accept="image/*" style="display:none" data-onchange="pickRepFile">
     <p class="note" id="repMsg"></p>
     <p class="note">צילום מסך עוזר לנו מאוד. אפשר לצלם במכשיר (בטלפון: כפתורי ההפעלה והווליום יחד) ולצרף כאן. התמונה נשלחת רק אם צירפתם, ורק לצוות. נשלח גם מידע טכני: המסך, הגרסה, סוג המכשיר והשגיאות האחרונות. לא נשלח שם הילד.</p>
-    <div class="row"><button class="go" id="repSend" onclick="H.sendReport()">שלח</button><button class="mini" onclick="H.closeReport()">ביטול</button></div>
+    <div class="row"><button class="go" id="repSend" data-act="sendReport">שלח</button><button class="mini" data-act="closeReport">ביטול</button></div>
   </div>
 </div>
 <div id="confetti"></div>
@@ -906,22 +906,22 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <p class="sub">ואיזה צבע?</p>
     <div id="ob-rings" class="obrings"></div>
     <label class="lbl">איך קוראים לך?<input id="ob-name" placeholder="לא חובה" maxlength="14"></label>
-    <div class="row"><button class="go" onclick="H.finishOnboard()">יאללה, מתחילים! 🚀</button></div>
+    <div class="row"><button class="go" data-act="finishOnboard">יאללה, מתחילים! 🚀</button></div>
   </section>
 
   <!-- ============ בית ============ -->
   <section class="screen on" id="s-home">
     <nav class="homenav" aria-label="תפריט">
-      <button class="mini tb" onclick="H.openLibrary()">📚 מאגר מילים</button>
-      <button class="mini tb" onclick="H.openSettings()">⚙️ הורים</button>
-      <button class="mini tb" onclick="H.startTour()">❓ מדריך</button>
-      <button class="mini tb" onclick="H.show('pguide')">👨‍👩‍👧 מדריך להורים</button>
-      <button class="mini tb" onclick="H.show('tips')">💡 טיפים</button>
-      <button class="mini tb" id="homeadmin" onclick="H.openAdmin()" style="display:none">📊 ניהול</button>
-      <button class="mini tb" onclick="H.openReport()">🐞 דווח</button>
+      <button class="mini tb" data-act="openLibrary">📚 מאגר מילים</button>
+      <button class="mini tb" data-act="openSettings">⚙️ הורים</button>
+      <button class="mini tb" data-act="startTour">❓ מדריך</button>
+      <button class="mini tb" data-act="show" data-arg="pguide">👨‍👩‍👧 מדריך להורים</button>
+      <button class="mini tb" data-act="show" data-arg="tips">💡 טיפים</button>
+      <button class="mini tb" id="homeadmin" data-act="openAdmin" style="display:none">📊 ניהול</button>
+      <button class="mini tb" data-act="openReport">🐞 דווח</button>
     </nav>
     <div class="betanote" id="betanote">🚧 <b>האפליקציה בהרצה.</b> לכן יכולות להתגלות בעיות ובאגים, ואנו מתנצלים על כך. נתקלתם במשהו? נשמח שתצלמו מסך עם הבעיה ותדווחו עליה.
-      <div><button class="mini" onclick="H.openReport()">🐞 דווחו על בעיה</button></div></div>
+      <div><button class="mini" data-act="openReport">🐞 דווחו על בעיה</button></div></div>
     <h1 id="hello">היי!</h1>
     <p class="topic" id="topic"></p>
 
@@ -930,8 +930,8 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
       <div id="homeg" class="gbtn"></div>
       <div class="homeacc-row">
         <span id="homeemail" class="homeemail" style="display:none"></span>
-        <button class="mini" id="homesignin" onclick="H.login()">🔐 התחבר עם גוגל</button>
-        <button class="mini" id="homesignout" onclick="H.signOut()" disabled>🚪 התנתק</button>
+        <button class="mini" id="homesignin" data-act="login">🔐 התחבר עם גוגל</button>
+        <button class="mini" id="homesignout" data-act="signOut" disabled>🚪 התנתק</button>
       </div>
     </div>
 
@@ -941,7 +941,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
       <div class="lv-chips" id="lvchips"></div>
       <p class="lv-hint" id="lvhint"></p>
       <div class="lv-toggles">
-        <button class="mini" id="tgNikud" onclick="H.cycleNikud()"></button>
+        <button class="mini" id="tgNikud" data-act="cycleNikud"></button>
         <span class="seg2" role="group" aria-label="סוג כתב">
           <button class="mini on" id="ktbtn">✏️ כתב</button><button class="mini" id="dfbtn">🔤 דפוס</button>
         </span>
@@ -949,10 +949,10 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     </div>
 
     <div class="tiles">
-      <button class="menu wide plan" id="planbtn" onclick="H.openPlan()"></button>
-      <button class="menu wide chal" id="chalbtn" onclick="H.startChallenge()"></button>
-      <button class="menu wide world" id="worldbtn" onclick="H.openWorld()"></button>
-      <button class="menu wide voxel" id="voxbtn" onclick="H.openVoxel()"></button>
+      <button class="menu wide plan" id="planbtn" data-act="openPlan"></button>
+      <button class="menu wide chal" id="chalbtn" data-act="startChallenge"></button>
+      <button class="menu wide world" id="worldbtn" data-act="openWorld"></button>
+      <button class="menu wide voxel" id="voxbtn" data-act="openVoxel"></button>
       <button class="menu big-map" data-go="map">
         <span class="m-e">🗺️</span><b>המסע</b><small>תחנות שנפתחות אחת אחרי השנייה</small>
       </button>
@@ -967,7 +967,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
       </button>
     </div>
 
-    <button class="menu wide install" id="installbtn" style="display:none" onclick="H.doInstall()">
+    <button class="menu wide install" id="installbtn" style="display:none" data-act="doInstall">
       <span class="m-e">📲</span><b>התקן על המסך</b><small>כדי שההתקדמות תישמר ויהיה קל לחזור</small>
     </button>
   </section>
@@ -1029,7 +1029,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <p class="sub">מצא את המילים: לחץ על האות הראשונה ואז על האחרונה</p>
     <div id="searchlist" class="searchlist"></div>
     <div id="searchgrid" class="searchgrid"></div>
-    <div class="row"><button class="mini" onclick="H.byId('search').hint()">💡 רמז</button></div>
+    <div class="row"><button class="mini" data-gact="search:hint">💡 רמז</button></div>
   </section>
 
   <!-- ============ תפוס את הטעות ============ -->
@@ -1058,8 +1058,8 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
       <div id="flslots" class="slots"></div>
       <div id="flpool" class="pool"></div>
       <div class="row">
-        <button class="go" onclick="H.byId('flash').check()">✅ בדיקה</button>
-        <button class="mini" onclick="H.byId('flash').peek()">👀 הבזק שוב</button>
+        <button class="go" data-gact="flash:check">✅ בדיקה</button>
+        <button class="mini" data-gact="flash:peek">👀 הבזק שוב</button>
       </div>
     </div>
     <div id="flashfb" class="fb"></div>
@@ -1115,8 +1115,8 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
       <button class="mini" id="writeclear">🧹 נקה</button>
     </div>
     <div class="row" id="selfmark" style="display:none">
-      <button class="go" onclick="H.byId('selfcheck').selfMark(true)">✅ כתבתי נכון</button>
-      <button class="mini" onclick="H.byId('selfcheck').selfMark(false)">❌ טעיתי</button>
+      <button class="go" data-gact="selfcheck:selfMark:1">✅ כתבתי נכון</button>
+      <button class="mini" data-gact="selfcheck:selfMark:0">❌ טעיתי</button>
     </div>
     <p class="note">כתוב גם במחברת — האצבע על המסך זו רק הבדיקה.</p>
   </section>
@@ -1212,10 +1212,10 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <p class="sub">מילה חדשה <b id="intro-n"></b></p>
     <div class="introcard">
       <div id="intro-w" class="introword"></div>
-      <button class="mini" onclick="H.introSay()">🔊 שמע</button>
+      <button class="mini" data-act="introSay">🔊 שמע</button>
       <p id="intro-hint" class="introhint"></p>
     </div>
-    <div class="row"><button class="go" id="intro-next" onclick="H.introNext()">הבא ➜</button></div>
+    <div class="row"><button class="go" id="intro-next" data-act="introNext">הבא ➜</button></div>
   </section>
 
   <!-- ============ מדריך להורים ============ -->
@@ -1283,9 +1283,9 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     </div>
     <div id="tour-dots" class="tour-dots"></div>
     <div class="row">
-      <button class="mini" id="tour-skip" onclick="H.endTour()">דלג</button>
-      <button class="mini" id="tour-prev" onclick="H.prevTour()">הקודם</button>
-      <button class="go" id="tour-next" onclick="H.nextTour()">הבא</button>
+      <button class="mini" id="tour-skip" data-act="endTour">דלג</button>
+      <button class="mini" id="tour-prev" data-act="prevTour">הקודם</button>
+      <button class="go" id="tour-next" data-act="nextTour">הבא</button>
     </div>
   </section>
 
@@ -1307,19 +1307,19 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
   <section class="screen" id="s-nikud">
     <h2>ניקוד ✏️</h2>
     <p class="sub">בחר מילה, בחר אות, ואז בחר לה תנועה</p>
-    <div class="photowrap" id="photowrap2" style="display:none" onclick="H.togglePhoto()">
+    <div class="photowrap" id="photowrap2" style="display:none" data-act="togglePhoto">
       <img alt="דף ההכתבה">
     </div>
     <div id="nk-draft" class="draftbox" style="display:none">
       <b>⚠️ חבילה מוכנה, לא נבדקה</b>
       <p>עבור על כל מילה למטה. אם משהו לא נכון, תקן אותו. כשהכול תקין, אשר.</p>
-      <button class="go" onclick="H.approvePack()">✅ אישרתי, המילים תקינות</button>
+      <button class="go" data-act="approvePack">✅ אישרתי, המילים תקינות</button>
     </div>
     <div id="nk-words" class="nkwords"></div>
     <div id="nk-preview" class="nkpreview"></div>
     <div id="nk-letters" class="nkletters"></div>
     <div id="nk-pad" class="nkpad"></div>
-    <div class="row"><button class="go" onclick="H.finishNikud()">✔️ סיימתי</button></div>
+    <div class="row"><button class="go" data-act="finishNikud">✔️ סיימתי</button></div>
   </section>
 
   <!-- ============ לוח ניהול ============ -->
@@ -1333,7 +1333,7 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
   <!-- ============ הורים ============ -->
   <section class="screen" id="s-settings">
     <h2>מסך הורים ⚙️</h2>
-    <div class="row"><button class="mini" onclick="H.show('pguide')">📘 איך מוסיפים מילים ואיך משתמשים</button></div>
+    <div class="row"><button class="mini" data-act="show" data-arg="pguide">📘 איך מוסיפים מילים ואיך משתמשים</button></div>
     <div class="row"><button class="mini" data-go="report">📊 דוח התקדמות</button></div>
     <div id="timebox" class="timebox"></div>
     <label class="lbl">חבילות מילים</label>
@@ -1348,14 +1348,14 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <label class="lbl">צילום דף ההכתבה</label>
     <p class="note" id="photohint" style="text-align:start">צלם את הדף והוא יישאר על המסך בזמן שאתה מקליד.</p>
     <div class="row">
-      <label class="mini photobtn">📷 צלם או בחר<input type="file" accept="image/*" capture="environment" onchange="H.pickPhoto(this)"></label>
-      <button class="mini" onclick="H.clearPhoto()">🗑️ הסר צילום</button>
+      <label class="mini photobtn">📷 צלם או בחר<input type="file" accept="image/*" capture="environment" data-onchange="pickPhoto"></label>
+      <button class="mini" data-act="clearPhoto">🗑️ הסר צילום</button>
     </div>
-    <div class="photowrap" id="photowrap" style="display:none" onclick="H.togglePhoto()">
+    <div class="photowrap" id="photowrap" style="display:none" data-act="togglePhoto">
       <img alt="דף ההכתבה">
       <span class="phototip">הקש להגדלה</span>
     </div>
-    <button class="go soonbtn" id="ocrbtn" disabled onclick="H.readPhoto()">🔍 קרא את המילים מהצילום <span class="soon">בקרוב</span></button>
+    <button class="go soonbtn" id="ocrbtn" disabled data-act="readPhoto">🔍 קרא את המילים מהצילום <span class="soon">בקרוב</span></button>
     <p class="note" id="ocrmsg"></p>
     <p class="note" id="quotamsg" style="display:none"></p>
     <div class="upgrade" id="upgradebox" style="display:none">
@@ -1369,23 +1369,23 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <label class="lbl">מילים — אחת בכל שורה</label>
     <div id="nikpad" class="nikpad"></div>
     <textarea id="wordsIn" rows="10"></textarea>
-    <div class="row"><button class="go" onclick="H.openNikud()">✏️ נקד את המילים</button>
-      <button class="mini" onclick="H.openLibrary()">📚 ספריית מילים</button></div>
+    <div class="row"><button class="go" data-act="openNikud">✏️ נקד את המילים</button>
+      <button class="mini" data-act="openLibrary">📚 ספריית מילים</button></div>
     <p class="note">הכי קל: הקלד את המילים בלי ניקוד, ואז נקד אותן בלחיצות.</p>
 
     <h3>חשבון וסנכרון</h3>
     <div id="accbox">
-      <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ברירת מחדל מוגדרת" onchange="H.setClientId(this.value)"></label>
+      <label class="lbl">Client ID של גוגל<input id="cidIn" placeholder="ברירת מחדל מוגדרת" data-onchange="setClientId"></label>
       <div class="row accrow">
-        <button class="go" id="loginbtn" onclick="H.login()">🔐 התחבר עם גוגל</button>
-        <button class="mini" id="signoutbtn" onclick="H.signOut()" disabled>🚪 התנתק</button>
+        <button class="go" id="loginbtn" data-act="login">🔐 התחבר עם גוגל</button>
+        <button class="mini" id="signoutbtn" data-act="signOut" disabled>🚪 התנתק</button>
       </div>
       <div id="gbtn" class="gbtn"></div>
       <p class="note" id="accmsg" style="text-align:start"></p>
       <div class="row">
-        <button class="mini" id="syncnow" style="display:none" onclick="H.syncNow()">🔄 סנכרן עכשיו</button>
-        <button class="mini" id="adminbtn" style="display:none" onclick="H.openAdmin()">📊 לוח ניהול</button>
-        <button class="mini" id="delbtn" style="display:none" onclick="H.deleteAccount()">🗑️ מחק את הנתונים שלי</button>
+        <button class="mini" id="syncnow" style="display:none" data-act="syncNow">🔄 סנכרן עכשיו</button>
+        <button class="mini" id="adminbtn" style="display:none" data-act="openAdmin">📊 לוח ניהול</button>
+        <button class="mini" id="delbtn" style="display:none" data-act="deleteAccount">🗑️ מחק את הנתונים שלי</button>
       </div>
       <p class="note" style="text-align:start">כשמתחברים נשמרים בשרת: האימייל שלך, והתקדמות המשחק (נקודות, מילים, כמה פעמים נכנסו וכמה זמן). לא נשמרים שם הילד, תמונות או כל פרט אחר. אפשר למחוק הכול בכל רגע בכפתור למעלה.</p>
       <p class="note" style="text-align:start">ההתחברות היא להורה בלבד. הילד לא מתחבר, והמשחק עובד גם בלי חשבון.</p>
@@ -1394,26 +1394,26 @@ body:not(.dfus) #wordsIn{font-family:'KtavYad','Arial Hebrew',sans-serif}
     <h3>גיבוי</h3>
     <p class="note" style="text-align:start">אם המכשיר ינוקה או יוחלף — הכול נמחק. שמור קוד מדי פעם.</p>
     <div class="row">
-      <button class="mini" onclick="H.exportAll()">📤 צור קוד גיבוי</button>
-      <button class="mini" onclick="H.exportLight()">📱 קוד למכשיר חדש</button>
+      <button class="mini" data-act="exportAll">📤 צור קוד גיבוי</button>
+      <button class="mini" data-act="exportLight">📱 קוד למכשיר חדש</button>
     </div>
     <textarea id="backupOut" rows="3" readonly style="display:none"></textarea>
     <p class="note" id="backupInfo"></p>
     <div class="row">
-      <button class="mini" onclick="H.copyBackup()">📋 העתק</button>
-      <button class="mini" onclick="H.downloadBackup()">⬇️ הורד קובץ</button>
+      <button class="mini" data-act="copyBackup">📋 העתק</button>
+      <button class="mini" data-act="downloadBackup">⬇️ הורד קובץ</button>
     </div>
     <label class="lbl">שחזור — הדבק כאן קוד גיבוי</label>
     <textarea id="backupIn" rows="3" placeholder="Z...."></textarea>
     <div class="row">
-      <button class="mini" onclick="H.importBackup()">♻️ שחזר</button>
-      <button class="mini" onclick="H.resetHand()">🧽 אפס פרופיל כתב</button>
+      <button class="mini" data-act="importBackup">♻️ שחזר</button>
+      <button class="mini" data-act="resetHand">🧽 אפס פרופיל כתב</button>
     </div>
 
     <div class="row">
-      <button class="go" onclick="H.applySettings()">💾 שמור</button>
-      <button class="mini" onclick="H.resetWords()">ברירת מחדל</button>
-      <button class="mini" onclick="H.removePack()">🗑️ מחק חבילה</button>
+      <button class="go" data-act="applySettings">💾 שמור</button>
+      <button class="mini" data-act="resetWords">ברירת מחדל</button>
+      <button class="mini" data-act="removePack">🗑️ מחק חבילה</button>
     </div>
   </section>
 
@@ -1439,7 +1439,7 @@ H.DEFAULT_WORDS = [
   "לוּלָב",
   "חַג שָׂמֵחַ"
 ];
-H.BUILD = '2026-10-08 16:24 8925d80';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
+H.BUILD = '2026-10-09 12:17 c91a52c';          /* חותמת בנייה: זמן ועוגן גיט. נכנסת לדיווחי בעיות */
 H.DEFAULT_TOPIC = "חגי תשרי";
 H.DEFAULT_PRIZE = "חטיף MARS 🍫";
 
@@ -2188,6 +2188,29 @@ H.finish = function(opt){
   H.show('end');
 };
 
+/* ---------- אירועים בלי קוד בתוך ה-HTML ----------
+   אין יותר onclick="..." בדף, ולכן מדיניות האבטחה (CSP) אוסרת קוד מוטמע בתכונות.
+   כפתור מצהיר על פעולה ב-data-act (עם data-arg אופציונלי) ורק פעולות מהרשימה הזו רצות.
+   כך גם אם איכשהו יוזרק HTML לדף, הוא לא יכול להריץ קוד, ורק ללחוץ על כפתורים שהמשתמש עצמו רואה. */
+H.ACTS = new Set(['applySettings','approvePack','clearPhoto','closeReport','copyBackup','cycleNikud','deleteAccount','doInstall','downloadBackup','endTour','exportAll','exportLight','finishNikud','finishOnboard','importBackup','introNext','introSay','login','nextTour','openAdmin','openLibrary','openNikud','openPlan','openReport','openSettings','openVoxel','openWorld','prevTour','readPhoto','removePack','resetHand','resetWords','sendReport','show','signOut','startChallenge','startTour','syncNow','togglePhoto']);
+H.GACTS = new Set(['search:hint', 'flash:check', 'flash:peek', 'selfcheck:selfMark']);
+H.CHANGES = {pickPhoto: el => H.pickPhoto(el), pickRepFile: el => H.pickRepFile(el), setClientId: el => H.setClientId(el.value)};
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-act],[data-gact]') : null;
+  if(!el || el.disabled) return;
+  if(el.dataset.act){
+    const f = H[el.dataset.act];
+    if(H.ACTS.has(el.dataset.act) && typeof f === 'function') f.call(H, el.dataset.arg);
+  } else if(el.dataset.gact){
+    const [gid, fn, arg] = el.dataset.gact.split(':');
+    if(H.GACTS.has(gid + ':' + fn)){ const g = H.byId(gid); if(g && typeof g[fn] === 'function') g[fn](arg === undefined ? undefined : arg === '1'); }
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target, k = el && el.dataset && el.dataset.onchange;
+  if(k && H.CHANGES[k]) H.CHANGES[k](el);
+});
+
 /* ===== 35-onboard.js ===== */
 /* ==========================================================
    מסך ראשון: שם ודמות. רץ פעם אחת, לפני שהילד רואה משהו אחר.
@@ -2543,7 +2566,7 @@ H.game({
     }
   },
   hint(){
-    H.$('buildfb').innerHTML = '<span class="peek">' + H.run.word + '</span>';
+    H.$('buildfb').innerHTML = '<span class="peek">' + H.esc(H.run.word) + '</span>';
     setTimeout(() => { const f = H.$('buildfb'); if(f.querySelector('.peek')) f.textContent = ''; }, 2200);
   }
 });
@@ -2627,7 +2650,7 @@ H.game({
       H.$('misfb').innerHTML = '<span class="ok">🎉 יפה!</span>';
     } else {
       H.wrong(); btn.classList.add('wrongpick');
-      H.$('misfb').innerHTML = '<span class="no">לא… הנכונה היא ' + H.run.answer + '</span>';
+      H.$('misfb').innerHTML = '<span class="no">לא… הנכונה היא ' + H.esc(H.run.answer) + '</span>';
     }
     setTimeout(() => { H.run.picked = false; this.next(); }, ok ? 850 : 1800);
   }
@@ -3047,7 +3070,7 @@ H.game({
       bar.classList.toggle('low', r.left < 8);
       if(r.left <= 0){
         H.wrong();
-        H.$('anafb').innerHTML = '<span class="no">נגמר הזמן! המילה: <b>' + r.word + '</b></span>';
+        H.$('anafb').innerHTML = '<span class="no">נגמר הזמן! המילה: <b>' + H.esc(r.word) + '</b></span>';
         clearInterval(r.clock);
         setTimeout(() => this.next(), 1900);
         return;
@@ -3088,7 +3111,7 @@ H.game({
       setTimeout(() => this.next(), 900);
     } else {
       H.wrong();
-      H.$('anafb').innerHTML = '<span class="no">לא בדיוק — <b>' + r.word + '</b></span>';
+      H.$('anafb').innerHTML = '<span class="no">לא בדיוק — <b>' + H.esc(r.word) + '</b></span>';
       setTimeout(() => this.next(), 1800);
     }
   },
@@ -7877,7 +7900,7 @@ H.renderReports = function(d){
   const body = H.$('admbody'), list = Array.isArray(d.reports) ? d.reports : [];
   const open = list.filter(x => x.status !== 'done').length;
   H.$('admsum').innerHTML = '<div class="statbox"><b>' + (d.total || 0) + '</b><small>דיווחים</small></div><div class="statbox"><b>' + open + '</b><small>פתוחים</small></div>';
-  body.innerHTML = '<div class="row"><button class="mini" onclick="H.openAdmin()">👥 משתמשים</button></div>';
+  body.innerHTML = '<div class="row"><button class="mini" data-act="openAdmin">👥 משתמשים</button></div>';
   if(!list.length){ body.innerHTML += '<p class="note">אין דיווחים.</p>'; return; }
   const KI = {bug: '🐞', confusing: '❓', idea: '💡'};
   list.forEach(x => {
